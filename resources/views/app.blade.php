@@ -8,7 +8,7 @@
     @inertiaHead
     @routes
   </head>
-  <body class="font-poppins">
+  <body>
     @inertia
   </body>
 </html>

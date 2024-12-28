@@ -24,5 +24,4 @@ defineProps({
             </option>
         </select>
     </div>
-
 </template>
