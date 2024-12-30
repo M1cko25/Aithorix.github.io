@@ -15,7 +15,11 @@
         "vite": "^6.0"
     },
     "dependencies": {
+        "@inertiajs/inertia": "^0.11.1",
         "@inertiajs/vue3": "^2.0.0",
-        "@vitejs/plugin-vue": "^5.2.1"
+        "@vitejs/plugin-vue": "^5.2.1",
+        "ionicons": "^7.4.0",
+        "lucide-vue-next": "^0.469.0",
+        "swiper": "^11.1.15"
     }
 }

@@ -1,7 +1,7 @@
 <script setup>
 defineProps({
     text: String,
-    style2: {
+    btn2: {
         type: Boolean,
         default: false
     },
@@ -20,14 +20,18 @@ defineProps({
     type: {
         type: String,
         default: 'button'
+    }, 
+    click: {
+        type: Function,
+        default: () => {}
     }
 })
 </script>
 <template>
-    <button v-if="social" :type="type" :class="`btn-cancel ${style} flex row justify-center items-center gap-2`">
+    <button @click="click"  v-if="social" :type="type" :class="`btn-cancel ${style} flex row justify-center items-center gap-2`">
         <img :src="pic">
         {{ text }}
     </button>
-    <button v-else-if="style2 && !social" :type="type" :class="`btn-cancel ${style}`">{{ text }}</button>
-    <button v-else :class="`btn-primary ${style}`" :type="type">{{ text }}</button>
+    <button @click="click" v-else-if="btn2 && !social" :type="type" :class="`btn-cancel ${style}`">{{ text }}</button>
+    <button @click="click" v-else :class="`btn-primary ${style}`" :type="type">{{ text }}</button>
 </template>

@@ -1,4 +1,7 @@
 <script setup>
+import { ref, watch } from 'vue';
+
+const input = ref('');
 defineProps({
     type: {
         type: String,
@@ -24,13 +27,19 @@ defineProps({
         default: ''
     }
 })
+
+// defineEmits({update:newInput})
+
+// watch(() => input, (newValue) => {
+//     emit('update:newinput', newValue)
+// })
 </script>
 <template>
     <div class="flex flex-col gap-2">
-        <label :for="name">{{ labeltxt }}</label>
+        <p>{{ labeltxt }}</p>
         <div :class="`txt-primary ${style}`">
             <img :src="icon" class="h-fit w-fit" alt="icon">
-            <input :type="type" class="bg-transparent h-full w-full outline-none p-3" :name="name" :placeholder="placeholder">
+            <input :type="type" class="bg-transparent h-full w-full outline-none p-3" v-model="input" autocomplete="email" :name="name" :placeholder="placeholder">
         </div>
     </div>
 </template>

@@ -25,7 +25,7 @@ const signUp = () => {
         </nav>
         </div>
         <div>
-            <Link class="btn-primary px-4 py-2" :href="route('signin')">Sign In</Link>
+            <Link class="btn-primary px-4 py-2" :href="route('login')">Log In</Link>
         </div>
     </header>
 </template>

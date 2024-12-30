@@ -1,24 +1,39 @@
 <script setup>
+import icon from '../Icons.js';
+import graphics from '../graphics.js';
 import Button from '../Components/Button.vue'
-import signupIllustration from '../../../public/assets/signup-illustration.svg'
-import googleIcon from '../../../public/assets/google-icon.svg'
-import microsoftIcon from '../../../public/assets/microsoft-icon.svg'
 import TextField from '../Components/TextField.vue';
-import EmailIcon from '../../../public/assets/email-icon.svg'
+import { Inertia } from '@inertiajs/inertia';
+import { useForm, router } from '@inertiajs/vue3';
+
+const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
+
+const  handleSubmit = () => {
+    
+}
+
+const verify = ()=> {
+    router.visit('/verification')
+}
 </script>
 <template>
+    <Head title="Sign Up"/>
     <div class="min-h-screen flex items-center justify-center p-6">
-        <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-6xl w-full">
+        <button @click="goBack" class="flex flex-row items-center gap-4 absolute top-4 left-4">
+            <img :src="icon.leftIcon">
+            <p>Back</p>
+        </button>
+        <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-5xl w-full">
             <!-- Left side - Form -->
             <div class="w-full lg:w-1/2 p-10">
-                <div class="pt-20 pb-10 px-6">
+                <div class="pt-16 pb-10 px-6">
                     <h1 class="text-3xl font-bold text-gray-800 mb-2">Sign Up</h1>
                     <p class="text-gray-600 mb-6">Sign up with open account</p>
                     
                     <!-- OAuth Buttons -->
                     <div class=" mb-6 flex flex-col gap-2 border">
-                        <Button social :pic="googleIcon" :style="`py-2 w-full text-lg`" text="Google" />
-                        <Button social :pic="microsoftIcon" :style="`py-2 w-full text-lg`" text="Microsoft" />
+                        <Button social :pic="icon.googleIcon" :style="`py-2 w-full text-lg`" text="Google" />
+                        <Button social :pic="icon.microsoftIcon" :style="`py-2 w-full text-lg`" text="Microsoft" />
                     </div>
 
                     <div class="relative flex flex-col gap-3">
@@ -32,19 +47,19 @@ import EmailIcon from '../../../public/assets/email-icon.svg'
 
                     <!-- Form -->
                     <form @submit.prevent="handleSubmit" class="flex flex-col gap-12 p-4">
-                    <TextField v-model="email" :icon="EmailIcon" label="Email" type="email" labeltxt="Email" placeholder="jon@email.com"/>
+                    <TextField :icon="icon.emailIcon" label="Email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
                     
-                    <Button text="Sign Up" :style="`py-2 w-full text-lg`" type="submit"/>
+                    <Button :click="verify" text="Submit" :style="`py-2 w-full text-lg`"/>
                     </form>
                 </div>
 
                 <div class="w-full text-center">
-                    <p>Already have an account? <Link :href="route('signin')" class="underline font-bold text-lg">Sign in</Link></p>
+                    <p>Already have an account? <Link :href="route('login')" class="underline font-bold text-lg">Log in</Link></p>
                 </div>
             </div>
             <!-- Right side - Illustration -->
             <div class="hidden lg:block lg:w-1/2 bg-light p-12">
-                <img :src="signupIllustration" alt="Illustration" class="w-full h-full object-contain" />
+                <img :src="graphics.signupIllustration" alt="Illustration" class="w-full h-full object-contain" />
             </div>
         </div>
     </div>
