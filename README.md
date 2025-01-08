@@ -64,3 +64,14 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+After cloning this repo, do the following steps:
+1. type "composer install" in your terminal/cmd inside the cloned folder
+2. type "npm install" in your terminal/cmd inside the cloned folder
+3. type "cp .env.example .env" in your terminal/cmd inside the cloned folder
+4. type "php artisan migrate" in your terminal/cmd inside the cloned folder
+5. type yes to make a sqlite database
+6. type "php artisan key:generate" in your terminal/cmd inside the cloned folder
+7. type "php artisan serve" in your terminal/cmd inside the cloned folder
+8. execute another terminal/cmd inside the cloned folder and run "npm run dev"
