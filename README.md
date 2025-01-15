@@ -65,7 +65,15 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-
+before cloning this repo, do the following steps:
+1. go to https://pecl.php.net/package/mongodb/1.20.1/windows
+2. download the php 8.2 thread safe 
+3. extract it and copy the dll file inside of it
+4. paste the dll file to your php/ext folder
+5. go to your php ini file and paste extension=php_mongodb.dll at the bottom
+6. save the ini file.
+7. go to your powershell and run this command: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+   
 After cloning this repo, do the following steps:
 1. type "composer install" in your terminal/cmd inside the cloned folder
 2. type "npm install" in your terminal/cmd inside the cloned folder
