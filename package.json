@@ -10,16 +10,14 @@
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.0",
-        "postcss": "^8.4.49",
+        "postcss": "^8.5.1",
         "tailwindcss": "^3.4.17",
         "vite": "^6.0"
     },
     "dependencies": {
         "@inertiajs/inertia": "^0.11.1",
-        "@inertiajs/vue3": "^2.0.0",
+        "@inertiajs/vue3": "^2.0.2",
         "@vitejs/plugin-vue": "^5.2.1",
-        "ionicons": "^7.4.0",
-        "lucide-vue-next": "^0.469.0",
-        "swiper": "^11.1.15"
+        "lucide-vue-next": "^0.471.0"
     }
 }

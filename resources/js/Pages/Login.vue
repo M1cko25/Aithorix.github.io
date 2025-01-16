@@ -25,7 +25,7 @@ const handleSubmit = () => {
         </button>
         <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-5xl w-full">
             <!-- Left side - Illustration -->
-            <div class="hidden lg:block lg:w-1/2 bg-gray-100 p-12">
+            <div class="hidden lg:block lg:w-1/2 bg-gray-100 p-6">
                 <img :src="graphics.signinIllustration" alt="Illustration" class="w-full h-full object-contain" />
             </div>
             

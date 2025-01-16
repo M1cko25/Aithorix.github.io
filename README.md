@@ -64,6 +64,7 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+<<<<<<< Updated upstream
 
 before cloning this repo, do the following steps:
 1. go to https://pecl.php.net/package/mongodb/1.20.1/windows
@@ -83,3 +84,5 @@ After cloning this repo, do the following steps:
 6. type "php artisan key:generate" in your terminal/cmd inside the cloned folder
 7. type "php artisan serve" in your terminal/cmd inside the cloned folder
 8. execute another terminal/cmd inside the cloned folder and run "npm run dev"
+=======
+>>>>>>> Stashed changes
