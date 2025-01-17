@@ -18,21 +18,21 @@ const verify = ()=> {
 </script>
 <template>
     <Head title="Sign Up"/>
-    <div class="min-h-screen flex items-center justify-center p-6">
+    <div class="min-h-screen flex items-center justify-center">
         <button @click="goBack" class="flex flex-row items-center gap-4 absolute top-4 left-4">
             <img :src="icon.leftIcon">
             <p>Back</p>
         </button>
-        <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-5xl w-full">
+        <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
             <!-- Left side - Form -->
-            <div class="w-full lg:w-1/2 p-10">
-                <div class="pt-16 pb-10 px-6">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Sign Up</h1>
-                    <p class="text-gray-600 mb-6">Sign up with open account</p>
+            <div class="w-full lg:w-1/2 p-6">
+                <div class="pb-10 px-6">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Register</h1>
+                    <p class="text-gray-600 mb-6">Register with open account</p>
                     
                     <!-- OAuth Buttons -->
                     <div class=" mb-6 flex flex-col gap-2 border">
-                        <Button social :pic="icon.googleIcon" :style="`py-2 w-full text-lg`" text="Google" />
+                        <Button social :pic="icon.googleIcon" :style="`py-2 w-full text-lg`" :href="route('googleLogin')" text="Google" />
                         <Button social :pic="icon.microsoftIcon" :style="`py-2 w-full text-lg`" text="Microsoft" />
                     </div>
 
@@ -46,7 +46,7 @@ const verify = ()=> {
                     </div>
 
                     <!-- Form -->
-                    <form @submit.prevent="handleSubmit" class="flex flex-col gap-12 p-4">
+                    <form @submit.prevent="handleSubmit" class="flex flex-col gap-8 p-4">
                     <TextField :icon="icon.emailIcon" label="Email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
                     
                     <Button :click="verify" text="Submit" :style="`py-2 w-full text-lg`"/>
@@ -58,7 +58,7 @@ const verify = ()=> {
                 </div>
             </div>
             <!-- Right side - Illustration -->
-            <div class="hidden lg:block lg:w-1/2 bg-light p-12">
+            <div class="hidden lg:block lg:w-1/2 bg-light p-6">
                 <img :src="graphics.signupIllustration" alt="Illustration" class="w-full h-full object-contain" />
             </div>
         </div>
