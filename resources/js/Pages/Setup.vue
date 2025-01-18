@@ -4,15 +4,26 @@ import TextField from '../Components/TextField.vue'
 import icon from '../Icons.js';
 import logo from '../../../public/assets/logo.png'
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 
-const fullName = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const props = defineProps({
+    email: {
+        type: String,
+        default: ''
+    },
+    name: String,
+    avatar: String,
+    google_id: String
+})
 
-const handleSubmit = () => {
-  router.visit('/template-selection')
-}
+const form = useForm({
+    email: props.email,
+    name: props.name,
+    password: null,
+    confirmPassword: null,
+    avatar: props.avatar,
+    google_id: props.google_id
+})
 </script>
 
 <template>
@@ -30,37 +41,47 @@ const handleSubmit = () => {
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
-                <TextField 
-                    v-model="fullName" 
+            <form @submit.prevent="form.post('/create-account')" class="flex flex-col gap-6">
+                <div>
+                    <TextField 
+                    v-model="form.name" 
                     :icon="icon.userIcon" 
                     label="fullName" 
                     type="text" 
+                    name="fullName"
                     labeltxt="Full Name"
                     placeholder="Jon Doe"
-                />
+                    />
+                    <p v-if="$attrs.errors.name" class="text-red-600 text-sm">{{ $attrs.errors.name }}</p>
+                </div>
                 
-                <TextField 
-                    v-model="password" 
+                <div>
+                    <TextField 
+                    v-model="form.password" 
                     :icon="icon.passwordIcon" 
                     label="password" 
                     type="password" 
+                    name="password"
                     labeltxt="Password"
                     placeholder="Password"
-                />
+                    />
+                    <p v-if="$attrs.errors.password" class="text-red-600 text-sm">{{ $attrs.errors.password }}</p>
+                </div>
                 
-                <TextField 
-                    v-model="confirmPassword" 
+                <div>
+                    <TextField 
+                    v-model="form.confirmPassword" 
                     :icon="icon.passwordIcon" 
                     label="confirmPassword" 
                     type="password" 
                     labeltxt="Confirm Password"
                     placeholder="Confirm Password"
-                />
+                    />
+                    <p v-if="$attrs.errors.confirmPassword" class="text-red-600 text-sm">{{ $attrs.errors.confirmPassword }}</p>
+                </div>
 
                 <Button 
                     text="Register" 
-                    :click="handleSubmit"
                     :style="`py-2 w-full text-lg mt-4`" 
                     type="submit"
                 />

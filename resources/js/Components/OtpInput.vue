@@ -27,19 +27,25 @@ const handleInput = (index, event) => {
   const value = event.target.value
   const newInputs = [...inputs.value]
   
-  // Only take the last character if multiple characters are pasted
-  newInputs[index] = value.slice(-1)
-  
-  // Move to next input if value is entered
-  if (value && index < 3) {
-    inputRefs.value[index + 1].focus()
+  // Only allow numbers
+  if (/^\d*$/.test(value)) {
+    // Only take the last character if multiple characters are pasted
+    newInputs[index] = value.slice(-1)
+    
+    // Move to next input if value is entered
+    if (value && index < 3) {
+      inputRefs.value[index + 1].focus()
+    }
+    
+    emit('update:modelValue', newInputs)
   }
-  
-  emit('update:modelValue', newInputs)
 }
-
 const handleKeydown = (index, event) => {
   // Move to previous input on backspace if current input is empty
+  if (event.key === 'e' || event.key === '.' || event.key === '-') {
+    event.preventDefault()
+    return
+  }
   if (event.key === 'Backspace' && !inputs.value[index] && index > 0) {
     inputRefs.value[index - 1].focus()
   }
@@ -64,7 +70,7 @@ const handlePaste = (event) => {
     <div class="flex justify-center gap-4">
         <template v-for="(digit, index) in 4" :key="index">
             <input
-                type="text"
+                type="number"
                 :value="inputs[index]"
                 @input="(e) => handleInput(index, e)"
                 @keydown="(e) => handleKeydown(index, e)"
@@ -78,3 +84,13 @@ const handlePaste = (event) => {
         </template>
     </div>
 </template>
+<style scoped>
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>

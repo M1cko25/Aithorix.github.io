@@ -25,7 +25,8 @@ const signUp = () => {
         </nav>
         </div>
         <div>
-            <Link class="btn-primary px-4 py-2" :href="route('login')">Log In</Link>
+            <Link v-if="$page.props.auth.user" class="btn-primary px-4 py-2" :href="route('logout')" method="post">Log out</Link>
+            <Link v-else class="btn-primary px-4 py-2" :href="route('login')">Log In</Link>
         </div>
     </header>
 </template>

@@ -94,7 +94,7 @@ const handleNext = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 sm:p-6">
+  <div class="min-h-screen bg-gray-50 p-4 sm:p-6 overflow-hidden">
     <div class="max-w-7xl mx-auto">
       <!-- Logo -->
       <div class="flex justify-center mb-8 sm:mb-12">

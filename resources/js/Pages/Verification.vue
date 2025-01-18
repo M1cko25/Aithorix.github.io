@@ -3,17 +3,23 @@ import Button from '../Components/Button.vue'
 import OtpInput from '../Components/OtpInput.vue'
 import logo from '../../../public/assets/logo.png'
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
+import { route } from '../../../vendor/tightenco/ziggy/src/js'
 
+const { props } = usePage();
 const otp = ref(['', '', '', ''])
-const email = 'John@gmail.com'
+
+let errorMessage = ref(null);
 
 const handleVerify = () => {
-  router.visit('/account-setup');
-}
-
-const handleResend = () => {
-  
+    let otpValue = Number(otp.value.join(''))
+    if (otpValue === props.code) {
+        router.visit(route('verify', { email: props.email }))
+    } else if (otp.value.join('').length != 4){
+        errorMessage.value = 'Code must be 4 digits'
+    } else {
+        errorMessage.value = 'Incorrect code'
+    }
 }
 
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
@@ -31,12 +37,13 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
             <!-- Content -->
             <div class="text-center mb-8">
                 <h1 class="text-2xl font-bold text-gray-800 mb-2">Enter verification code</h1>
-                <p class="text-gray-600">We've sent a code to {{ email }}</p>
+                <p class="text-gray-600">We've sent a code to {{ props.email }}</p>
             </div>
 
             <!-- OTP Input -->
             <div class="mb-8">
                 <OtpInput v-model="otp" />
+                <p v-if="errorMessage" class="text-red-600 text-sm text-center">{{ errorMessage }}</p>
             </div>
 
             <!-- Resend Link -->

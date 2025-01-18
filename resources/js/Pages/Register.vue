@@ -4,17 +4,16 @@ import graphics from '../graphics.js';
 import Button from '../Components/Button.vue'
 import TextField from '../Components/TextField.vue';
 import { Inertia } from '@inertiajs/inertia';
-import { useForm, router } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
+let emailInput = ref('')
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 
-const  handleSubmit = () => {
-    
-}
+const form = useForm({
+    email: null
+})
 
-const verify = ()=> {
-    router.visit('/verification')
-}
 </script>
 <template>
     <Head title="Sign Up"/>
@@ -46,10 +45,12 @@ const verify = ()=> {
                     </div>
 
                     <!-- Form -->
-                    <form @submit.prevent="handleSubmit" class="flex flex-col gap-8 p-4">
-                    <TextField :icon="icon.emailIcon" label="Email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
-                    
-                    <Button :click="verify" text="Submit" :style="`py-2 w-full text-lg`"/>
+                    <form @submit.prevent="form.post('/register')" class="flex flex-col gap-8 p-4">
+                    <div>
+                        <TextField :icon="icon.emailIcon" label="Email" v-model="form.email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
+                        <p v-if="form.errors.email" class="text-red-600 text-sm text-center">{{ form.errors.email }}</p>
+                    </div>
+                    <Button text="Submit" type="submit" :style="`py-2 w-full text-lg`"/>
                     </form>
                 </div>
 

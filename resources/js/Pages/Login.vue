@@ -4,21 +4,19 @@ import graphics from '../graphics.js'
 import Button from '../Components/Button.vue'
 import TextField from '../Components/TextField.vue'
 import { ref } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 
-let options = [ 'Option 1', 'Option 2', 'Option 3']
-const email = ref('')
-const password = ref('')
-
-const handleSubmit = () => {
-  // Handle form submission
-}
+const form = useForm({
+  email: null,
+  password: null
+})
 </script>
 
 <template>
     <Head title="Log In"/>
-    <div class="min-h-screen flex items-center justify-center">
+    <div class="min-h-screen flex items-center justify-center overflow-hidden">
         <button @click="goBack" class="flex flex-row items-center gap-4 absolute top-4 left-4">
             <img :src="icon.leftIcon">
             <p>Back</p>
@@ -62,34 +60,35 @@ const handleSubmit = () => {
                     </div>
 
                     <!-- Form -->
-                    <form @submit.prevent="handleSubmit" class="flex flex-col gap-2 p-2">
+                    <form @submit.prevent="form.post('/login')" class="flex flex-col gap-2 p-2">
                         <TextField 
-                            v-model="email" 
+                            v-model="form.email" 
                             :icon="icon.emailIcon" 
                             label="Email" 
                             type="email" 
                             labeltxt="Email" 
                             placeholder="jon@email.com"
                         />
+                        <p class="text-red-600 font-sm" v-if="form.errors.email">{{ form.errors.email }}</p>
                         
                         <div class="flex flex-col gap-1">
                             <TextField 
-                                v-model="password" 
+                                v-model="form.password" 
                                 :icon="icon.passwordIcon" 
                                 label="Password" 
                                 type="password" 
                                 labeltxt="Password" 
                                 placeholder="Password"
                             />
+                            <p class="text-red-600 font-sm" v-if="form.errors.password">{{ form.errors.password }}</p>
                             <div class="flex justify-end">
-                                <a href="#" class="text-sm text-gray-600 hover:underline">
+                                <Link :href="route('forgot-password')" class="text-sm text-gray-600 hover:underline">
                                     Forgot Password?
-                                </a>
+                                </Link>
                             </div>
                         </div>
                         
                         <Button 
-                            @click="handleSubmit"
                             text="Log In" 
                             :style="`py-2 w-full text-lg mt-4`" 
                             type="submit"
