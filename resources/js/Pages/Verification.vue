@@ -22,6 +22,19 @@ const handleVerify = () => {
     }
 }
 
+let resendTime = ref(60);
+let resendReady = ref(true);
+let resendTimer = () => {
+    if (resendTime.value > 0) {
+        resendTime.value--;
+        resendReady.value = false;
+        setTimeout(resendTimer, 1000);
+    } else {
+        resendReady.value = true;
+        resendTime.value = 60;
+    }
+}
+
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 </script>
 
@@ -50,12 +63,10 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
             <div class="text-center mb-8">
                 <p class="text-gray-600">
                     Didn't get a code?
-                    <button 
-                        @click="handleResend"
-                        class="text-gray-800 font-semibold ml-1 hover:underline"
-                    >
+                    <Link v-if="resendReady" @click="resendTimer" class="text-dark font-bold" method="post" as="button" :href="route('register', { email: props.email })">
                         Click to resend
-                    </button>
+                    </Link>
+                    <span v-else class="text-gray-600"> Wait for {{ resendTime }} to resend</span>
                 </p>
             </div>
 
