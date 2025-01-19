@@ -3,7 +3,7 @@ import icon from '../Icons.js'
 import graphics from '../graphics.js'
 import Button from '../Components/Button.vue'
 import TextField from '../Components/TextField.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
@@ -11,6 +11,10 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
 const form = useForm({
   email: null,
   password: null
+})
+
+let loginText = computed(() => {
+    return form.processing ? 'Logging in...' : 'Log In'
 })
 </script>
 
@@ -89,7 +93,7 @@ const form = useForm({
                         </div>
                         
                         <Button 
-                            text="Log In" 
+                            :text="loginText" 
                             :style="`py-2 w-full text-lg mt-4`" 
                             type="submit"
                         />

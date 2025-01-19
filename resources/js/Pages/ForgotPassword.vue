@@ -56,5 +56,23 @@ let form = useForm({
         </div>
       </div>
     </div>
+    <div v-if="form.wasSuccessful" v-motion="pop" class="absolute popup top-0 right-0 flex 
+    flex-col gap-6 m-4 bg-success md:p-6 text-white rounded-lg shadow">
+      <h1>Email sent successfully</h1>
+    </div>
   </div>
 </template>
+<style scoped>
+.popup {
+  animation: timer 5s forwards;
+}
+
+@keyframes timer {
+  0%, 80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+</style>

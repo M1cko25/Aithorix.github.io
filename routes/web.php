@@ -18,6 +18,8 @@ Route::inertia('/account-setup', 'Setup')->name('setup')->middleware(AuthMiddlew
 Route::inertia('/template-selection', 'Template')->name('template')->middleware('auth');
 Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->middleware('guest');
 
+//scrum routes
+Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
 //Auth posts
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [EmailController::class, 'sendEmail']);

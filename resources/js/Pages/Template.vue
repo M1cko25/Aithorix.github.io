@@ -5,6 +5,10 @@ import TemplateCard from '../Components/TemplateCard.vue'
 import graphics from '../graphics.js'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import logo from '../../../public/assets/logo.png'
+import { Inertia } from '@inertiajs/inertia'
+
+const templateCards = ref(null);
+const templateContainer = ref(null);
 
 const templates = [
   {
@@ -39,7 +43,7 @@ const templates = [
   }
 ]
 
-const selectedIndex = ref(2)
+let selectedIndex = ref(2)
 const isAnimating = ref(false)
 
 const getVisibleCards = computed(() => {
@@ -88,28 +92,30 @@ const handleSelectTemplate = (index) => {
   selectedIndex.value = index
 }
 
-const handleNext = () => {
-  // Handle next step with templates[selectedIndex.value]
-}
+const createProject = computed(() => {
+   if (selectedIndex.value === 2) {return route('scrum-board')}
+})
+
+
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 sm:p-6 overflow-hidden">
+  <div class="h-fit bg-gray-50 p-4 sm:p-8">
     <div class="max-w-7xl mx-auto">
       <!-- Logo -->
-      <div class="flex justify-center mb-8 sm:mb-12">
+      <div class="flex justify-center mb-4 sm:mb-12">
         <img :src="logo" alt="Aithorix" class="h-6 sm:h-8" />
       </div>
       
       <!-- Heading -->
-      <div class="text-center mb-8 sm:mb-16">
+      <div class="text-center mb-4 sm:mb-16">
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 px-4">
           Select the template that fits<br class="hidden sm:block"/>to your project?
         </h1>
       </div>
       
       <!-- Templates Carousel -->
-      <div class="relative mx-auto mb-8 sm:mb-16 h-[420px] sm:h-[480px]">
+      <div class="relative mx-auto mb-8 sm:mb-16 ">
         <!-- Navigation Buttons -->
         <button 
           @click="navigate(-1)"
@@ -128,7 +134,7 @@ const handleNext = () => {
         </button>
         
         <!-- Cards Container -->
-        <div class="relative w-full h-full">
+        <div class="relative w-full h-[400px]">
           <TemplateCard
             v-for="card in getVisibleCards"
             :key="card.id"
@@ -143,12 +149,8 @@ const handleNext = () => {
       
       <!-- Next Button -->
       <div class="flex justify-end px-4 sm:px-0">
-        <Button 
-          text="Next" 
-          :style="`py-2 px-6 sm:px-8 text-base sm:text-lg`"
-          @click="handleNext"
-        />
+        <Link :href="createProject" class="btn-primary px-4 py-2">Next</Link>
       </div>
     </div>
   </div>
-</template>
+</template> 

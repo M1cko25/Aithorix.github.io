@@ -45,6 +45,7 @@ class EmailController extends Controller
     }
     
     public function resetPassword (string $token) {
-        return Inertia::render('ResetPassword', ['token' => $token]);
+        return Inertia::render('ResetPassword', ['token' => $token, 
+        'email' => request()->email]);
     }
 }

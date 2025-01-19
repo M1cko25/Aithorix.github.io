@@ -3,6 +3,7 @@ import { createApp, h } from 'vue'
 import { createInertiaApp, Head, Link } from '@inertiajs/vue3'
 import Layout from '../js/Pages/Layout.vue'
 import {ZiggyVue} from '../../vendor/tightenco/ziggy'
+import { MotionPlugin } from '@vueuse/motion'
 
 createInertiaApp({
     title: (title) => `Aithorix | ${title}`,
@@ -16,6 +17,7 @@ createInertiaApp({
     createApp({ render: () => h(App, props) })
       .use(plugin)
       .use(ZiggyVue)
+      .use(MotionPlugin)
       .component('Head', Head)
       .component('Link', Link)
       .mount(el)
