@@ -11,5 +11,9 @@
 }
 
 .txt-primary {
-    @apply px-2 text-dark border border-dark rounded flex flex-row gap-2 items-center;
+    @apply px-2 text-dark border border-dark rounded gap-2 items-center;
+}
+
+.btn-disable {
+    @apply bg-neutral text-dark text-center rounded;
 }

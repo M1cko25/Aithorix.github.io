@@ -39,7 +39,7 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
 </script>
 
 <template>
-    <Head title="Verification"/>
+    <Head title="| Email Verification"/>
     <div class="min-h-screen flex items-center justify-center p-6">
         <div class="bg-light rounded-xl shadow-lg w-full max-w-md p-8">
             <!-- Logo -->

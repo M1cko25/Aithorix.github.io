@@ -8,6 +8,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\EmailController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Validation\Rules\Email;
+use App\Http\Controllers\TemplatesController;
 
 //routes
 Route::inertia('/', 'Landing')->name('landing');
@@ -20,6 +21,11 @@ Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->m
 
 //scrum routes
 Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
+Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
+
+//scrum posts
+Route::post('/template-selected', [TemplatesController::class, 'templateSelected'])->name('template-selected');
+
 //Auth posts
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [EmailController::class, 'sendEmail']);

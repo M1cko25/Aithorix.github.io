@@ -5,5 +5,7 @@ export default {
     passwordIcon: new URL('../../../public/assets/password-icon.svg', import.meta.url).href,
     leftIcon: new URL('../../../public/assets/Left-icon.svg', import.meta.url).href,
     userIcon: new URL('../../../public/assets/user-icon.svg', import.meta.url).href,
+    scrumIcon: new URL('../../../public/assets/scrum-icon.svg', import.meta.url).href,
+    startIcon: new URL('../../../public/assets/start-icon.svg', import.meta.url).href,
   };
   

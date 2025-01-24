@@ -15,17 +15,26 @@ class AuthController extends Controller
 {
     public function login(Request $request) {
         //validation
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|min:6|max:255'
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
 
-        //sign in
-        if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->route('template');
+        // Check if user exists first
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            return redirect()->back()->withErrors([
+                'email' => 'Email not found'
+            ])->onlyInput('email');
         }
 
-        return redirect()->back()->withErrors(['email' => 'Incorrect email', 'password' => 'Incorrect pasword']);
+        //sign in
+        if (Auth::attempt($credentials, $request->remember)) {
+            $request->session()->regenerate();
+            return redirect()->route('template');
+        }
+        return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
     }
 
     public function verify(Request $request) {

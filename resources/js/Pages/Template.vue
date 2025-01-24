@@ -2,10 +2,10 @@
 import { ref, computed } from 'vue'
 import Button from '../Components/Button.vue'
 import TemplateCard from '../Components/TemplateCard.vue'
-import graphics from '../graphics.js'
+import graphics from '../graphics'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import logo from '../../../public/assets/logo.png'
-import { Inertia } from '@inertiajs/inertia'
+import { useForm } from '@inertiajs/vue3'
 
 const templateCards = ref(null);
 const templateContainer = ref(null);
@@ -90,16 +90,17 @@ const navigate = (direction) => {
 const handleSelectTemplate = (index) => {
   if (isAnimating.value) return
   selectedIndex.value = index
+  form.selectedTemplate = templates[index].title
 }
 
-const createProject = computed(() => {
-   if (selectedIndex.value === 2) {return route('scrum-board')}
+const form = useForm({
+  selectedTemplate: 'Scrum'
 })
-
 
 </script>
 
 <template>
+  <Head title="| Template Selection"/>
   <div class="h-fit bg-gray-50 p-4 sm:p-8">
     <div class="max-w-7xl mx-auto">
       <!-- Logo -->
@@ -149,7 +150,9 @@ const createProject = computed(() => {
       
       <!-- Next Button -->
       <div class="flex justify-end px-4 sm:px-0">
-        <Link :href="createProject" class="btn-primary px-4 py-2">Next</Link>
+        <button class="btn-primary px-4 py-2" type="submit" @click="form.post('/template-selected')">
+          Next
+        </button>
       </div>
     </div>
   </div>

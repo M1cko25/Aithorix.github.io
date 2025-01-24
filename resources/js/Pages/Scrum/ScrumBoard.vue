@@ -1,4 +1,5 @@
-<script setup></script>
+<script setup>
+</script>
 <template>
-    basta scrum to
+    <Head title="| Scrum Board"/>
 </template>

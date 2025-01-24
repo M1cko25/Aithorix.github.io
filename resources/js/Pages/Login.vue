@@ -10,21 +10,19 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
 
 const form = useForm({
   email: null,
-  password: null
+  password: null,
+  remember: false
 })
 
-let loginText = computed(() => {
-    return form.processing ? 'Logging in...' : 'Log In'
-})
 </script>
 
 <template>
-    <Head title="Log In"/>
+    <Head title="| Log In" />
     <div class="min-h-screen flex items-center justify-center overflow-hidden">
-        <button @click="goBack" class="flex flex-row items-center gap-4 absolute top-4 left-4">
+        <Link :href="route('landing')" class="flex flex-row items-center gap-4 absolute top-4 left-4">
             <img :src="icon.leftIcon">
             <p>Back</p>
-        </button>
+        </Link>
         <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
             <!-- Left side - Illustration -->
             <div class="hidden lg:block lg:w-1/2 bg-gray-100 p-6">
@@ -75,28 +73,46 @@ let loginText = computed(() => {
                         />
                         <p class="text-red-600 font-sm" v-if="form.errors.email">{{ form.errors.email }}</p>
                         
+                        
                         <div class="flex flex-col gap-1">
                             <TextField 
-                                v-model="form.password" 
-                                :icon="icon.passwordIcon" 
-                                label="Password" 
-                                type="password" 
-                                labeltxt="Password" 
-                                placeholder="Password"
+                            v-model="form.password" 
+                            :icon="icon.passwordIcon" 
+                            label="Password" 
+                            type="password" 
+                            labeltxt="Password" 
+                            placeholder="Password"
                             />
                             <p class="text-red-600 font-sm" v-if="form.errors.password">{{ form.errors.password }}</p>
-                            <div class="flex justify-end">
+                            <div class="flex flex-row items-center justify-between">
+                                <div class="flex items-center gap-2 mt-2">
+                                    <input
+                                    type="checkbox"
+                                    id="remember"
+                                    v-model="form.remember"
+                                    class="rounded border-gray-300 text-primary focus:ring-primary"
+                                    >
+                                    <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                                </div>
                                 <Link :href="route('forgot-password')" class="text-sm text-gray-600 hover:underline">
                                     Forgot Password?
                                 </Link>
                             </div>
+                            
                         </div>
                         
-                        <Button 
-                            :text="loginText" 
+                        
+                        <Button v-if="form.processing"
+                            text="Logging in" 
                             :style="`py-2 w-full text-lg mt-4`" 
-                            type="submit"
+                            disableBtn
                         />
+                        <Button v-else 
+                        text="Log In"
+                        :style="`py-2 w-full text-lg mt-4`"
+                        type="submit"
+                        />
+
                     </form>
                 </div>
 

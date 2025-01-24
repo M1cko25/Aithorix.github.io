@@ -16,12 +16,12 @@ const form = useForm({
 
 </script>
 <template>
-    <Head title="Sign Up"/>
+    <Head title="| Sign Up"/>
     <div class="min-h-screen flex items-center justify-center">
-        <button @click="goBack" class="flex flex-row items-center gap-4 absolute top-4 left-4">
+        <Link :href="route('landing')" class="flex flex-row items-center gap-4 absolute top-4 left-4">
             <img :src="icon.leftIcon">
             <p>Back</p>
-        </button>
+        </Link>
         <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
             <!-- Left side - Form -->
             <div class="w-full lg:w-1/2 p-6">

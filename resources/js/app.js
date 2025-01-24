@@ -6,7 +6,7 @@ import {ZiggyVue} from '../../vendor/tightenco/ziggy'
 import { MotionPlugin } from '@vueuse/motion'
 
 createInertiaApp({
-    title: (title) => `Aithorix | ${title}`,
+    title: (title) => `Aithorix ${title}`,
   resolve: name => {
     const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
     let page = pages[`./Pages/${name}.vue`]

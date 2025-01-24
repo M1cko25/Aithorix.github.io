@@ -3,7 +3,11 @@ import { route } from '../../../vendor/tightenco/ziggy/src/js';
 
 defineProps({
     text: String,
-    btn2: {
+    closeBtn: {
+        type: Boolean,
+        default: false
+    },
+    disableBtn: {
         type: Boolean,
         default: false
     },
@@ -38,6 +42,10 @@ defineProps({
         <img :src="pic">
         {{ text }}
     </a>
-    <button @click="click" v-else-if="btn2 && !social" :type="type" :class="`btn-cancel ${style}`">{{ text }}</button>
-    <button @click="click" v-else :class="`btn-primary ${style}`" :type="type">{{ text }}</button>
+    <button @click="click" v-else-if="closeBtn && !social" :type="type" :class="`btn-cancel ${style}`">{{ text }}</button>
+    <button @click="click" v-else-if="disableBtn && !social" :class="`btn-disable ${style}`" disabled>{{ text }}</button>
+    <div v-else :class="`btn-primary ${style}`">
+        <img :src="pic" class="w-6 h-6">
+        <button @click="click" :type="type">{{ text }}</button>
+    </div>
 </template>

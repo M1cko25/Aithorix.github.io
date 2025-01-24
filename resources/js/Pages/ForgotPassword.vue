@@ -14,6 +14,7 @@ let form = useForm({
 </script>
 
 <template>
+  <Head title="| Forgot Password"/>
   <div class="min-h-screen flex items-center justify-center p-6">
     <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
       <!-- Left side - Illustration -->
