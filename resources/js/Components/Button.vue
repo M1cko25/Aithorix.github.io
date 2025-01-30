@@ -13,7 +13,7 @@ defineProps({
     },
     style: {
         type: String,
-        default: ''
+        default: 'px-6 py-2'
     },
     social: {
         type: Boolean,
@@ -34,6 +34,10 @@ defineProps({
     href: {
         type: String,
         default: ''
+    }, 
+    cta: {
+        type: Boolean,
+        default: false
     }
 })
 </script>
@@ -44,8 +48,15 @@ defineProps({
     </a>
     <button @click="click" v-else-if="closeBtn && !social" :type="type" :class="`btn-cancel ${style}`">{{ text }}</button>
     <button @click="click" v-else-if="disableBtn && !social" :class="`btn-disable ${style}`" disabled>{{ text }}</button>
+    <div v-else-if="cta" :class="`btn-primary overflow-hidden group ${style}`">
+        <img :src="pic" class="transform transition-transform duration-300 ease-in-out group-hover:translate-x-32 h-6 w-6">
+        <button @click="click" :type="type" class="transform transition-transform duration-300 group-hover:-translate-x-8">{{ text }}</button>
+    </div>
     <div v-else :class="`btn-primary ${style}`">
-        <img :src="pic" class="w-6 h-6">
+        <img v-if="pic" :src="pic" class="w-6 h-6">
         <button @click="click" :type="type">{{ text }}</button>
     </div>
 </template>
+<style scoped>
+
+</style>

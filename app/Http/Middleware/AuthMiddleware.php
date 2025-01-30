@@ -19,6 +19,6 @@ class AuthMiddleware
         if ($request->email) {
             return $next($request);
         }
-        return redirect()->route('template');
+         return redirect()->route('template');
     }
 }

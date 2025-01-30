@@ -150,7 +150,7 @@ const form = useForm({
       
       <!-- Next Button -->
       <div class="flex justify-end px-4 sm:px-0">
-        <button class="btn-primary px-4 py-2" type="submit" @click="form.post('/template-selected')">
+        <button class="btn-primary px-4 py-2" type="submit" @click="form.get('/create-project')">
           Next
         </button>
       </div>

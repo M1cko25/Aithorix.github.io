@@ -9,6 +9,7 @@ use App\Http\Controllers\EmailController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Validation\Rules\Email;
 use App\Http\Controllers\TemplatesController;
+use App\Http\Controllers\UserController;
 
 //routes
 Route::inertia('/', 'Landing')->name('landing');
@@ -21,10 +22,12 @@ Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->m
 
 //scrum routes
 Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
-Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
 
-//scrum posts
-Route::post('/template-selected', [TemplatesController::class, 'templateSelected'])->name('template-selected');
+//project creation
+Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
+Route::get('/create-project', [TemplatesController::class, 'templateSelected'])->name('template-selected')->middleware('auth');
+Route::post('/create-project', [TemplatesController::class, 'createProject'])->name('create-project')->middleware('auth');
+Route::post('/project-members', [TemplatesController::class, 'addProjectMembers'])->name('add-members')->middleware('auth');
 
 //Auth posts
 Route::post('/login', [AuthController::class, 'login']);
@@ -41,7 +44,11 @@ Route::get('/reset-password/{token}', [EmailController::class, 'resetPassword'])
 Route::controller(SocialiteController::class)->group(function () {
     Route::get('/googleLogin', 'googleLogin')->name('googleLogin');
     Route::get('/googleAuth', 'googleAuth')->name('googleauth');
+    Route::get('/slackLogin', 'slacksLogin')->name('slackLogin');
+    Route::get('/slackAuth', 'slacksAuth')->name('slackAuth');
 });
+
+Route::get('/search-users', [UserController::class, 'searchUsers'])->name('search-users')->middleware('auth');
 
 //logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

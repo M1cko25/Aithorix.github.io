@@ -8,7 +8,7 @@ import { MotionPlugin } from '@vueuse/motion'
 createInertiaApp({
     title: (title) => `Aithorix ${title}`,
   resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
+    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true }) 
     let page = pages[`./Pages/${name}.vue`]
     page.default.layout = page.default.layout || Layout;
     return page;

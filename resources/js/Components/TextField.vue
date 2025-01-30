@@ -33,6 +33,14 @@ defineProps({
         type: String,
         default: ''
     },
+    click: {
+        type: Function,
+        default: () => {}
+    },
+    hasButton: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const emit = defineEmits(['update:modelValue']);
@@ -45,9 +53,14 @@ function onInput(event) {
     <div class="flex flex-col gap-2">
         <p v-if="labeltxt">{{ labeltxt }}</p>
         <div :class="`txt-primary flex flex-row ${style}`">
-            <img v-if="icon" :src="icon" class="h-fit w-fit" alt="icon">
-            <Search v-if="type == 'search'" class="h-fit w-fit" />
-            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-3`" @input="onInput" :value="modelValue" autocomplete="email" :name="name" :placeholder="placeholder">
+            <img v-if="icon && !hasButton" :src="icon" class="h-fit w-fit" alt="icon">
+            <div v-if="type == 'search'" type="submit"><Search class="h-fit w-fit" /></div>
+            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-3`" @input="onInput" 
+            :value="modelValue" autocomplete="email" @keyup.enter="$emit('onEnter')"
+             :name="name" :placeholder="placeholder">
+            <button v-if="hasButton" @click="click">
+                <img :src="icon" class="h-8 w-8" alt="icon">
+            </button>
         </div>
     </div>
 </template>

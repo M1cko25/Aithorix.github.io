@@ -32,7 +32,7 @@ const form = useForm({
                     <!-- OAuth Buttons -->
                     <div class=" mb-6 flex flex-col gap-2 border">
                         <Button social :pic="icon.googleIcon" :style="`py-2 w-full text-lg`" :href="route('googleLogin')" text="Google" />
-                        <Button social :pic="icon.microsoftIcon" :style="`py-2 w-full text-lg`" text="Microsoft" />
+                        <Button social :pic="icon.slackIcon" :style="`py-2 w-full text-lg`" text="Slack" :href="route('slackLogin')"/>
                     </div>
 
                     <div class="relative flex flex-col gap-3">

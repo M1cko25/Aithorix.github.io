@@ -23,10 +23,12 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         'email',
         'password',
         'avatar',
+        'google_email',
         'google_id',
         'google_token',
-        'microsoft_id',
-        'microsoft_token',
+        'slack_email',
+        'slack_id',
+        'slack_token',
     ];
 
     /**

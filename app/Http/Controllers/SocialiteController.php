@@ -25,10 +25,10 @@ class SocialiteController extends Controller
         } else {
             $newUser = User::create([
                 'name' => $gooleUser->name,
-                'email' => $gooleUser->email,
                 'avatar' => $gooleUser->avatar,
+                'google_email' => $gooleUser->email,
                 'google_id' => $gooleUser->id,
-                'password' => Hash::make('password'),
+                'google_token' => $gooleUser->token,
                 'email_verified_at' => now()
             ]);
             if ($newUser) {
@@ -36,6 +36,31 @@ class SocialiteController extends Controller
             }
             return redirect()->route('template');
         }
-        dd($gooleUser);
+    }
+
+    public function slacksLogin()
+    {
+        return Socialite::driver('slack')->redirect();
+    }
+    public function slacksAuth() {
+        $slackUser = Socialite::driver('slack')->user();
+        $user = User::where('slack_id', $slackUser->id)->first();
+        if ($user) {
+            Auth::login($user);
+            return redirect()->route('template');
+        } else {
+            $newUser = User::create([
+                'name' => $slackUser->name,
+                'avatar' => $slackUser->avatar,
+                'slack_email' => $slackUser->email,
+                'slack_id' => $slackUser->id,
+                'slack_token' => $slackUser->token,
+                'email_verified_at' => now()
+            ]);
+            if ($newUser) {
+                Auth::login($newUser);
+            }
+            return redirect()->route('template');
+        }
     }
 }

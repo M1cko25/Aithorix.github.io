@@ -46,9 +46,10 @@ const form = useForm({
                         />
                         <Button 
                             social 
-                            :pic="icon.microsoftIcon" 
+                            :pic="icon.slackIcon" 
                             :style="`py-2 flex-1 text-lg`" 
-                            text="Microsoft" 
+                            text="Slack"
+                            :href="route('slackLogin')"
                         />
                     </div>
 
