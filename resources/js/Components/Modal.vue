@@ -38,7 +38,7 @@ const close = () => {
 };
 </script>
 <template>
-    <div v-if="show" class="w-screen h-screen bg-dark/50 absolute"></div>
+    <div v-if="show" class="w-screen h-screen bg-dark/50 absolute z-8"></div>
     <Transition name="modal-pop">
         <div v-if="show" @click.self="close" class="absolute w-screen h-screen z-10 flex flex-col justify-center items-center">
             <div class="bg-light p-6 rounded-lg shadow-md lg:w-1/2 w-full h-fit">
@@ -51,7 +51,7 @@ const close = () => {
                         <X/>
                     </button>
                 </header>
-                <div class="flex flex-col items-start p-4">
+                <div class="flex flex-col justify-center items-center items-start p-4">
                     <slot/>
                 </div>
             </div>

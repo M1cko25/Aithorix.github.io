@@ -7,6 +7,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use phpseclib3\Crypt\RC2;
 
 class SocialiteController extends Controller
 {
@@ -17,11 +18,14 @@ class SocialiteController extends Controller
 
     public function googleAuth()
     {
-        $gooleUser = Socialite::driver('google')->user();
+        // if ($request->has('error')) {
+        //     return to_route('login')->with('error', 'Google authentication was cancelled.');
+        // }
+       try{ $gooleUser = Socialite::driver('google')->user();
         $user = User::where('google_id', $gooleUser->id)->first();
         if ($user) {
             Auth::login($user);
-            return redirect()->route('template');
+            return redirect()->route('scrum-board');
         } else {
             $newUser = User::create([
                 'name' => $gooleUser->name,
@@ -35,6 +39,9 @@ class SocialiteController extends Controller
                 Auth::login($newUser);
             }
             return redirect()->route('template');
+        }}
+        catch (\Exception $e) {
+            return redirect()->route('login');
         }
     }
 

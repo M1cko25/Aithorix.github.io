@@ -20,49 +20,48 @@ class TemplatesController extends Controller
         ]);
     }
 
-    // public function addProjectMembers(Request $request) {
-    //     $userId = User::where('email', $request->email)->first()->id;
-    //     ProjectMembers::create([
-    //         'project_key' => $request->project_key,
-    //         'user_id' => $userId,
-    //         'role' => $request->role,
-    //     ]);
-
-    //     return redirect()->back()->with('success', 'Member added successfully');
-    // }
-
     public function createProject(Request $request){
-        $request->validate([
+        $credentials = $request->validate([
             'name' => 'required',
-            'key' => 'required',
-            'email' => 'required',
+            'key' => 'required|min:2|max:4',
+            'owner_id' => 'required|integer',
             'template' => 'required',
-        ]);
-        $projectKey = Project::where('key', $request->key)->first();
-        if ($projectKey) {
-            // return redirect()->back()->with('error', 'Project key already exists');
-            return response()->json(['error' => 'Project key already exists'], 400);
+        ]); 
+
+        $projectKey = Project::where('owner_id', $request->owner_id)
+        ->where('key', $request->key)
+        ->exists();
+        if ($projectKey == $request->key) {
+            return redirect()->back()->withErrors([
+                'key' => 'The key is already in use.',
+            ]);
+        }
+
+        foreach($request->members as $member) {
+            $projMember = ProjectMembers::where('user_id', $member['id'])->first();
+            if ($projMember && $projMember->project_key == $request->key) {
+                return redirect()->back()->withErrors([
+                    'key' => 'The key is already been used by another member.',
+                ]);
+            }
         }
 
         $project = Project::create([
             'name' => $request->name,
             'key' => $request->key,
-            'owner_email' => $request->email,
+            'owner_id' => $request->owner_id,
             'template' => $request->template,
         ]);
 
         foreach($request->members as $member) {
-            $userId = User::where('email', $member['email'])
-            ->orWhere('google_email', $member['email'])
-            ->orWhere('slack_email', $member['email'])
-            ->first()->id;
             ProjectMembers::create([
                 'project_key' => $request->key,
-                'user_id' => $userId,
+                'user_id' => $member['id'],
                 'role' => $member['role'],
             ]);
         }
 
-        return redirect()->route('scrum-board', ['key' => $request->key])->with('success', 'Project created successfully');
+        return redirect()->route('scrum-board', ['key' => $credentials['key']])
+            ->with('success', 'Project created successfully');
     }
 }

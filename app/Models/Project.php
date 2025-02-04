@@ -13,7 +13,7 @@ class Project extends Model
     protected $fillable = [
         'name',
         'key',
-        'owner_email',
+        'owner_id',
         'template',
     ];
 }

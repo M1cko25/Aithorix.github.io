@@ -2,25 +2,21 @@
 import Button from '../Components/Button.vue'
 import OtpInput from '../Components/OtpInput.vue'
 import logo from '../../../public/assets/logo.png'
-import { ref } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { ref, watch } from 'vue'
+import { router, usePage, useForm } from '@inertiajs/vue3'
 import { route } from '../../../vendor/tightenco/ziggy/src/js'
 
 const { props } = usePage();
 const otp = ref(['', '', '', ''])
 
-let errorMessage = ref(null);
+const verifyCode = useForm({
+    code: otp.value.join(''),
+    email: props.email
+})
 
-const handleVerify = () => {
-    let otpValue = Number(otp.value.join(''))
-    if (otpValue === props.code) {
-        router.visit(route('verify', { email: props.email }))
-    } else if (otp.value.join('').length != 4){
-        errorMessage.value = 'Code must be 4 digits'
-    } else {
-        errorMessage.value = 'Incorrect code'
-    }
-}
+watch(otp, (newValue) => {
+    verifyCode.code = newValue.join('')
+}, { deep: true })
 
 let resendTime = ref(60);
 let resendReady = ref(true);
@@ -56,14 +52,14 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
             <!-- OTP Input -->
             <div class="mb-8">
                 <OtpInput v-model="otp" />
-                <p v-if="errorMessage" class="text-red-600 text-sm text-center">{{ errorMessage }}</p>
+                <p v-if="$attrs.errorMessage" class="text-red-600 text-sm text-center m-2">{{ $attrs.errorMessage }}</p>
             </div>
 
             <!-- Resend Link -->
             <div class="text-center mb-8">
                 <p class="text-gray-600">
                     Didn't get a code?
-                    <Link v-if="resendReady" @click="resendTimer" class="text-dark font-bold" method="post" as="button" :href="route('register', { email: props.email })">
+                    <Link v-if="resendReady" class="text-dark font-bold" method="post" :href="route('resend-code', { email: props.email })" as="button" @click="resendTimer">
                         Click to resend
                     </Link>
                     <span v-else class="text-gray-600"> Wait for {{ resendTime }} to resend</span>
@@ -79,11 +75,19 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
                     social
                     @click="goBack"
                 />
-                <Button 
-                    text="Verify" 
+                <form @submit.prevent="verifyCode.post('/verify-code')" class="w-full">
+                    <Button v-if="otp.join('').length !== 4 || verifyCode.processing"
+                    disableBtn
+                    text="Verify"
+                    type="submit"
                     :style="`w-full p-2`"
-                    @click="handleVerify"
-                />
+                    />
+                    <Button v-else
+                    text="Verify"
+                    type="submit"
+                    :style="`w-full p-2`"
+                    />
+                </form>
             </div>
         </div>
     </div>

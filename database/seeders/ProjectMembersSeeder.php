@@ -4,20 +4,19 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Project;
+use App\Models\ProjectMembers;
 
-class ProjectSeeder extends Seeder
+class ProjectMembersSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Project::factory()->create([
-            'name' => 'Project 1',
-            'key' => 'PJ1',
-            'owner_id' => 21,
-            'template' => 'Scrum',
+        ProjectMembers::factory()->create([
+            'project_key' => 'PJ1',
+            'user_id' => 21,
+            'role' => 'Scrum Master',
         ]);
     }
 }

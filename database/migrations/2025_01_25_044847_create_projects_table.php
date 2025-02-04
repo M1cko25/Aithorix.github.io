@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('key')->unique();
-            $table->string('owner_email');
+            $table->string('key');
+            $table->integer('owner_id');
+            $table->unique(['owner_id', 'key']);
             $table->string('template');
             $table->timestamps();
         });

@@ -1,7 +1,7 @@
 <script setup>
 import { Search } from 'lucide-vue-next';
 
-defineProps({
+let props = defineProps({
     type: {
         type: String,
         default: 'text'
@@ -40,13 +40,20 @@ defineProps({
     hasButton: {
         type: Boolean,
         default: false
-    }
+    }, Capitalized: {
+        type: Boolean,
+        default: false
+    },
 })
 
 const emit = defineEmits(['update:modelValue']);
 
 function onInput(event) {
-  emit('update:modelValue', event.target.value);
+  if (props.Capitalized) {
+    emit('update:modelValue', event.target.value.toUpperCase());
+  } else {
+    emit('update:modelValue', event.target.value);
+  }
 }
 </script>
 <template>

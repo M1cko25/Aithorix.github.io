@@ -6,6 +6,13 @@ import TextField from '../Components/TextField.vue'
 import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+
 const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 
 const form = useForm({

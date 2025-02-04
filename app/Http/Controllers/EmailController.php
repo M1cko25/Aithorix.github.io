@@ -26,7 +26,33 @@ class EmailController extends Controller
         session(['verification_code' => $code]);
         return Inertia::render('Verification', [
             'email' => $request->email,
-            'code' => $code
+        ]);
+    }
+
+    public function resendCode(Request $request) {
+        $code = rand(1000, 9999);
+        $toEmail = $request->email;
+        Mail::to($toEmail)->send(new VerificationCodeMail($code));
+        session(['verification_code' => $code]);
+        return Inertia::render('Verification', [
+            'email' => $request->email,
+        ]);
+    }
+
+    public function verifyCode(Request $request) {
+        $request->validate([
+            'code' => 'required|numeric|digits:4',
+        ]);
+        $code = (int) $request->code;
+        $storedCode = session('verification_code');
+        if ($code === $storedCode) {
+            return Inertia::render('Setup', [
+                'email' => $request->email,
+            ]);
+        } 
+        return Inertia::render('Verification', [
+            'email' => $request->email,
+            'errorMessage' => 'Invalid verification code'
         ]);
     }
 

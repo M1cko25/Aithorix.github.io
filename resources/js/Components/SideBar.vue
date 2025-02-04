@@ -13,6 +13,20 @@ import {
   Search,
   Filter
 } from 'lucide-vue-next'
+import { route } from '../../../vendor/tightenco/ziggy/src/js'
+
+const props = defineProps({
+  projectItems: {
+    type: Array,
+    default: [
+    { icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard', active: false },
+    { icon: LayoutList, text: 'Board', path: '/scrum/board', active: true },
+    { icon: Clock, text: 'Timeline', path: '/timeline', active: false },
+    { icon: Package, text: 'Backlog', path: '/backlog', active: false },
+    { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+    ]
+  }
+})
 
 const searchQuery = ref('')
 const currentProject = ref('Scrum Project')
@@ -23,13 +37,15 @@ const menuItems = [
   { icon: Star, text: 'Starred', path: '/starred' },
 ]
 
-const projectItems = [
-  { icon: LayoutDashboard, text: 'Dashboard', path: '/dashboard' },
-  { icon: LayoutList, text: 'Board', path: '/board', active: true },
-  { icon: Clock, text: 'Timeline', path: '/timeline' },
-  { icon: Package, text: 'Backlog', path: '/backlog' },
-  { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade' },
-]
+const activateLink = (projItem) => {
+  props.projectItems.forEach(item => {
+    if(projItem == item.text) {
+      item.active = true;
+    } else {
+      item.active = false;
+    }
+  });
+}
 </script>
 
 <template>
@@ -52,10 +68,10 @@ const projectItems = [
     <nav class="px-2">
       <ul class="space-y-1">
         <li v-for="item in menuItems" :key="item.text">
-          <a :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+          <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
             <component :is="item.icon" class="w-5 h-5" />
             {{ item.text }}
-          </a>
+          </Link>
         </li>
       </ul>
     </nav>
@@ -72,15 +88,15 @@ const projectItems = [
       </div>
 
       <ul class="space-y-1 px-2">
-        <li v-for="item in projectItems" :key="item.text">
-          <a 
-            :href="item.path" 
-            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-gray-100"
-            :class="item.active ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+        <li v-for="item in props.projectItems" :key="item.text">
+          <Link
+            :href="item.path" @click="activateLink(item.text)"
+            class="flex items-center gap-3 px-4 py-2 rounded-lg"
+            :class="item.active ? 'bg-blue text-light hover:bg-button-hover' : 'text-gray-700'"
           >
             <component :is="item.icon" class="w-5 h-5" />
             {{ item.text }}
-          </a>
+          </Link>
         </li>
       </ul>
     </div>

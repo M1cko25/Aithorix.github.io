@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Search, Users, Filter, ArrowUpDown, MessageSquare, Star, Share2 } from 'lucide-vue-next'
+import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2 } from 'lucide-vue-next'
 import Button from './Button.vue'
 import KanbanColumn from './KanbanColumn.vue'
 
@@ -39,10 +39,11 @@ const teamMembers = ref([
       </div>
 
       <div class="flex items-center gap-4">
-        <Button text="Ask LIRA" :icon="MessageSquare" />
-        <Button text="Star" :icon="Star" variant="outline" />
-        <Button text="Share" :icon="Share2" variant="outline" />
-        <Button text="Create Meeting" variant="primary" />
+        <button><Share2/></button>
+        <button><Star/></button>
+        <Button text="Create Meeting" variant="primary" :style="`flex px-4 py-2 items-center gap-2`">
+          <Video/>
+        </Button>
       </div>
     </div>
 
@@ -58,9 +59,8 @@ const teamMembers = ref([
         />
       </div>
 
-      <Button text="Person" :icon="Users" variant="outline" />
-      <Button text="Filter" :icon="Filter" variant="outline" />
-      <Button text="Sort" :icon="ArrowUpDown" variant="outline" />
+      <Button text="Members" :icon="Users" variant="outline" />
+      
     </div>
 
     <!-- Kanban Board -->
