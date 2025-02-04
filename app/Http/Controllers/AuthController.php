@@ -29,10 +29,10 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
-        //sign in
+        //log in
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
-            return redirect()->route('template');
+            return redirect()->route('scrum-board');
         }
         return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
     }
@@ -68,10 +68,10 @@ class AuthController extends Controller
     }
 
     public function logout(Request $request) {
-        Auth::logout();
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login');
+        return Inertia::render('Login');
     }
 
     public function resetPass (Request $request) {

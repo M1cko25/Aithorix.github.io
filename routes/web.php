@@ -22,12 +22,15 @@ Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->m
 
 //scrum routes
 Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
+Route::inertia('/scrum/dashboard', 'Scrum/ScrumDashboard')->name('scrum-dashboard')->middleware('auth');
 
 //project creation
 Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
 Route::get('/create-project', [TemplatesController::class, 'templateSelected'])->name('template-selected')->middleware('auth');
 Route::post('/create-project', [TemplatesController::class, 'createProject'])->name('create-project')->middleware('auth');
 Route::post('/project-members', [TemplatesController::class, 'addProjectMembers'])->name('add-members')->middleware('auth');
+Route::post('/verify-code', [EmailController::class, 'verifyCode'])->name('verify-code');
+Route::post('/resend-code', [EmailController::class, 'resendCode'])->name('resend-code');
 
 //Auth posts
 Route::post('/login', [AuthController::class, 'login']);

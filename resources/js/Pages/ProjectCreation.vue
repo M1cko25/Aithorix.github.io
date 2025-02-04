@@ -14,10 +14,11 @@ import axios from 'axios';
 const searchResults = ref([]);
 const isSearching = ref(false);
 let projectName = ref('');
+let memberToRemoveId = ref(null);
 
 const props = usePage().props;
-
-let projectKey = computed(() => {
+let projectKey = ref('');
+let generatedKey = computed( () => {
   if (!projectName.value) return '';
   
   const words = projectName.value.split(' ');
@@ -35,11 +36,17 @@ let projectKey = computed(() => {
   return words.map(word => word[0]).join('').slice(0, 4).toUpperCase();
 });
 
+watch(projectName, (newValue) => {
+  if (newValue) {
+    projectKey.value = generatedKey.value;
+  }
+});
+
 let member = ref('');
 
 const members = ref([
   {
-    id: 1,
+    id: props.auth.user.id,
     name: props.auth.user.name,
     email: props.auth.user.email,
     role: 'Scrum Master',
@@ -59,8 +66,11 @@ const roles = [
 
 const form = useForm({
     name: projectName.value,
-    key: projectKey,
+    key: projectKey.value,
+    owner_id: props.auth.user.id,
     email : props.auth.user.email,
+    google_email: props.auth.user.google_email,
+    slack_email: props.auth.user.slack_email,
     template: props.selectedTemplate.selectedTemplate,
     members: members
 })
@@ -72,12 +82,9 @@ watch(members, (newValue) => {
 watch(projectName, (newValue) => {
     form.name = newValue;
 });
-
-const membersForm = useForm({
-    projectKey: projectKey,
-    email: null,
-    role: null,
-})
+watch(projectKey, (newValue) => {
+    form.key = newValue;
+});
 
 watch(member, async (newValue) => {
   if (newValue.length >= 2) {
@@ -102,7 +109,7 @@ watch(member, async (newValue) => {
 // Add function to add member
 const addMember = (user) => {
   members.value.push({
-    id: members.value.length + 1,
+    id: user.id,
     name: user.name,
     email: user.email || user.google_email || user.slack_email,
     role: roles[0], // Default role
@@ -114,10 +121,20 @@ const addMember = (user) => {
   member.value = ''; // Clear search
 };
 
+const isRemoveModal = ref(false);
+const RemoveOpen = (memberId) => {
+  memberToRemoveId.value = memberId;
+  isRemoveModal.value = true;
+}
+
 // Remove member function
-const removeMember = (memberId) => {
-  members.value = members.value.filter(member => member.id !== memberId);
-  form.members = members.value;
+const removeMember = () => {
+  if (memberToRemoveId.value !== null) {
+    members.value = members.value.filter(member => member.id !== memberToRemoveId.value);
+    form.members = members.value;
+    memberToRemoveId.value = null;
+    isRemoveModal.value = false;
+  }
 };
 
 // add custom role function
@@ -163,6 +180,8 @@ const template = props.selectedTemplate.selectedTemplate;
 const createProject = () => {
   form.post('/create-project');
 }
+
+
 </script>
 <template>
     <Head title="| Create Project"/>
@@ -202,6 +221,7 @@ const createProject = () => {
                       name="projectKey"
                       placeholder=""
                       :style="`w-1/2`"
+                      Capitalized
                       />
                       <p v-if="form.errors.key && !form.errors.name" class="text-red-600">{{form.errors.key}}</p>
                     </div>
@@ -305,12 +325,21 @@ const createProject = () => {
                   <TextField v-if="member.role === 'Custom'" v-model="customRole" 
                   hasButton :icon="Icons.plusIcon" :style="`w-3/4 h-10`" 
                   @click="addCustomRole(member.id)" @onEnter="addCustomRole(member.id)"  />
-                  <button @click="removeMember(member.id)">
+                  <button @click="RemoveOpen(member.id)">
                     <Delete class="text-red-600"/>
                   </button>
                 </div>
               </div>
              </div>
+          </Modal>
+          <Modal v-model:modelValue="isRemoveModal">
+            <div class="flex flex-col justify-center items-center gap-4">
+              <p class="text-lg">are you sure you want to remove this member?</p>
+              <div class="flex flex-row gap-2 justify-between w-full">
+                <Button text="No" closeBtn :style="`px-4 py-2 gap-2 w-full`" :click="()=> {isRemoveModal = false}" />
+                <Button text="Yes" :style="`px-4 py-2 gap-2 w-full`" :click="removeMember" />
+              </div>
+            </div>
           </Modal>
     </div>
 </template>

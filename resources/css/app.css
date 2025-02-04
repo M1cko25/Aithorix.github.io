@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 .btn-primary {
-    @apply bg-button hover:bg-button-hover text-light text-center rounded;
+    @apply bg-button hover:bg-button-hover text-light text-center rounded flex justify-center;
 }
 
 .btn-cancel {
-    @apply bg-transparent hover:bg-neutral text-dark border border-dark text-center rounded;
+    @apply bg-transparent hover:bg-neutral text-dark border border-dark text-center rounded flex justify-center;
 }
 
 .txt-primary {
