@@ -59,8 +59,9 @@ const form = useForm({
               class="text-red-600 text-sm">{{ form.errors.password_confirmation }}</p>
             </div>
             
-            <Button 
-              text="Reset Password" 
+            <Button
+              :disableBtn="form.processing"
+              text="Reset Password"
               :style="`py-2 w-full text-lg mt-4`" 
               type="submit"
             />
@@ -72,18 +73,9 @@ const form = useForm({
         </div>
       </div>
     </div>
-
-    <div v-if="form.wasSuccessful" v-motion="pop" class="absolute flex flex-col items-center bg-light p-8 gap-5 rounded-lg shadow">
-      <div class="w-full max-w-2xl p-12 mx-4 text-center transition-all transform bg-light">
-        <!-- Success Icon -->
-        <div class="flex items-center justify-center w-24 h-24 mx-auto bg-green-100 rounded-full">
-            <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-        </div>
-      </div>
-      <h1>Your Password is successfully updated</h1>
-      <Link :href="route('login')" class="btn-primary px-5 py-2">Login Now</Link>
+    <div v-if="form.wasSuccessful" v-motion="pop" class="absolute popup top-0 right-0 flex 
+    flex-col gap-6 m-4 bg-success md:p-6 text-white rounded-lg shadow">
+      <h1>Your password successfully updated</h1>
     </div>
   </div>
 </template>

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 use phpseclib3\Crypt\RC2;
 
 class SocialiteController extends Controller
@@ -18,12 +20,17 @@ class SocialiteController extends Controller
 
     public function googleAuth()
     {
-        // if ($request->has('error')) {
-        //     return to_route('login')->with('error', 'Google authentication was cancelled.');
-        // }
        try{ $gooleUser = Socialite::driver('google')->user();
         $user = User::where('google_id', $gooleUser->id)->first();
         if ($user) {
+            $userId = User::where('google_id', $gooleUser->id)->value('id');
+            $project = Project::where('owner_id', $userId)->first();
+            if (!$project) {
+                Auth::login($user);
+                return redirect()->route('template');
+            }
+            session()->put('project', $project);
+            session()->put('user', $user);
             Auth::login($user);
             return redirect()->route('scrum-board');
         } else {
@@ -36,6 +43,7 @@ class SocialiteController extends Controller
                 'email_verified_at' => now()
             ]);
             if ($newUser) {
+                session()->put('user', $newUser);
                 Auth::login($newUser);
             }
             return redirect()->route('template');
@@ -53,6 +61,14 @@ class SocialiteController extends Controller
         $slackUser = Socialite::driver('slack')->user();
         $user = User::where('slack_id', $slackUser->id)->first();
         if ($user) {
+            $userId = User::where('slack_id', $slackUser->id)->value('id');
+            $project = Project::where('owner_id', $userId)->first();
+            if (!$project) {
+                Auth::login($user);
+                return redirect()->route('template');
+            }
+            session()->put('project', $project);
+            session()->put('user', $user);
             Auth::login($user);
             return redirect()->route('template');
         } else {
@@ -65,6 +81,7 @@ class SocialiteController extends Controller
                 'email_verified_at' => now()
             ]);
             if ($newUser) {
+                session()->put('user', $newUser);
                 Auth::login($newUser);
             }
             return redirect()->route('template');

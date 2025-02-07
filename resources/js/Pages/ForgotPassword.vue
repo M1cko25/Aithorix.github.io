@@ -48,6 +48,7 @@ let form = useForm({
               text="Reset Password" 
               :style="`py-2 w-full text-lg mt-4`" 
               type="submit"
+              :disableBtn="form.processing"
             />
           </form>
         </div>

@@ -60,7 +60,7 @@ class TemplatesController extends Controller
                 'role' => $member['role'],
             ]);
         }
-
+        session()->put('project', $project);
         return redirect()->route('scrum-board', ['key' => $credentials['key']])
             ->with('success', 'Project created successfully');
     }

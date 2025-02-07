@@ -18,7 +18,7 @@ const showLogin = () => {
 
 <template>
   <div v-if="isShowLogin" class="absolute w-screen h-screen " @click="showLogin"></div>
-  <header class="h-16 bg-white border-b fixed top-0 left-64 right-0 flex items-center justify-between px-6">
+  <header class="h-16 bg-light border-b fixed top-0 left-64 right-0 flex items-center justify-between px-6">
     <div class="flex items-center">
       <img :src="Logo" alt="Aithorix" class="h-8" />
     </div>
