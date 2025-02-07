@@ -5,7 +5,9 @@ import { ref } from 'vue'
 import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2 } from 'lucide-vue-next'
 import Button from '../../Components/Button.vue'
 import KanbanColumn from '../../Components/KanbanColumn.vue'
+import { usePage } from '@inertiajs/vue3'
 
+const page = usePage().props;
 const searchQuery = ref('')
 const columns = ref([
   { id: 'todo', title: 'To Do', tasks: [] },
@@ -29,7 +31,7 @@ const teamMembers = ref([
     <!-- Board Header -->
     <div class="p-6 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <h1 class="text-2xl font-bold">Board</h1>
+        <h1 class="text-2xl font-bold">{{ page.projectName }}<span class="text-xl font-normal"> > Board</span></h1>
         <div class="flex items-center -space-x-2">
           <!-- <img 
             v-for="member in teamMembers" 

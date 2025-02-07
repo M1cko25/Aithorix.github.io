@@ -50,7 +50,7 @@ const form = useForm({
                         <TextField :icon="icon.emailIcon" label="Email" v-model="form.email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
                         <p v-if="form.errors.email" class="text-red-600 text-sm text-center">{{ form.errors.email }}</p>
                     </div>
-                    <Button text="Submit" type="submit" :style="`py-2 w-full text-lg`"/>
+                    <Button :disableBtn="form.processing" text="Submit" type="submit" :style="`py-2 w-full text-lg`"/>
                     </form>
                 </div>
 

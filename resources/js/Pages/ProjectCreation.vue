@@ -287,7 +287,7 @@ const createProject = () => {
                 </div>
                 <div class="flex flex-row justify-end">
                   <Button :pic="Icons.startIcon" :click="createProject" cta text="Create Project" 
-                  :style="`px-4 py-2 flex gap-2 w-fit`" :disabled="!projectName || !projectKey" />
+                  :style="`px-4 py-2 flex gap-2 w-fit`" :disableBtn="!projectName || !projectKey || form.processing" />
                 </div>
             </div>
          </div>

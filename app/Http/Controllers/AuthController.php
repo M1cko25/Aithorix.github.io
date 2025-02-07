@@ -32,6 +32,7 @@ class AuthController extends Controller
         //log in
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
+            session()->put('user', $user);
             return redirect()->route('scrum-board');
         }
         return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
@@ -62,7 +63,7 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
             'email_verified_at' => now()
         ]);
-
+        session()->put('user', $user);
         Auth::login($user);
         return redirect()->route('template');
     }
@@ -71,7 +72,7 @@ class AuthController extends Controller
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return Inertia::render('Login');
+        return redirect()->route('login');
     }
 
     public function resetPass (Request $request) {

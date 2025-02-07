@@ -3,30 +3,40 @@ import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue'
 import { ref } from 'vue'
 import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import VueCal from 'vue-cal';
+import 'vue-cal/dist/vuecal.css';
+import VueApexCharts from 'vue3-apexcharts';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage().props;
+const events = ref([
+  { start: '2025-02-06 10:00', end: '2025-02-06 12:00', title: 'Meeting' },
+  { start: '2025-02-07 14:00', end: '2025-02-07 15:30', title: 'Call with client' },
+]);
 
 const stats = ref([
   { 
     icon: ClipboardList,
-    label: 'Task Created',
-    value: 12,
-    period: 'at the last 7 days'
+    label: 'Pending Backlogs',
+    value: page.pendingBacklogs,
+    period: ''
   },
   {
     icon: CheckSquare,
-    label: 'Task Completed',
-    value: 5,
+    label: 'Backlog Completed',
+    value: page.completedBacklogs,
     period: 'at the last 7 days'
   },
   {
     icon: Video,
     label: 'Meeting Created',
-    value: 4,
+    value: page.meetingCreated,
     period: 'at the last 7 days'
   },
   {
     icon: Calendar,
-    label: 'Task Due',
-    value: 3,
+    label: 'Sprints',
+    value: page.sprints,
     period: 'in the last 7 days'
   }
 ])
@@ -80,11 +90,55 @@ const statusOverview = ref({
   done: 5
 })
 
-const selectDate = (dateSelected)=>{
-    // currentDate = dateSelected;
-    let date = new Date(d.getFullYear(), d.getMonth(), 29).getDate();
-console.log(date);
-}
+const chartOptions = ref({
+  chart: {
+    type: 'donut',
+  },
+  labels: ['To Do', 'In Progress', 'Done'],
+  colors: ['#ff6384', '#36a2eb', '#ffce56'],
+  legend: {
+    position: 'right',
+    horizontalAlign: 'center',
+  },
+});
+
+// Chart Series (Values)
+const chartSeries = ref([40, 25, 35]);
+const radialSeries = ref([67])
+const radialOptions = ref({
+  chart: {
+    type: "radialBar",
+  },
+  plotOptions: {
+    radialBar: {
+      hollow: {
+        size: "50%"
+      },
+      dataLabels: {
+        showOn: "always",
+        name: {
+          offsetY: 0,
+          show: true,
+          color: "#888",
+          fontSize: "15px",
+          formatter: function (val) {
+            return val.split('\n')  // This helps handle the line break
+          }
+        },
+        value: {
+          color: "#111",
+          fontSize: "30px",
+          show: false
+        }
+      }
+    }
+  },
+
+  stroke: {
+    lineCap: "round",
+  },
+  labels: ["9\n/12"],
+})
 </script>
 
 <template>
@@ -92,7 +146,7 @@ console.log(date);
   <Sidebar />
   <div class="ml-64 pt-16 p-6">
     <div class="p-12 flex items-center">
-        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        <h1 class="text-2xl font-bold mb-6">{{ page.projectName }}<span class="text-xl font-normal"> > Dashboard</span></h1>
     </div>
 
     <!-- Stats Cards -->
@@ -100,7 +154,7 @@ console.log(date);
       <div 
         v-for="stat in stats" 
         :key="stat.label"
-        class="bg-white rounded-xl p-6 shadow-sm"
+        class="bg-light rounded-xl p-6 shadow-sm"
       >
         <div class="flex items-start justify-between">
           <div>
@@ -116,10 +170,11 @@ console.log(date);
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Recent Activities -->
-      <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
-        <h2 class="font-semibold mb-4">Recent Activities</h2>
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-row gap-6">
+        <!-- Recent Activities -->
+      <div class="w-full bg-light rounded-xl p-6 shadow-sm">
+        <h2 class="font-semibold mb-4 text-2xl">Recent Activities</h2>
         <p class="text-sm text-gray-500 mb-6">View all the activities that is made in the project</p>
         
         <div class="space-y-6">
@@ -138,107 +193,55 @@ console.log(date);
           </div>
         </div>
       </div>
+      <!-- Status Overview -->
+      <div class="bg-light w-full rounded-xl p-6 shadow-sm">
+          <h2 class="font-semibold text-xl mb-4">Status Overview</h2>
+          <p class="text-sm text-gray-500 mb-6">Get the status of project's issues</p>
 
-      <!-- Calendar -->
-      <div class="bg-white rounded-xl p-6 shadow-sm">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="font-semibold">{{ calendar.month }}</h2>
-          <div class="flex gap-2">
-            <button class="p-1 hover:bg-gray-100 rounded">
-              <ChevronLeft class="w-4 h-4" />
-            </button>
-            <button class="p-1 hover:bg-gray-100 rounded">
-              <ChevronRight class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-2 text-center mb-2">
-          <div v-for="day in calendar.days" :key="day" class="text-xs text-gray-500">
-            {{ day }}
-          </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-2 text-center">
-          <button 
-            v-for="date in calendar.dates" 
-            :key="date" @click="selectDate(date)"
-            class="aspect-square flex items-center justify-center text-sm rounded-full hover:bg-gray-100"
-            :class="date === currentDate ? 'bg-button text-white hover:bg-blue' : ''"
-          >
-            {{ date }}
-          </button>
+          <!-- Donut Chart Placeholder -->
+          <div class="relative flex items-center justify-center">
+              <VueApexCharts 
+                type="donut"
+                :options="chartOptions"
+                :series="chartSeries"
+                width="100%"
+              />
+              <div class="absolute rounded-full w-24 h-24 shadow-xl -translate-x-14 flex flex-col justify-center items-center">
+                <p class="text-xl font-bold">24</p>
+                <p class="text-sm">Total Issues</p>
+              </div>
+            </div>
         </div>
       </div>
 
       <!-- Meeting Participation -->
-      <div class="bg-white rounded-xl p-6 shadow-sm">
-        <h2 class="font-semibold mb-4">Meeting Participation</h2>
-        <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>
-        
-        <div class="flex justify-between items-center mb-6">
-          <select class="border rounded-lg px-3 py-2">
-            <option>12/5/2024</option>
-          </select>
-          <select class="border rounded-lg px-3 py-2">
-            <option>11am - 1pm</option>
-          </select>
-        </div>
+      <div class="flex flex-row gap-6">
+        <div class="bg-light w-full rounded-xl p-6 shadow-sm">
+          <h2 class="font-semibold text-xl mb-4">Meeting Participation</h2>
+          <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>
+          
+          <div class="flex justify-between items-center mb-6">
+            <select class="border rounded-lg px-3 py-2">
+              <option>12/5/2024</option>
+            </select>
+            <select class="border rounded-lg px-3 py-2">
+              <option>11am - 1pm</option>
+            </select>
+          </div>
 
-        <!-- Donut Chart Placeholder -->
-        <div class="relative w-48 h-48 mx-auto">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="text-center">
-              <div class="text-3xl font-bold">9</div>
-              <div class="text-sm text-gray-500">/12</div>
+          <!-- Radial Chart Placeholder -->
+            <div class="relative flex flex-row items-center justify-center">
+              <VueApexCharts 
+                :options="radialOptions"
+                :series="radialSeries"
+                height="180"
+              />
+              <ul class="list-disc">
+                <li>3 present</li>
+                <li>2 absent</li>
+                <li>7 late</li>
+              </ul>
             </div>
-          </div>
-        </div>
-
-        <div class="space-y-2 mt-6">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-            <span class="text-sm">5 on time</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span class="text-sm">4 late attendees</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-            <span class="text-sm">3 not present</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Status Overview -->
-      <div class="bg-white rounded-xl p-6 shadow-sm">
-        <h2 class="font-semibold mb-4">Status Overview</h2>
-        <p class="text-sm text-gray-500 mb-6">Get the status of project's issues</p>
-
-        <!-- Donut Chart Placeholder -->
-        <div class="relative w-48 h-48 mx-auto">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="text-center">
-              <div class="text-3xl font-bold">24</div>
-              <div class="text-sm text-gray-500">Total Issues</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-2 mt-6">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-green-500"></div>
-            <span class="text-sm">To Do (12)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span class="text-sm">In Progress (7)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span class="text-sm">Done (5)</span>
-          </div>
         </div>
       </div>
     </div>

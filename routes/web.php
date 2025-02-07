@@ -10,6 +10,7 @@ use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Validation\Rules\Email;
 use App\Http\Controllers\TemplatesController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ScrumController;
 
 //routes
 Route::inertia('/', 'Landing')->name('landing');
@@ -21,8 +22,9 @@ Route::inertia('/template-selection', 'Template')->name('template')->middleware(
 Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->middleware('guest');
 
 //scrum routes
-Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
-Route::inertia('/scrum/dashboard', 'Scrum/ScrumDashboard')->name('scrum-dashboard')->middleware('auth');
+Route::get('/scrum/board', [ScrumController::class, 'getProjectDetails'])->name('scrum-board')->middleware('auth');
+Route::get('/scrum/dashboard', [ScrumController::class, 'getDashboardDatas'])->name('scrum-dashboard')->middleware('auth');
+// Route::inertia('/scrum/dashboard', 'Scrum/ScrumDashboard')->name('scrum-dashboard')->middleware('auth');
 
 //project creation
 Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
@@ -54,4 +56,4 @@ Route::controller(SocialiteController::class)->group(function () {
 Route::get('/search-users', [UserController::class, 'searchUsers'])->name('search-users')->middleware('auth');
 
 //logout
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');

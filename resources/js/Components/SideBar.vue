@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { 
   Home, 
   Briefcase, 
@@ -13,7 +13,10 @@ import {
   Search,
   Filter
 } from 'lucide-vue-next'
-import { route } from '../../../vendor/tightenco/ziggy/src/js'
+import { usePage } from '@inertiajs/vue3'
+
+// Add this after your existing props definition
+const page = usePage()
 
 const props = defineProps({
   projectItems: {
@@ -46,10 +49,20 @@ const activateLink = (projItem) => {
     }
   });
 }
+
+watch(
+  () => page.url,
+  (newUrl) => {
+    props.projectItems.forEach(item => {
+      item.active = item.path === newUrl
+    })
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
-  <aside class="w-64 bg-white border-r h-screen fixed left-0 top-0">
+  <aside class="w-64 bg-light border-r h-screen fixed left-0 top-0">
     <!-- Search Section -->
     <div class="p-4">
       <div class="relative">
