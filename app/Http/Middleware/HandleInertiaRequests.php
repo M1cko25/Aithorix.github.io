@@ -40,6 +40,12 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn () => $request->user()
                 ? $request->user()->only('avatar', 'name', 'email', 'id')
                 : null,
+            ],
+            'project' => [
+                'project' => fn () => session()->get('project')
+                ? session()->get('project')->only('name', 'key', 'id')
+                : null,
+                'members' => fn () => session()->get('project')
             ]
         ]);
     }

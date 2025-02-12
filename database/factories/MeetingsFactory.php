@@ -25,7 +25,7 @@ class MeetingsFactory extends Factory
             'start_time' => $this->faker->dateTimeBetween('now', '+1 week'),
             'end_time' => $this->faker->dateTimeBetween('+1 week', '+2 weeks'),
             'project_id' => 1,
-            'creator_id' => 21,
+            'creator_id' => 3,
             'created_at' => now(),
             'updated_at' => now(),
         ];

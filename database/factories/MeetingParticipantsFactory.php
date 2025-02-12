@@ -17,7 +17,9 @@ class MeetingParticipantsFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'meeting_id' => $this->faker->numberBetween(1, 10),
+            'user_id' => $this->faker->numberBetween(1, 3),
+            'status' => $this->faker->randomElement(['on time', 'late', 'absent']),
         ];
     }
 }

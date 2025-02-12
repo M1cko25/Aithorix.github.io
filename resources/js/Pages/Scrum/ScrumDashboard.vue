@@ -3,10 +3,10 @@ import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue'
 import { ref } from 'vue'
 import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import VueCal from 'vue-cal';
 import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 
 const page = usePage().props;
 const events = ref([
@@ -18,7 +18,7 @@ const stats = ref([
   { 
     icon: ClipboardList,
     label: 'Pending Backlogs',
-    value: page.pendingBacklogs,
+    value: page.toDoBacklogs + page.progressBacklogs,
     period: ''
   },
   {
@@ -41,29 +41,7 @@ const stats = ref([
   }
 ])
 
-const activities = ref([
-  {
-    user: { name: 'Mico Jake', avatar: '/placeholder.svg?height=32&width=32' },
-    action: 'created a new task named',
-    task: 'Task 1',
-    destination: 'To Do',
-    time: '1 day ago'
-  },
-  {
-    user: { name: 'Mico Jake', avatar: '/placeholder.svg?height=32&width=32' },
-    action: 'created a new task named',
-    task: 'Task 2',
-    destination: 'To Do',
-    time: '1 day ago'
-  },
-  {
-    user: { name: 'Andrei Odango', avatar: '/placeholder.svg?height=32&width=32' },
-    action: 'change the status of',
-    task: 'Task 1',
-    destination: 'In Progress',
-    time: '1 day ago'
-  }
-])
+const activities = page.activities;
 let currentDate = ref(24)
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -95,15 +73,16 @@ const chartOptions = ref({
     type: 'donut',
   },
   labels: ['To Do', 'In Progress', 'Done'],
-  colors: ['#ff6384', '#36a2eb', '#ffce56'],
+  colors: ['#E4080A', '#30FAFA', '#7DDA58'],
   legend: {
     position: 'right',
     horizontalAlign: 'center',
   },
 });
 
+const totalIssues = ref(page.toDoBacklogs + page.progressBacklogs + page.completedBacklogs);
 // Chart Series (Values)
-const chartSeries = ref([40, 25, 35]);
+const chartSeries = ref([page.toDoBacklogs, page.progressBacklogs, page.completedBacklogs]);
 const radialSeries = ref([67])
 const radialOptions = ref({
   chart: {
@@ -122,7 +101,7 @@ const radialOptions = ref({
           color: "#888",
           fontSize: "15px",
           formatter: function (val) {
-            return val.split('\n')  // This helps handle the line break
+            return val.split('\n')
           }
         },
         value: {
@@ -137,16 +116,40 @@ const radialOptions = ref({
   stroke: {
     lineCap: "round",
   },
-  labels: ["9\n/12"],
+  labels: [page.onTimeParticipant + page.lateParticipant + "\n/" + page.totalMembers],
 })
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric'
+  });
+}
+
+
+const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
+const meetingTimes = ref(page.meetings.map(meeting => {
+    const formatTime = (timeStr) => {
+        const time = new Date(`2000-01-01 ${timeStr.split(' ')[1]}`);
+        return time.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+    
+    return `${formatTime(meeting.start_time)} - ${formatTime(meeting.end_time)}`;
+}));
 </script>
 
 <template>
   <Header />
-  <Sidebar />
-  <div class="ml-64 pt-16 p-6">
+  <Sidebar id="sidebar" />
+  <div class="md:ml-64 md:pt-16 md:p-6 p-2" id="content">
     <div class="p-12 flex items-center">
-        <h1 class="text-2xl font-bold mb-6">{{ page.projectName }}<span class="text-xl font-normal"> > Dashboard</span></h1>
+        <h1 class="text-2xl font-bold mb-6">{{ $page.props.project.project.name }}<span class="text-xl font-normal"> > Dashboard</span></h1>
     </div>
 
     <!-- Stats Cards -->
@@ -171,24 +174,27 @@ const radialOptions = ref({
     </div>
 
     <div class="flex flex-col gap-6">
-      <div class="flex flex-row gap-6">
+      <div class="flex md:flex-row flex-col gap-6">
         <!-- Recent Activities -->
-      <div class="w-full bg-light rounded-xl p-6 shadow-sm">
+      <div class="w-full h-80 bg-light rounded-xl p-6 shadow-sm">
         <h2 class="font-semibold mb-4 text-2xl">Recent Activities</h2>
         <p class="text-sm text-gray-500 mb-6">View all the activities that is made in the project</p>
         
-        <div class="space-y-6">
+        <div class="space-y-6 overflow-y-scroll h-48">
           <div v-for="(activity, index) in activities" :key="index" class="flex gap-4">
-            <img :src="activity.avatar" :alt="activity.user.name" class="w-8 h-8 rounded-full" />
+            <img v-if="activity.user.avatar" :src="activity.user.avatar" :alt="activity.user.name" class="w-8 h-8 rounded-full" />
+            <div v-else class="w-8 h-8 rounded-full bg-blue flex items-center justify-center lg:text-sm text-xs text-light">
+              <p>{{ activity.user.name.slice(0,2).toUpperCase() }}</p>
+            </div>
             <div>
               <p class="text-sm">
                 <span class="font-medium">{{ activity.user.name }}</span>
                 {{ activity.action }}
-                <span class="text-blue-500">"{{ activity.task }}"</span>
+                <span>{{ activity.description }}</span>
                 in
-                <span class="text-blue-500">{{ activity.destination }}</span>
+                <span class="text-blue">{{ activity.update }}</span>
               </p>
-              <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ activity.date }}</p>
             </div>
           </div>
         </div>
@@ -207,7 +213,7 @@ const radialOptions = ref({
                 width="100%"
               />
               <div class="absolute rounded-full w-24 h-24 shadow-xl -translate-x-14 flex flex-col justify-center items-center">
-                <p class="text-xl font-bold">24</p>
+                <p class="text-xl font-bold">{{ totalIssues }}</p>
                 <p class="text-sm">Total Issues</p>
               </div>
             </div>
@@ -221,12 +227,13 @@ const radialOptions = ref({
           <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>
           
           <div class="flex justify-between items-center mb-6">
-            <select class="border rounded-lg px-3 py-2">
-              <option>12/5/2024</option>
+            <select
+            class="border rounded-lg px-3 py-2">
+              <option v-for="date in meetingDates" :key="date">{{ formatDate(date) }}</option>
             </select>
-            <select class="border rounded-lg px-3 py-2">
-              <option>11am - 1pm</option>
-            </select>
+            <!-- <select class="border rounded-lg px-3 py-2">
+              <option v-for="times in meetingTimes" :key="times">{{ times }}</option>
+            </select> -->
           </div>
 
           <!-- Radial Chart Placeholder -->
@@ -237,9 +244,9 @@ const radialOptions = ref({
                 height="180"
               />
               <ul class="list-disc">
-                <li>3 present</li>
-                <li>2 absent</li>
-                <li>7 late</li>
+                  <li>{{ page.onTimeParticipant }} on time</li>
+                  <li>{{ page.absentParticipant }} absent</li>
+                  <li>{{ page.lateParticipant }} late</li>
               </ul>
             </div>
         </div>

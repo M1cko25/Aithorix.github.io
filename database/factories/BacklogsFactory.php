@@ -20,7 +20,7 @@ class BacklogsFactory extends Factory
             'title' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
             'project_id' => 1,
-            'creator_id' => 21,
+            'creator_id' => 3,
             'status' => $this->faker->randomElement(['pending', 'in_progress', 'completed']),
             'created_at' => now(),
             'updated_at' => now(),

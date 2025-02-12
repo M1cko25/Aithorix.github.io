@@ -24,7 +24,7 @@ const props = defineProps({
     default: [
     { icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard', active: false },
     { icon: LayoutList, text: 'Board', path: '/scrum/board', active: true },
-    { icon: Clock, text: 'Timeline', path: '/timeline', active: false },
+    { icon: Clock, text: 'Timeline', path: '/scrum/timeline', active: false },
     { icon: Package, text: 'Backlog', path: '/backlog', active: false },
     { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
     ]
@@ -62,7 +62,7 @@ watch(
 </script>
 
 <template>
-  <aside class="w-64 bg-light border-r h-screen fixed left-0 top-0">
+  <aside class="md:w-64 absolute md:left-0 -left-full bg-light border-r h-screen fixed top-0">
     <!-- Search Section -->
     <div class="p-4">
       <div class="relative">

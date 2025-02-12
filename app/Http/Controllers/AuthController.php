@@ -8,8 +8,12 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use App\Mail\WelcomeMail;
+use App\Models\Project;
+use App\Models\ProjectMembers;
 
 class AuthController extends Controller
 {
@@ -20,52 +24,73 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Check if user exists first
-        $user = User::where('email', $request->email)->first();
-        
-        if (!$user) {
-            return redirect()->back()->withErrors([
-                'email' => 'Email not found'
-            ])->onlyInput('email');
-        }
+        try {
+            // Check if user exists first
+            $user = User::where('email', $request->email)->first();
+            $userId = User::where('email', $request->email)->value('id');
+            $project = Project::where('owner_id', $userId)->first();
+            $members = ProjectMembers::where('project_id', $project->id)->get();
+            if (!$project) {
+                Auth::login($user);
+                return redirect()->route('template');
+            }
+            if (!$user) {
+                return redirect()->back()->withErrors([
+                    'email' => 'Email not found'
+                ])->onlyInput('email');
+            }
 
-        //log in
-        if (Auth::attempt($credentials, $request->remember)) {
-            $request->session()->regenerate();
-            session()->put('user', $user);
-            return redirect()->route('scrum-board');
+            //log in
+            if (Auth::attempt($credentials, $request->remember)) {
+                $request->session()->regenerate();
+                session()->put('user', $user);
+                session()->put('project', $project);
+                session()->put('members', $members);
+                return redirect()->route('scrum-board');
+            }
+            return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
         }
-        return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
     }
 
     public function verify(Request $request) {
 
-        if ($request->email == null) {
-            return redirect()->back()->withErrors(['email' => 'Email is required']);
+        try {
+            if ($request->email == null) {
+                return redirect()->back()->withErrors(['email' => 'Email is required']);
+            }
+            return Inertia::render('Setup', [
+                'email' => $request->email,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
         }
-        return Inertia::render('Setup', [
-            'email' => $request->email,
-        ]);
     }
 
     public function register(Request $request) {
-        $request->validate([
-            'name' => 'required|unique:users,name|max:255|regex:/^[a-zA-Z\s]+$/',
-            'password' => 'required|min:8|max:255',
-            'confirmPassword' => 'required|same:password',
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'avatar' => $request->avatar,
-            'google_id' => $request->google_id,
-            'password' => bcrypt($request->password),
-            'email_verified_at' => now()
-        ]);
-        session()->put('user', $user);
-        Auth::login($user);
-        return redirect()->route('template');
+        try {
+            $request->validate([
+                'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
+                'password' => 'required|min:8|max:255',
+                'confirmPassword' => 'required|same:password',
+            ]);
+    
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'avatar' => $request->avatar,
+                'google_id' => $request->google_id,
+                'password' => bcrypt($request->password),
+                'email_verified_at' => now()
+            ]);
+            Auth::login($user);
+            session()->put('user', $user);
+            Mail::to($request->email)->send(new WelcomeMail($request->name));
+            return redirect()->route('template');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
+        }
     }
 
     public function logout(Request $request) {

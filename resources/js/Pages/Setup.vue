@@ -4,7 +4,12 @@ import TextField from '../Components/TextField.vue'
 import icon from '../Icons.js';
 import logo from '../../../public/assets/logo.png'
 import { ref } from 'vue'
-import { useForm, router } from '@inertiajs/vue3'
+import { useForm, router, usePage } from '@inertiajs/vue3'
+import Modal from '../Components/Modal.vue'
+
+const page = usePage();
+
+const url = ref(page.props.url)
 
 const props = defineProps({
     email: {
@@ -47,7 +52,7 @@ const form = useForm({
                     v-model="form.name" 
                     :icon="icon.userIcon" 
                     label="fullName" 
-                    type="text" 
+                    type="text"
                     name="fullName"
                     labeltxt="Full Name"
                     placeholder="Jon Doe"
@@ -87,7 +92,7 @@ const form = useForm({
                 />
             </form>
         </div>
-        <div v-if="form.processing" class="absolute bg-light rounded-xl shadow-lg p-6 flex flex-col gap-4">
+        <Modal v-if="form.processing" v-model:modelValue="form.processing" class="absolute bg-light rounded-xl shadow-lg p-6 flex flex-col gap-4">
             <h1>We're making your account please wait</h1>
             <div class="flex justify-center items-center">
                 <div class="flex flex-row gap-2">
@@ -96,7 +101,6 @@ const form = useForm({
                     <div class="w-4 h-4 rounded-full bg-blue animate-bounce [animation-delay:-.5s]"></div>
                 </div>
             </div>
-
-        </div>
+        </Modal>
     </div>
 </template>

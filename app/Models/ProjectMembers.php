@@ -10,8 +10,11 @@ class ProjectMembers extends Model
     /** @use HasFactory<\Database\Factories\ProjectMembersFactory> */
     use HasFactory;
     protected $fillable = [
-        'project_key',
+        'project_id',
         'user_id',
         'role'
     ];
+    public function projectId() {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
 }
