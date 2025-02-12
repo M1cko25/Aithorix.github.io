@@ -31,8 +31,8 @@ const form = useForm({
                     
                     <!-- OAuth Buttons -->
                     <div class=" mb-6 flex flex-col gap-2 border">
-                        <Button social :pic="icon.googleIcon" :style="`py-2 w-full text-lg`" :href="route('googleLogin')" text="Google" />
-                        <Button social :pic="icon.slackIcon" :style="`py-2 w-full text-lg`" text="Slack" :href="route('slackLogin')"/>
+                        <Button social :pic="icon.googleIcon" :href="route('googleLogin')">Google</Button>
+                        <Button social :pic="icon.slackIcon" :href="route('slackLogin')">Slack</Button>
                     </div>
 
                     <div class="relative flex flex-col gap-3">
@@ -50,7 +50,13 @@ const form = useForm({
                         <TextField :icon="icon.emailIcon" label="Email" v-model="form.email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
                         <p v-if="form.errors.email" class="text-red-600 text-sm text-center">{{ form.errors.email }}</p>
                     </div>
-                    <Button :disableBtn="form.processing" text="Submit" type="submit" :style="`py-2 w-full text-lg`"/>
+                    <Button
+                    :disable="form.processing"
+                    type="submit"
+                    :style="`btn-primary ${form.processing ? 'btn-disable hover:bg-neutral' : ''} `"
+                    >
+                    {{ form.processing ? 'Processing...' : 'Register' }}
+                    </Button>
                     </form>
                 </div>
 

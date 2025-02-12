@@ -1,10 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import Button from '../Components/Button.vue'
 import TextField from '../Components/TextField.vue'
 import PasswordIcon from '../../../public/assets/password-icon.svg'
 import resetPasswordIllustration from '../../../public/assets/resetpass.svg'
-import { useForm, usePage } from '@inertiajs/vue3'
+import { useForm, usePage, router } from '@inertiajs/vue3'
+import StateDisplay from '../Components/StateDisplay.vue' 
 
 const { props } = usePage();
 
@@ -14,6 +15,14 @@ const form = useForm({
   password: null,
   password_confirmation: null,
 })
+
+watch(() => form.wasSuccessful, (newValue) => {
+  if (newValue == true) {
+    setTimeout(() => {
+      router.visit('/login')
+    }, 2000)
+  }
+}, { deep: true })
 
 </script>
 
@@ -60,11 +69,10 @@ const form = useForm({
             </div>
             
             <Button
-              :disableBtn="form.processing"
-              text="Reset Password"
-              :style="`py-2 w-full text-lg mt-4`" 
+              :disable="form.processing"
+              :style="`btn-primary w-full text-lg mt-4`" 
               type="submit"
-            />
+            >Reset Password</Button>
           </form>
         </div>
 
@@ -73,9 +81,6 @@ const form = useForm({
         </div>
       </div>
     </div>
-    <div v-if="form.wasSuccessful" v-motion="pop" class="absolute popup top-0 right-0 flex 
-    flex-col gap-6 m-4 bg-success md:p-6 text-white rounded-lg shadow">
-      <h1>Your password successfully updated</h1>
-    </div>
+    <StateDisplay v-if="form.wasSuccessful" state="success" message="Password reset was successful." />
   </div>
 </template>

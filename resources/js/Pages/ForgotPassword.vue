@@ -5,6 +5,7 @@ import TextField from '../Components/TextField.vue'
 import EmailIcon from '../../../public/assets/email-icon.svg'
 import forgotPasswordIllustration from '../../../public/assets/forgotpass.svg'
 import { useForm } from '@inertiajs/vue3'
+import StateDisplay from '../Components/StateDisplay.vue'
 
 const email = ref('')
 
@@ -41,40 +42,21 @@ let form = useForm({
                 placeholder="john@email.com"
                 />
                 <p v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</p>
-
             </div>
             
             <Button 
-              text="Reset Password" 
-              :style="`py-2 w-full text-lg mt-4`" 
+              :style="`btn-primary w-full text-lg mt-4`" 
               type="submit"
-              :disableBtn="form.processing"
-            />
+              :disable="form.processing"
+            >Reset Password</Button>
           </form>
         </div>
-
         <div class="w-full text-center mt-6">
           <p>Remember your password? <Link :href="route('login')" class="underline font-bold text-lg">Log In</Link></p>
         </div>
       </div>
     </div>
-    <div v-if="form.wasSuccessful" v-motion="pop" class="absolute popup top-0 right-0 flex 
-    flex-col gap-6 m-4 bg-success md:p-6 text-white rounded-lg shadow">
-      <h1>Email sent successfully</h1>
-    </div>
+    <StateDisplay v-if="form.wasSuccessful" state="success" 
+    message="Password reset form was sent to your email." />
   </div>
 </template>
-<style scoped>
-.popup {
-  animation: timer 5s forwards;
-}
-
-@keyframes timer {
-  0%, 80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-</style>

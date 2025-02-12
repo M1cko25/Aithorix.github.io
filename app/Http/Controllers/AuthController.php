@@ -27,17 +27,17 @@ class AuthController extends Controller
         try {
             // Check if user exists first
             $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return redirect()->back()->withErrors([
+                    'email' => 'Email not found'
+                ])->onlyInput('email');
+            }
             $userId = User::where('email', $request->email)->value('id');
             $project = Project::where('owner_id', $userId)->first();
             $members = ProjectMembers::where('project_id', $project->id)->get();
             if (!$project) {
                 Auth::login($user);
                 return redirect()->route('template');
-            }
-            if (!$user) {
-                return redirect()->back()->withErrors([
-                    'email' => 'Email not found'
-                ])->onlyInput('email');
             }
 
             //log in
@@ -50,7 +50,7 @@ class AuthController extends Controller
             }
             return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
+            return redirect()->back()->withErrors(['email' => 'error: ' . $e->getMessage()]);
         }
     }
 
@@ -87,7 +87,7 @@ class AuthController extends Controller
             Auth::login($user);
             session()->put('user', $user);
             Mail::to($request->email)->send(new WelcomeMail($request->name));
-            return redirect()->route('template');
+            return redirect()->route('template')->with('success', 'Registration successful.');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
         }

@@ -6,7 +6,7 @@ import Button from '../Components/Button.vue';
 import DropDown from '../Components/DropDown.vue';
 import { ref, computed } from 'vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
-import { ChevronRight, Delete } from 'lucide-vue-next';
+import { ChevronRight, Delete, MoveRight } from 'lucide-vue-next';
 import Modal from '../Components/Modal.vue';
 import { watch } from 'vue';
 import axios from 'axios';
@@ -286,8 +286,10 @@ const createProject = () => {
                   </div>
                 </div>
                 <div class="flex flex-row justify-end">
-                  <Button :pic="Icons.startIcon" :click="createProject" cta text="Create Project" 
-                  :style="`px-4 py-2 flex gap-2 w-fit`" :disableBtn="!projectName || !projectKey || form.processing" />
+                  <Button :style="`btn-primary overflow-hidden flex gap-2 group`" @click="createProject">
+                    <MoveRight class="transform transition-transform duration-300 ease-in-out group-hover:translate-x-32 h-6 w-6"/>
+                    <p :type="type" class="transform transition-transform duration-300 group-hover:-translate-x-8">Create Project</p>
+                  </Button>
                 </div>
             </div>
          </div>
@@ -336,8 +338,8 @@ const createProject = () => {
             <div class="flex flex-col justify-center items-center gap-4">
               <p class="text-lg">are you sure you want to remove this member?</p>
               <div class="flex flex-row gap-2 justify-between w-full">
-                <Button text="No" closeBtn :style="`px-4 py-2 gap-2 w-full`" :click="()=> {isRemoveModal = false}" />
-                <Button text="Yes" :style="`px-4 py-2 gap-2 w-full`" :click="removeMember" />
+                <Button :style="`btn-cancel`" :click="()=> { isRemoveModal = false}">No</Button>
+                <Button :style="`btn-primary w-full`" :click="removeMember">Yes</Button>
               </div>
             </div>
           </Modal>

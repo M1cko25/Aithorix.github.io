@@ -67,21 +67,17 @@ class EmailController extends Controller
     }
 
     public function forgotPassword(Request $request) {
-        try {
-            $request->validate([
-                'email' => 'required|email|exists:users,email',
-            ]);
-            
-            $status = Password::sendResetLink(
-                $request->only('email')
-            );
-         
-            return $status === Password::RESET_LINK_SENT
-                        ? back()->with(['status' => __($status)])
-                        : back()->withErrors(['email' => __($status)]);   
-        }catch (\Exception $e) {
-            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
-        }
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+        
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+        
+        return $status === Password::RESET_LINK_SENT
+                    ? back()->with(['status' => __($status)])
+                    : back()->withErrors(['email' => __($status)]);   
     }
     
     public function resetPassword (string $token) {
