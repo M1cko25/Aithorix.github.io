@@ -3,7 +3,6 @@ import icon from '../Icons.js'
 import graphics from '../graphics.js'
 import Button from '../Components/Button.vue'
 import TextField from '../Components/TextField.vue'
-import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
 window.addEventListener('pageshow', (event) => {
@@ -48,16 +47,14 @@ const form = useForm({
                             social 
                             :pic="icon.googleIcon" 
                             :style="`py-2 flex-1 text-lg`" 
-                            text="Google" 
                             :href="route('googleLogin')"
-                        />
+                        >Google</Button>
                         <Button 
                             social 
                             :pic="icon.slackIcon" 
                             :style="`py-2 flex-1 text-lg`" 
-                            text="Slack"
                             :href="route('slackLogin')"
-                        />
+                        >Slack</Button>
                     </div>
 
                     <div class="relative flex flex-col gap-3">
@@ -71,16 +68,15 @@ const form = useForm({
 
                     <!-- Form -->
                     <form @submit.prevent="form.post('/login')" class="flex flex-col gap-2 p-2">
-                        <TextField 
+                        <TextField
                             v-model="form.email" 
                             :icon="icon.emailIcon" 
                             label="Email" 
-                            type="email" 
+                            type="email"
                             labeltxt="Email" 
                             placeholder="jon@email.com"
                         />
                         <p class="text-red-600 font-sm" v-if="form.errors.email">{{ form.errors.email }}</p>
-                        
                         
                         <div class="flex flex-col gap-1">
                             <TextField 
@@ -106,21 +102,12 @@ const form = useForm({
                                     Forgot Password?
                                 </Link>
                             </div>
-                            
                         </div>
-                        
-                        
-                        <Button v-if="form.processing"
-                            text="Logging in" 
-                            :style="`py-2 w-full text-lg mt-4`" 
-                            disableBtn
-                        />
-                        <Button v-else 
-                        text="Log In"
-                        :style="`py-2 w-full text-lg mt-4`"
-                        type="submit"
-                        />
-
+                        <Button :disable="form.processing"
+                        :style="`btn-primary ${form.processing ? 'btn-disable hover:bg-neutral' : ''}`"
+                        type="submit">
+                        {{ form.processing ? "Logging in" : "Log in" }}
+                        </Button>
                     </form>
                 </div>
 

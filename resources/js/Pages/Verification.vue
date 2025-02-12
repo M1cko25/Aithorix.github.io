@@ -67,26 +67,17 @@ const goBack =() => {(window.history.length > 1) ? window.history.back() : Inert
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex justify-between gap-4">
+            <div class="w-full">
+                <form @submit.prevent="verifyCode.post('/verify-code')" class="w-full p-0 gap-4 flex flex-row justify-between">
                 <Button 
-                    text="Cancel" 
-                    :btn2="true" 
-                    :style="`w-full p-2`"
-                    social
-                    @click="goBack"
-                />
-                <form @submit.prevent="verifyCode.post('/verify-code')" class="w-full">
-                    <Button v-if="otp.join('').length !== 4 || verifyCode.processing"
-                    disableBtn
-                    text="Verify"
+                    :style="`btn-cancel w-full`"
+                    :click="goBack"
+                >Cancel</Button>
+                    <Button
+                    :disable="otp.join('').length !== 4 || verifyCode.processing"
                     type="submit"
-                    :style="`w-full p-2`"
-                    />
-                    <Button v-else
-                    text="Verify"
-                    type="submit"
-                    :style="`w-full p-2`"
-                    />
+                    :style="`btn-primary w-full ${otp.join('').length !== 4 ? 'btn-disable hover:bg-neutral' : ''}`"
+                    >Verify</Button>
                 </form>
             </div>
         </div>

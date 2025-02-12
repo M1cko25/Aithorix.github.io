@@ -21,11 +21,11 @@
     </header>
     <main>
         <p>Hello {{$name}}</p>
-        <br><br> 
+        <br>
         <p>Thank you for registering with Aithorix. We're really happy to have you!</p>
-        <br><br>
+        <br>
         <p>Best regards,</p>
-        <br><br>
+        <br>
         <p>Aithorix Team</p>
     </main>
 </body>

@@ -85,11 +85,9 @@ const form = useForm({
                     <p v-if="$attrs.errors.confirmPassword" class="text-red-600 text-sm">{{ $attrs.errors.confirmPassword }}</p>
                 </div>
 
-                <Button 
-                    text="Register" 
-                    :style="`py-2 w-full text-lg mt-4`" 
-                    type="submit"
-                />
+                <Button type="submit" :style="`btn-primary w-full text-lg mt-4`">
+                    Register    
+                </Button>
             </form>
         </div>
         <Modal v-if="form.processing" v-model:modelValue="form.processing" class="absolute bg-light rounded-xl shadow-lg p-6 flex flex-col gap-4">
