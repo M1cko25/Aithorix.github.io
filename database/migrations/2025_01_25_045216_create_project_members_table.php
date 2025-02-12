@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('project_members', function (Blueprint $table) {
             $table->id();
-            $table->string('project_key');
+            $table->string('project_id');
+            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->string('user_id');
             $table->string('role');
             $table->timestamps();

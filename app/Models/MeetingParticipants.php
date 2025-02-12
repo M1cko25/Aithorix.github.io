@@ -13,4 +13,11 @@ class MeetingParticipants extends Model
         'meeting_id',
         'user_id'
     ];
+
+    public function meeting() {
+        return $this->belongsTo(Meetings::class, 'meeting_id');
+    }
+    public function user() {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

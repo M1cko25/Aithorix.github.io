@@ -12,66 +12,89 @@ use Illuminate\Support\Facades\Password;
 class EmailController extends Controller
 {
     public function sendEmail(Request $request) {
-        if ($request->email == null) {
-            return redirect()->back()->withErrors(['email' => 'Email is required']);
+        try {
+            if ($request->email == null) {
+                return redirect()->back()->withErrors(['email' => 'Email is required']);
+            }
+    
+            $request->validate([
+                'email' => 'required|email|unique:users,email'
+            ]);
+    
+            $code = rand(1000, 9999);
+            $toEmail = $request->email;
+            Mail::to($toEmail)->send(new VerificationCodeMail($code));
+            session(['verification_code' => $code]);
+            return Inertia::render('Verification', [
+                'email' => $request->email,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
         }
-
-        $request->validate([
-            'email' => 'required|email|unique:users,email'
-        ]);
-
-        $code = rand(1000, 9999);
-        $toEmail = $request->email;
-        Mail::to($toEmail)->send(new VerificationCodeMail($code));
-        session(['verification_code' => $code]);
-        return Inertia::render('Verification', [
-            'email' => $request->email,
-        ]);
     }
 
     public function resendCode(Request $request) {
-        $code = rand(1000, 9999);
-        $toEmail = $request->email;
-        Mail::to($toEmail)->send(new VerificationCodeMail($code));
-        session(['verification_code' => $code]);
-        return Inertia::render('Verification', [
-            'email' => $request->email,
-        ]);
+        try {
+            $code = rand(1000, 9999);
+            $toEmail = $request->email;
+            Mail::to($toEmail)->send(new VerificationCodeMail($code));
+            session(['verification_code' => $code]);
+            return Inertia::render('Verification', [
+                'email' => $request->email,
+            ]);
+        }
+         catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
+         }
     }
 
     public function verifyCode(Request $request) {
-        $request->validate([
-            'code' => 'required|numeric|digits:4',
-        ]);
-        $code = (int) $request->code;
-        $storedCode = session('verification_code');
-        if ($code === $storedCode) {
-            return Inertia::render('Setup', [
-                'email' => $request->email,
+        try {
+            $request->validate([
+                'code' => 'required|numeric|digits:4',
             ]);
-        } 
-        return Inertia::render('Verification', [
-            'email' => $request->email,
-            'errorMessage' => 'Invalid verification code'
-        ]);
+            $code = (int) $request->code;
+            $storedCode = session('verification_code');
+            if ($code === $storedCode) {
+                return Inertia::render('Setup', [
+                    'email' => $request->email,
+                ]);
+            }  else{
+                return Inertia::render('Verification', [
+                    'email' => $request->email,
+                    'errorMessage' => 'Invalid verification code'
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
+        }
     }
 
     public function forgotPassword(Request $request) {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-        ]);
-        
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
-     
-        return $status === Password::RESET_LINK_SENT
-                    ? back()->with(['status' => __($status)])
-                    : back()->withErrors(['email' => __($status)]);     
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+            
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
+         
+            return $status === Password::RESET_LINK_SENT
+                        ? back()->with(['status' => __($status)])
+                        : back()->withErrors(['email' => __($status)]);   
+        }catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
+        }
     }
     
     public function resetPassword (string $token) {
-        return Inertia::render('ResetPassword', ['token' => $token, 
-        'email' => request()->email]);
+        try {
+            return Inertia::render('ResetPassword', ['token' => $token, 
+            'email' => request()->email]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
+        }
     }
 }

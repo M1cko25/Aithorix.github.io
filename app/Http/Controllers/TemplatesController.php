@@ -28,40 +28,46 @@ class TemplatesController extends Controller
             'template' => 'required',
         ]); 
 
-        $projectKey = Project::where('owner_id', $request->owner_id)
-        ->where('key', $request->key)
-        ->exists();
-        if ($projectKey == $request->key) {
-            return redirect()->back()->withErrors([
-                'key' => 'The key is already in use.',
-            ]);
-        }
-
-        foreach($request->members as $member) {
-            $projMember = ProjectMembers::where('user_id', $member['id'])->first();
-            if ($projMember && $projMember->project_key == $request->key) {
+        try {
+            $projectKey = Project::where('owner_id', $request->owner_id)
+            ->where('key', $request->key)
+            ->exists();
+            if ($projectKey == $request->key) {
                 return redirect()->back()->withErrors([
-                    'key' => 'The key is already been used by another member.',
+                    'key' => 'The key is already in use.',
                 ]);
             }
-        }
 
-        $project = Project::create([
-            'name' => $request->name,
-            'key' => $request->key,
-            'owner_id' => $request->owner_id,
-            'template' => $request->template,
-        ]);
+            foreach($request->members as $member) {
+                $projMember = ProjectMembers::where('user_id', $member['id'])->first();
+                if ($projMember && $projMember->project_key == $request->key) {
+                    return redirect()->back()->withErrors([
+                        'key' => 'The key is already been used by another member.',
+                    ]);
+                }
+            }
 
-        foreach($request->members as $member) {
-            ProjectMembers::create([
-                'project_key' => $request->key,
-                'user_id' => $member['id'],
-                'role' => $member['role'],
+            $project = Project::create([
+                'name' => $request->name,
+                'key' => $request->key,
+                'owner_id' => $request->owner_id,
+                'template' => $request->template,
+            ]);
+            foreach($request->members as $member) {
+                ProjectMembers::create([
+                    'project_id' => $project->id,
+                    'user_id' => $member['id'],
+                    'role' => $member['role'],
+                ]);
+            }
+            session()->put('project', $project);
+            session()->put('members', $request->members);   
+            return redirect()->route('scrum-board')
+                ->with('success', 'Project created successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors([
+                'error' => 'An error occurred while creating the project.',
             ]);
         }
-        session()->put('project', $project);
-        return redirect()->route('scrum-board', ['key' => $credentials['key']])
-            ->with('success', 'Project created successfully');
     }
 }

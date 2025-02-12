@@ -22,22 +22,22 @@ Route::inertia('/template-selection', 'Template')->name('template')->middleware(
 Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->middleware('guest');
 
 //scrum routes
-Route::get('/scrum/board', [ScrumController::class, 'getProjectDetails'])->name('scrum-board')->middleware('auth');
+Route::inertia('/scrum/board', 'Scrum/ScrumBoard')->name('scrum-board')->middleware('auth');
 Route::get('/scrum/dashboard', [ScrumController::class, 'getDashboardDatas'])->name('scrum-dashboard')->middleware('auth');
-// Route::inertia('/scrum/dashboard', 'Scrum/ScrumDashboard')->name('scrum-dashboard')->middleware('auth');
+Route::inertia('/scrum/timeline', 'Scrum/ScrumTimeline')->name('scrum-timeline')->middleware('auth');
 
 //project creation
 Route::inertia('/scrum/create-project', 'ProjectCreation')->name('scrum-create-project')->middleware('auth');
 Route::get('/create-project', [TemplatesController::class, 'templateSelected'])->name('template-selected')->middleware('auth');
 Route::post('/create-project', [TemplatesController::class, 'createProject'])->name('create-project')->middleware('auth');
 Route::post('/project-members', [TemplatesController::class, 'addProjectMembers'])->name('add-members')->middleware('auth');
-Route::post('/verify-code', [EmailController::class, 'verifyCode'])->name('verify-code');
+Route::post('/verify-code', [EmailController::class, 'verifyCode'])->name('verify-code')->middleware('guest');
 Route::post('/resend-code', [EmailController::class, 'resendCode'])->name('resend-code');
 
 //Auth posts
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [EmailController::class, 'sendEmail']);
-Route::post('/create-account', [AuthController::class, 'register'])->name('create-account');
+Route::post('/create-account', [AuthController::class, 'register'])->name('create-account')->middleware('guest');
 Route::post('forgot-password', [EmailController::class, 'forgotPassword'])->name('forgot-password');
 Route::post('/reset-password', [AuthController::class, 'resetPass'])->middleware('guest')->name('password.update');
 

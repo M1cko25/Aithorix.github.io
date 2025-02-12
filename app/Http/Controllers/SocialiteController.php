@@ -70,7 +70,7 @@ class SocialiteController extends Controller
             session()->put('project', $project);
             session()->put('user', $user);
             Auth::login($user);
-            return redirect()->route('template');
+            return redirect()->route('scrum-board');
         } else {
             $newUser = User::create([
                 'name' => $slackUser->name,
