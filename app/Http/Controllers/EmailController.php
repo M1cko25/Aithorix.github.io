@@ -23,7 +23,7 @@ class EmailController extends Controller
     
             $code = rand(1000, 9999);
             $toEmail = $request->email;
-            Mail::to($toEmail)->send(new VerificationCodeMail($code));
+            Mail::to($toEmail)->send(new VerificationCodeMail($code, $toEmail));
             session(['verification_code' => $code]);
             return Inertia::render('Verification', [
                 'email' => $request->email,
@@ -34,18 +34,13 @@ class EmailController extends Controller
     }
 
     public function resendCode(Request $request) {
-        try {
-            $code = rand(1000, 9999);
-            $toEmail = $request->email;
-            Mail::to($toEmail)->send(new VerificationCodeMail($code));
-            session(['verification_code' => $code]);
-            return Inertia::render('Verification', [
-                'email' => $request->email,
-            ]);
-        }
-         catch (\Exception $e) {
-            return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);
-         }
+        $code = rand(1000, 9999);
+        $toEmail = $request->email;
+        Mail::to($toEmail)->send(new VerificationCodeMail($code, $toEmail));
+        session(['verification_code' => $code]);
+        return Inertia::render('Verification', [
+            'email' => $request->email,
+        ]);
     }
 
     public function verifyCode(Request $request) {
