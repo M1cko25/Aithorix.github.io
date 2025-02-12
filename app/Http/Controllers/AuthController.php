@@ -13,7 +13,8 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         //validation
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -22,7 +23,7 @@ class AuthController extends Controller
 
         // Check if user exists first
         $user = User::where('email', $request->email)->first();
-        
+
         if (!$user) {
             return redirect()->back()->withErrors([
                 'email' => 'Email not found'
@@ -38,7 +39,8 @@ class AuthController extends Controller
         return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
     }
 
-    public function verify(Request $request) {
+    public function verify(Request $request)
+    {
 
         if ($request->email == null) {
             return redirect()->back()->withErrors(['email' => 'Email is required']);
@@ -48,7 +50,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $request->validate([
             'name' => 'required|unique:users,name|max:255|regex:/^[a-zA-Z\s]+$/',
             'password' => 'required|min:8|max:255',
@@ -68,34 +71,36 @@ class AuthController extends Controller
         return redirect()->route('template');
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
     }
 
-    public function resetPass (Request $request) {
+    public function resetPass(Request $request)
+    {
         $request->validate([
             'token' => 'required',
             'password' => 'required|min:8|confirmed',
         ]);
-     
+
         $status = Password::reset(
             $request->only('email', 'password', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
                     'password' => Hash::make($password)
                 ])->setRememberToken(Str::random(60));
-     
+
                 $user->save();
-     
+
                 event(new PasswordReset($user));
             }
         );
-     
+
         return $status === Password::PASSWORD_RESET
-                    ? redirect()->back()->with('status', __($status))
-                    : back()->withErrors(['email' => [__($status)]]);
+            ? redirect()->back()->with('status', __($status))
+            : back()->withErrors(['email' => [__($status)]]);
     }
 }

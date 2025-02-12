@@ -11,18 +11,19 @@ use Inertia\Inertia;
 
 class ScrumController extends Controller
 {
-    public function getDashboardDatas() {
+    public function getDashboardDatas()
+    {
         $pendingBacklogs = Backlogs::where('creator_id', session('user.id'))
-        ->where('status', 'pending')
-        ->orWhere('status', 'in_progress')
-        ->count();
+            ->where('status', 'pending')
+            ->orWhere('status', 'in_progress')
+            ->count();
         $completedBacklogs = Backlogs::where('creator_id', session('user.id'))
-        ->where('status', 'completed')
-        ->count();
+            ->where('status', 'completed')
+            ->count();
         $meetingCreated = Meetings::where('creator_id', session('user.id'))
-        ->count();
+            ->count();
         $sprints = Sprint::where('project_id', 1)
-        ->count();
+            ->count();
         return Inertia::render('Scrum/ScrumDashboard', [
             'pendingBacklogs' => $pendingBacklogs,
             'completedBacklogs' => $completedBacklogs,
@@ -33,8 +34,17 @@ class ScrumController extends Controller
         ]);
     }
 
-    public  function getProjectDetails() {
+    public  function getProjectDetails()
+    {
         return Inertia::render('Scrum/ScrumBoard', [
+            'projectName' => session('project.name'),
+            'projectKey' => session('project.key'),
+        ]);
+    }
+
+    public function getTimelineDetails()
+    {
+        return Inertia::render('Scrum/ScrumTimeline', [
             'projectName' => session('project.name'),
             'projectKey' => session('project.key'),
         ]);

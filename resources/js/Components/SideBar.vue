@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { 
-  Home, 
-  Briefcase, 
+import {
+  Home,
+  Briefcase,
   Star,
   LayoutDashboard,
   LayoutList,
@@ -22,11 +22,11 @@ const props = defineProps({
   projectItems: {
     type: Array,
     default: [
-    { icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard', active: false },
-    { icon: LayoutList, text: 'Board', path: '/scrum/board', active: true },
-    { icon: Clock, text: 'Timeline', path: '/timeline', active: false },
-    { icon: Package, text: 'Backlog', path: '/backlog', active: false },
-    { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard', active: false },
+      { icon: LayoutList, text: 'Board', path: '/scrum/board', active: true },
+      { icon: Clock, text: 'Timeline', path: '/scrum/timeline', active: false },
+      { icon: Package, text: 'Backlog', path: '/backlog', active: false },
+      { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
     ]
   }
 })
@@ -42,7 +42,7 @@ const menuItems = [
 
 const activateLink = (projItem) => {
   props.projectItems.forEach(item => {
-    if(projItem == item.text) {
+    if (projItem == item.text) {
       item.active = true;
     } else {
       item.active = false;
@@ -66,12 +66,8 @@ watch(
     <!-- Search Section -->
     <div class="p-4">
       <div class="relative">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search"
-          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
+        <input v-model="searchQuery" type="text" placeholder="Search"
+          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
         <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
         <Filter class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
       </div>
@@ -82,8 +78,8 @@ watch(
       <ul class="space-y-1">
         <li v-for="item in menuItems" :key="item.text">
           <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
-            <component :is="item.icon" class="w-5 h-5" />
-            {{ item.text }}
+          <component :is="item.icon" class="w-5 h-5" />
+          {{ item.text }}
           </Link>
         </li>
       </ul>
@@ -92,23 +88,17 @@ watch(
     <!-- Project Section -->
     <div class="mt-6">
       <div class="px-4 mb-2">
-        <select 
-          v-model="currentProject"
-          class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
+        <select v-model="currentProject" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
           <option>Scrum Project</option>
         </select>
       </div>
 
       <ul class="space-y-1 px-2">
         <li v-for="item in props.projectItems" :key="item.text">
-          <Link
-            :href="item.path" @click="activateLink(item.text)"
-            class="flex items-center gap-3 px-4 py-2 rounded-lg"
-            :class="item.active ? 'bg-blue text-light hover:bg-button-hover' : 'text-gray-700'"
-          >
-            <component :is="item.icon" class="w-5 h-5" />
-            {{ item.text }}
+          <Link :href="item.path" @click="activateLink(item.text)" class="flex items-center gap-3 px-4 py-2 rounded-lg"
+            :class="item.active ? 'bg-blue text-light hover:bg-button-hover' : 'text-gray-700'">
+          <component :is="item.icon" class="w-5 h-5" />
+          {{ item.text }}
           </Link>
         </li>
       </ul>

@@ -11,6 +11,7 @@ use Illuminate\Validation\Rules\Email;
 use App\Http\Controllers\TemplatesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScrumController;
+use App\Http\Controllers\TimelineController;
 
 //routes
 Route::inertia('/', 'Landing')->name('landing');
@@ -24,6 +25,7 @@ Route::inertia('/forgot-password', 'ForgotPassword')->name('forgot-password')->m
 //scrum routes
 Route::get('/scrum/board', [ScrumController::class, 'getProjectDetails'])->name('scrum-board')->middleware('auth');
 Route::get('/scrum/dashboard', [ScrumController::class, 'getDashboardDatas'])->name('scrum-dashboard')->middleware('auth');
+Route::get('/scrum/timeline', [ScrumController::class, 'getTimeLineDetails'])->name('scrum-timeline')->middleware('auth');
 // Route::inertia('/scrum/dashboard', 'Scrum/ScrumDashboard')->name('scrum-dashboard')->middleware('auth');
 
 //project creation
@@ -57,3 +59,9 @@ Route::get('/search-users', [UserController::class, 'searchUsers'])->name('searc
 
 //logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+//Timeline routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/timeline/{projectId}', [TimelineController::class, 'index']);
+    Route::post('/timeline', [TimelineController::class, 'store']);
+});
