@@ -6,6 +6,7 @@ import logo from '../../../public/assets/logo.png'
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
 import Modal from '../Components/Modal.vue'
+import { route } from '../../../vendor/tightenco/ziggy/src/js/index.js';
 
 const page = usePage();
 
@@ -22,13 +23,19 @@ const props = defineProps({
 })
 
 const form = useForm({
-    email: props.email,
+    email: page.props.flash.email,
     name: props.name,
     password: null,
-    confirmPassword: null,
+    password_confirmation: null,
     avatar: props.avatar,
     google_id: props.google_id
 })
+
+const submit = () => {
+    form.post(route('create-account'), {
+        preserveState: true,
+    })
+}
 </script>
 
 <template>
@@ -46,7 +53,7 @@ const form = useForm({
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="form.post('/create-account')" class="flex flex-col gap-6">
+            <form @submit.prevent="submit" class="flex flex-col gap-6">
                 <div>
                     <TextField 
                     v-model="form.name" 
@@ -57,7 +64,7 @@ const form = useForm({
                     labeltxt="Full Name"
                     placeholder="Jon Doe"
                     />
-                    <p v-if="$attrs.errors.name" class="text-red-600 text-sm">{{ $attrs.errors.name }}</p>
+                    <p v-if="$page.props.errors.name" class="text-red-600 text-sm">{{ $page.props.errors.name }}</p>
                 </div>
                 
                 <div>
@@ -70,14 +77,15 @@ const form = useForm({
                     labeltxt="Password"
                     placeholder="Password"
                     />
-                    <p v-if="$attrs.errors.password" class="text-red-600 text-sm">{{ $attrs.errors.password }}</p>
+                    <p v-if="$page.props.errors.password" class="text-red-600 text-sm">{{ $page.props.errors.password }}</p>
                 </div>
                 
                 <div>
                     <TextField 
-                    v-model="form.confirmPassword" 
+                    v-model="form.password_confirmation" 
                     :icon="icon.passwordIcon" 
                     label="confirmPassword" 
+                    name="password_confirmation"
                     type="password" 
                     labeltxt="Confirm Password"
                     placeholder="Confirm Password"

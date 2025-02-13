@@ -18,6 +18,29 @@ class MeetingParticipantsSeeder extends Seeder
             'meeting_id' => 1,
             'user_id' => 3,
             'status' => 'on time',
+        ], 
+        [
+            'meeting_id' => 1,
+            'user_id' => 4,
+            'status' => 'on time',
+        ],
+        [
+            'meeting_id' => 1,
+            'user_id' => 2,
+            'status' => 'on time',
+        ], [
+            'meeting_id' => 1,
+            'user_id' => 8,
+            'status' => 'late',
+        ],
+        [
+            'meeting_id' => 1,
+            'user_id' => 1,
+            'status' => 'late',
+        ],[
+            'meeting_id' => 1,
+            'user_id' => 12,
+            'status' => 'absent',
         ]
     ];
         foreach ($participants as $participant) {

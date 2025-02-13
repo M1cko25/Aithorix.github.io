@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use App\Mail\WelcomeMail;
 use App\Models\Project;
 use App\Models\ProjectMembers;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -69,13 +70,18 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
-        try {
-            $request->validate([
+        // try {
+            // $request->validate([
+            //     'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
+            //     'password' => 'required|min:8|max:255|confirmed',
+            // ]);
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
-                'password' => 'required|min:8|max:255',
-                'confirmPassword' => 'required|same:password',
+                'password' => 'required|min:8|max:255|confirmed',
             ]);
-    
+            if ($validator->fails()) {
+                return redirect()->back()->with('email', $request->email)->withErrors($validator->errors())->withInput();
+            }
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -88,9 +94,9 @@ class AuthController extends Controller
             session()->put('user', $user);
             Mail::to($request->email)->send(new WelcomeMail($request->name));
             return redirect()->route('template')->with('success', 'Registration successful.');
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
-        }
+        // } catch (\Exception $e) {
+        //     return redirect()->back()->withErrors(['email' => 'An error occurred while logging in.']);
+        // }
     }
 
     public function logout(Request $request) {
