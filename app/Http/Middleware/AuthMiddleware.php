@@ -16,7 +16,7 @@ class AuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->email) {
+        if ($request->email || $request->session()->has('email')) {
             return $next($request);
         }
         return redirect()->route('login');

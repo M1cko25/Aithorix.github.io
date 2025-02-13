@@ -51,9 +51,7 @@ class EmailController extends Controller
             $code = (int) $request->code;
             $storedCode = session('verification_code');
             if ($code === $storedCode) {
-                return Inertia::render('Setup', [
-                    'email' => $request->email,
-                ]);
+                return redirect()->route('setup')->with('email', $request->email);
             }  else{
                 return Inertia::render('Verification', [
                     'email' => $request->email,

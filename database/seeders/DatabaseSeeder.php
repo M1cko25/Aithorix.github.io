@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         // ProjectSeeder::class,
         // ActivitySeeder::class,
         // BacklogsSeeder::class,
-        MeetingsSeeder::class,
-        SprintSeeder::class,
+        // MeetingsSeeder::class,
+        // SprintSeeder::class,
         MeetingParticipantsSeeder::class,
     ]);
     }
