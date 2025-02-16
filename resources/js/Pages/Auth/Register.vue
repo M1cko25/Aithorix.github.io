@@ -1,14 +1,13 @@
 <script setup>
-import icon from '../Icons.js';
-import graphics from '../graphics.js';
-import Button from '../Components/Button.vue'
-import TextField from '../Components/TextField.vue';
+import icon from '../../Icons.js';
+import graphics from '../../graphics.js';
+import Button from '../../Components/Button.vue'
+import TextField from '../../Components/TextField.vue';
 import { Inertia } from '@inertiajs/inertia';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 let emailInput = ref('')
-const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 
 const form = useForm({
     email: null

@@ -25,7 +25,7 @@ class EmailController extends Controller
             $toEmail = $request->email;
             Mail::to($toEmail)->send(new VerificationCodeMail($code, $toEmail));
             session(['verification_code' => $code]);
-            return Inertia::render('Verification', [
+            return Inertia::render('Auth/Verification', [
                 'email' => $request->email,
             ]);
         } catch (\Exception $e) {
@@ -38,7 +38,7 @@ class EmailController extends Controller
         $toEmail = $request->email;
         Mail::to($toEmail)->send(new VerificationCodeMail($code, $toEmail));
         session(['verification_code' => $code]);
-        return Inertia::render('Verification', [
+        return Inertia::render('Auth/Verification', [
             'email' => $request->email,
         ]);
     }
@@ -53,7 +53,7 @@ class EmailController extends Controller
             if ($code === $storedCode) {
                 return redirect()->route('setup')->with('email', $request->email);
             }  else{
-                return Inertia::render('Verification', [
+                return Inertia::render('Auth/Verification', [
                     'email' => $request->email,
                     'errorMessage' => 'Invalid verification code'
                 ]);
@@ -80,7 +80,7 @@ class EmailController extends Controller
     
     public function resetPassword (string $token) {
         try {
-            return Inertia::render('ResetPassword', ['token' => $token, 
+            return Inertia::render('Auth/ResetPassword', ['token' => $token, 
             'email' => request()->email]);
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['email' => 'An error occurred while sending the email.']);

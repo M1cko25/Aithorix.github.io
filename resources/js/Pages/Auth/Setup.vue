@@ -1,12 +1,12 @@
 <script setup>
-import Button from '../Components/Button.vue'
-import TextField from '../Components/TextField.vue'
-import icon from '../Icons.js';
-import logo from '../../../public/assets/logo.png'
+import Button from '../../Components/Button.vue'
+import TextField from '../../Components/TextField.vue'
+import icon from '../../Icons.js';
+import logo from '../../../../public/assets/logo.png'
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
-import Modal from '../Components/Modal.vue'
-import { route } from '../../../vendor/tightenco/ziggy/src/js/index.js';
+import Modal from '../../Components/Modal.vue'
+import { route } from '../../../../vendor/tightenco/ziggy/src/js/index.js';
 
 const page = usePage();
 
