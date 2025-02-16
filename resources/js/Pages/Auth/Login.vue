@@ -1,18 +1,9 @@
 <script setup>
-import icon from '../Icons.js'
-import graphics from '../graphics.js'
-import Button from '../Components/Button.vue'
-import TextField from '../Components/TextField.vue'
+import icon from '../../Icons.js'
+import graphics from '../../graphics.js'
+import Button from '../../Components/Button.vue'
+import TextField from '../../Components/TextField.vue'
 import { useForm } from '@inertiajs/vue3'
-
-window.addEventListener('pageshow', (event) => {
-    if (event.persisted) {
-        window.location.reload();
-    }
-});
-
-
-const goBack =() => {(window.history.length > 1) ? window.history.back() : Inertia.visit('/');}
 
 const form = useForm({
   email: null,

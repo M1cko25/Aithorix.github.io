@@ -285,7 +285,8 @@ const createProject = () => {
                     <p class="text-lg">Selected Template: {{ template }}</p>
                   </div>
                 </div>
-                <div class="flex flex-row justify-end">
+                <div class="flex flex-row justify-between">
+                  <Link :href="route('home')">Skip</Link>
                   <Button :style="`btn-primary overflow-hidden flex gap-2 group`" @click="createProject">
                     <MoveRight class="transform transition-transform duration-300 ease-in-out group-hover:translate-x-32 h-6 w-6"/>
                     <p :type="type" class="transform transition-transform duration-300 group-hover:-translate-x-8">Create Project</p>

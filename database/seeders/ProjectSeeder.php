@@ -16,7 +16,7 @@ class ProjectSeeder extends Seeder
         Project::factory()->create([
             'name' => 'Project 1',
             'key' => 'PJ1',
-            'owner_id' => 21,
+            'owner_id' => 3,
             'template' => 'Scrum',
         ]);
     }

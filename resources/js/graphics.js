@@ -6,4 +6,5 @@ export default {
     contentIllustration: new URL('../../../public/assets/content-illustration.svg', import.meta.url).href,
     signinIllustration: new URL('../../../public/assets/signin-illustration.svg', import.meta.url).href,
     signupIllustration: new URL('../../../public/assets/signup-illustration.svg', import.meta.url).href,
+    noDataIllustration: new URL('../../../public/assets/noDataIllustration.svg', import.meta.url).href,
 }

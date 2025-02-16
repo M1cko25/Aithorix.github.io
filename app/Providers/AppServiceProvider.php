@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,7 +39,14 @@ class AppServiceProvider extends ServiceProvider
                 ];
             },
         ]);
-    }
 
-    
+        RedirectIfAuthenticated::redirectUsing(function(){
+            return route('scrum-board');
+        });
+
+        Authenticate::redirectUsing(function(){
+            Session::flash('fail', 'Log in first');
+            return route('login');
+        });
+    }
 }

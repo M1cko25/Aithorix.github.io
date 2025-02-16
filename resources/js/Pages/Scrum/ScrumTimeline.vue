@@ -33,8 +33,8 @@ const createTimelineEntry = () => {
         <div class="ml-64 pt-16">
             <div class="p-6 flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <h1 class="text-2xl font-bold">{{ page.projectName }}<span class="text-xl font-normal"> >
-                            Board</span></h1>
+                    <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> >
+                            Timeline</span></h1>
 
                     <div class="flex items-center -space-x-2">
                         <!-- <img v-for="member in teamMembers" :key="member.id" :src="member.avatar" class="w-8 h-8 rounded-full border-2 border-white"/><span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600">+3</span> -->

@@ -7,7 +7,13 @@ use App\Http\Middleware\HandleInertiaRequests;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
+        web: [
+            __DIR__.'/../routes/web.php',
+            __DIR__.'/../routes/auth.php',
+            __DIR__.'/../routes/project-creation.php',
+            __DIR__.'/../routes/socialite.php',
+            __DIR__.'/../routes/scrum.php',
+        ],
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
