@@ -1,43 +1,52 @@
 <script setup>
-import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue';
 import Button from '../../Components/Button.vue';
-import Timeline from '../../Components/Timeline.vue';
-import { Users, Video, Star, Share2 } from 'lucide-vue-next'
+import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'
 import { ref } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
+import Gantt from '../../Components/Gantt.vue'
 
 const page = usePage().props;
 const activeTab = ref('timeline')
 
-const createTimelineEntry = () => {
-    // router.post('/timeline', {
-    //     type: 'task',
-    //     text: 'Test Timeline Entry',
-    //     description: 'Testing the timeline functionality',
-    //     project_id: page.projectId,
-    //     details: {
-    //         taskName: 'Test Task',
-    //         status: 'In Progress'
-    //     }
-    // })
-}
+const activities = ref([
+    {
+        id: 1,
+        title: "You upload a file",
+        time: "10:00 AM",
+        type: "upload",
+    }, 
+    {
+        id: 2,
+        title: "You commented to a task",
+        time: "11:00 AM",
+        type: "comment",
+    }, {
+        id: 3,
+        title: "You created a new task",
+        time: "12:00 PM",
+        type: "create",
+    }, {
+        id: 4,
+        title: "You update a task",
+        time: "1:00 PM",
+        type: "update",
+    }
+])
 
 </script>
 <template>
-    <Header />
     <Sidebar />
 
-    <Head title=" | Scrum Timeline" />
-    <div class="min-h-screen bg-gray-50">
+    <Head title=" | Timeline" />
+    <div class="min-h-screen overflow-y-auto">
         <div class="ml-64 pt-16">
             <div class="p-6 flex items-center justify-between">
-                <div class="flex items-center gap-4">
+                <div class=" flex items-center gap-4">
                     <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> >
                             Timeline</span></h1>
 
                     <div class="flex items-center -space-x-2">
-                        <!-- <img v-for="member in teamMembers" :key="member.id" :src="member.avatar" class="w-8 h-8 rounded-full border-2 border-white"/><span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600">+3</span> -->
                     </div>
                     <button class="p-2 text-gray-600 hover:text-gray-800">
                         <Users class="w-5 h-5" />
@@ -56,10 +65,9 @@ const createTimelineEntry = () => {
                     </Button>
                 </div>
             </div>
-            <div class="p-6">
-                <!-- Replace the existing tab content section with this: -->
-                <div class="flex gap-8 border-b mb-8">
-                    <button @click="activeTab = 'timeline'" class="pb-2 text-gray-600"
+            <div>
+                <div class="flex gap-8 border-b border-dark-gray mb-8">
+                    <button @click="activeTab = 'timeline'" class="ml-6 pb-2 text-gray-600"
                         :class="activeTab === 'timeline' ? 'border-b-2 border-gray-900 text-gray-900' : ''">
                         Timeline
                     </button>
@@ -69,14 +77,34 @@ const createTimelineEntry = () => {
                     </button>
                 </div>
 
-                <!-- Content sections -->
-                <div v-if="activeTab === 'timeline'">
-                    <Timeline :projectId="page.projectId" />
+                <div v-if="activeTab == 'timeline'" v-for="activity in activities" :key="activity.id" class="flex flex-col gap-6">
+                    <div class="py-2 px-6 h-fit justify-start items-start gap-2 inline-flex">
+                        <div  class="flex flex-col w-full justify-between items-center inline-flex">
+                            <div class="self-stretch justify-start items-center gap-6 inline-flex">
+                                <div class="w-2.5 h-2.5 bg-success rounded-full"></div>
+                                <div class="justify-center items-center gap-2.5 flex">
+                                    <Upload v-if="activity.type === 'upload'" class="w-5 h-5"/>
+                                    <ClipboardPlus v-if="activity.type === 'create'" class="w-5 h-5" />
+                                    <FilePenLine v-if="activity.type === 'update'" class="w-5 h-5" />
+                                    <MessageCircle v-if="activity.type === 'comment'" class="w-5 h-5" />
+                                    <div class="">{{ activity.title }}</div>
+                                </div>
+                            </div>
+                            <div class="self-stretch justify-start items-center inline-flex">
+                                <div class="self-stretch px-1 justify-start items-center gap-2.5 flex">
+                                    <div class="w-px self-stretch bg-success"></div>
+                                </div>
+                                <div class="px-10 py-3 justify-between w-full items-start flex overflow-hidden">
+                                    <div class="">{{ activity.time }}</div>
+                                    <Link href="#" class="text-blue underline">See Details</Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div v-else-if="activeTab === 'gantt'">
-                    <!-- Gantt chart content here -->
+                <div v-if="activeTab == 'gantt'" class="w-full h-full">
+                  <Gantt></Gantt>
                 </div>
-
             </div>
         </div>
     </div>

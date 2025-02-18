@@ -58,9 +58,7 @@ const teamMembers = ref([
           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
         />
       </div>
-
       <Button text="Members" :icon="Users" variant="outline" />
-      
     </div>
 
     <!-- Kanban Board -->

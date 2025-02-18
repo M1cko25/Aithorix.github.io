@@ -46,8 +46,9 @@ class TemplatesController extends Controller
                     ]);
                 }
             }
-
-            $project = Project::create([
+            
+            $members = [];
+            $projectCreated = Project::create([
                 'name' => $request->name,
                 'key' => $request->key,
                 'owner_id' => $request->owner_id,
@@ -55,15 +56,19 @@ class TemplatesController extends Controller
             ]);
             foreach($request->members as $member) {
                 ProjectMembers::create([
-                    'project_id' => $project->id,
+                    'project_id' => $projectCreated->id,
                     'user_id' => $member['id'],
                     'role' => $member['role'],
                 ]);
             }
-            session()->put('project', $project);
-            session()->put('members', $request->members);   
-            return redirect()->route('scrum-board')
-                ->with('success', 'Project created successfully');
+            $getAllProjects = Project::where('owner_id', session('user.id'))->get();
+            foreach ($getAllProjects as $project) {
+                $member = ProjectMembers::where('project_id', $project->id)->get();
+                array_push($members, $member);
+            }
+            session()->put('projects', $getAllProjects);
+            session()->put('members', $request->members);
+            return redirect()->route('scrum-board', ['id' => $projectCreated->id]);
         } catch (\Exception $e) {
             return redirect()->back()->withErrors([
                 'error' => 'An error occurred while creating the project.',

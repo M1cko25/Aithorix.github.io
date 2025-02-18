@@ -6,9 +6,13 @@ import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight 
 import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
-import graphics from '../../graphics';
+import axios from 'axios';
 
 const page = usePage().props;
+const events = ref([
+  { start: '2025-02-06 10:00', end: '2025-02-06 12:00', title: 'Meeting' },
+  { start: '2025-02-07 14:00', end: '2025-02-07 15:30', title: 'Call with client' },
+]);
 
 const stats = ref([
   { 
@@ -38,6 +42,31 @@ const stats = ref([
 ])
 
 const activities = page.activities;
+let currentDate = ref(24)
+
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+const d = new Date();
+let currentMonth = months[d.getMonth()];
+const calendar = ref({
+  month: currentMonth,
+  days: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+  dates: Array.from({ length: 31 }, (_, i) => i + 1)
+})
+
+const meetingStats = ref({
+  total: 12,
+  onTime: 5,
+  late: 4,
+  absent: 3
+})
+
+const statusOverview = ref({
+  total: 24,
+  todo: 12,
+  inProgress: 7,
+  done: 5
+})
 
 const chartOptions = ref({
   chart: {
@@ -101,30 +130,31 @@ const formatDate = (dateString) => {
 
 
 const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
-// const meetingTimes = ref(page.meetings.map(meeting => {
-//     const formatTime = (timeStr) => {
-//         const time = new Date(`2000-01-01 ${timeStr.split(' ')[1]}`);
-//         return time.toLocaleTimeString('en-US', {
-//             hour: 'numeric',
-//             minute: '2-digit',
-//             hour12: true
-//         });
-//     };
+const meetingTimes = ref(page.meetings.map(meeting => {
+    const formatTime = (timeStr) => {
+        const time = new Date(`2000-01-01 ${timeStr.split(' ')[1]}`);
+        return time.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
     
-//     return `${formatTime(meeting.start_time)} - ${formatTime(meeting.end_time)}`;
-// }));
+    return `${formatTime(meeting.start_time)} - ${formatTime(meeting.end_time)}`;
+}));
 </script>
 
 <template>
+  <Head title="| Dashboard" />
   <Header />
   <Sidebar />
-  <div class="md:ml-64 md:pt-16 md:p-6 p-2" id="content">
-    <div class="p-12 flex items-center">
-        <h1 class="text-2xl font-bold mb-6">{{ page.projectDetails.name }}<span class="text-xl font-normal"> > Dashboard</span></h1>
+  <div class="md:ml-64 md:pt-16" id="content">
+    <div class="p-6 flex items-center">
+        <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> > Dashboard</span></h1>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 px-6">
       <div 
         v-for="stat in stats" 
         :key="stat.label"
@@ -144,10 +174,10 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
       </div>
     </div>
 
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6 px-6">
       <div class="flex md:flex-row flex-col gap-6">
         <!-- Recent Activities -->
-      <div v-if="activities.length > 0" class="w-full h-80 bg-light rounded-xl p-6 shadow-sm">
+      <div class="w-full h-80 bg-light rounded-xl p-6 shadow-sm">
         <h2 class="font-semibold mb-4 text-2xl">Recent Activities</h2>
         <p class="text-sm text-gray-500 mb-6">View all the activities that is made in the project</p>
         
@@ -170,36 +200,29 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
           </div>
         </div>
       </div>
-        <!-- Status Overview -->
-        <div class="bg-light w-full rounded-xl p-6 shadow-sm">
-          <div v-if="totalIssues > 0">
-            <h2 class="font-semibold text-xl mb-4">Status Overview</h2>
-            <p class="text-sm text-gray-500 mb-6">Get the status of project's issues</p>
+      <!-- Status Overview -->
+      <div class="bg-light w-full rounded-xl p-6 shadow-sm">
+          <h2 class="font-semibold text-xl mb-4">Status Overview</h2>
+          <p class="text-sm text-gray-500 mb-6">Get the status of project's issues</p>
 
-            <!-- Donut Chart Placeholder -->
-            <div class="relative flex items-center justify-center">
-                <VueApexCharts 
-                  type="donut"
-                  :options="chartOptions"
-                  :series="chartSeries"
-                  width="100%"
-                />
-                <div class="absolute rounded-full w-24 h-24 shadow-xl -translate-x-14 flex flex-col justify-center items-center">
-                  <p class="text-xl font-bold">{{ totalIssues }}</p>
+          <!-- Donut Chart Placeholder -->
+          <div class="relative flex items-center justify-center">
+              <VueApexCharts 
+                type="donut"
+                :options="chartOptions"
+                :series="chartSeries"
+                width="100%"
+              />
+              <div class="absolute rounded-full w-24 h-24 shadow-xl -translate-x-14 flex flex-col justify-center items-center">
+                <p class="text-xl font-bold">{{ totalIssues }}</p>
                 <p class="text-sm">Total Issues</p>
               </div>
             </div>
-          </div>
-          <div v-else class="flex flex-col justify-center h-full items-center gap-5">
-            <img :src="graphics.noDataIllustration" class="w-20 h-20">
-            <h1 class="font-bold">No activity yet</h1>
-            <p>Try creating few backlogs</p>
-          </div>
         </div>
       </div>
 
       <!-- Meeting Participation -->
-      <div v-if="meetingDates.length > 0" class="flex flex-row gap-6">
+      <div class="flex flex-row gap-6">
         <div class="bg-light w-full rounded-xl p-6 shadow-sm">
           <h2 class="font-semibold text-xl mb-4">Meeting Participation</h2>
           <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>

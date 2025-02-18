@@ -41,9 +41,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         RedirectIfAuthenticated::redirectUsing(function(){
-            return route('scrum-board');
+            return route('home');
         });
-
         Authenticate::redirectUsing(function(){
             Session::flash('fail', 'Log in first');
             return route('login');

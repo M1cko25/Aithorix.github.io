@@ -62,7 +62,7 @@ function onInput(event) {
         <div :class="`txt-primary flex flex-row ${style}`">
             <img v-if="icon && !hasButton" :src="icon" class="h-fit w-fit" alt="icon">
             <div v-if="type == 'search'" type="submit"><Search class="h-fit w-fit" /></div>
-            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-2`" @input="onInput" 
+            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-3`" @input="onInput" 
             :value="modelValue" autocomplete="email" @keyup.enter="$emit('onEnter')"
              :name="name" :placeholder="placeholder">
             <button v-if="hasButton" @click="click">

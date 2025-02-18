@@ -149,7 +149,8 @@ const form = useForm({
       </div>
       
       <!-- Next Button -->
-      <div class="flex justify-end px-4 sm:px-0">
+      <div class="flex justify-between px-4 sm:px-0">
+        <Link :href="route('home')" class="text-lg">Skip</Link>
         <button class="btn-primary px-4 py-2" type="submit" @click="form.get('/create-project')">
           Next
         </button>

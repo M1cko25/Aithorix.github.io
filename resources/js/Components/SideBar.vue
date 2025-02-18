@@ -5,62 +5,62 @@ import {
   Briefcase, 
   Star,
   LayoutDashboard,
-  LayoutList,
-  Clock,
-  Package,
+  Kanban,
+  ChartGantt,
+  Logs,
   Rocket,
   CalendarDays,
   Search,
-  Filter,
-  ChevronDown
+  Filter
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
 
 // Add this after your existing props definition
 const page = usePage()
-
 const props = defineProps({
-  projectName: String,
   projectItems: {
     type: Array,
     default: [
-    { icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard?id=', active: false },
-    { icon: LayoutList, text: 'Board', path: '/scrum/board?id=', active: true },
-    { icon: Clock, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
-    { icon: Package, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
-    { icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { id: 'dashboard', icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard?id=', active: false },
+      { id: 'board', icon: Kanban, text: 'Board', path: '/scrum/board?id=', active: true },
+      { id: 'timeline', icon: ChartGantt, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
+      { id: 'backlog', icon: Logs, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
+      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
     ]
   }
 })
 
 const searchQuery = ref('')
+const currentProject = ref('Scrum Project')
 
 const menuItems = [
-  { icon: Home, text: 'Home', path: '/home', },
+  { icon: Home, text: 'Home', path: '/home' },
   { icon: Briefcase, text: 'My Work', path: '/work' },
   { icon: Star, text: 'Starred', path: '/starred' },
 ]
 
-const activateLink = (projItem) => {
-  props.projectItems.forEach(item => {
-    if(projItem == item.text) {
-      item.active = true;
-    } else {
-      item.active = false;
-    }
-  });
+const activeStates = ref(new Map())
+
+const isItemActive = (projectId, itemPath) => {
+  const key = `${projectId}-${itemPath}`
+  return activeStates.value.get(key) || false
 }
 
 watch(
   () => page.url,
   (newUrl) => {
-    props.projectItems.forEach(item => {
-      item.active = item.path === newUrl || newUrl.includes(item.path);
+    if (page.props.projects?.project?.length){
+      page.props.projects.project.forEach(project => {
+      props.projectItems.forEach(item => {
+        const key = `${project.id}-${item.path}`
+        const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
+        activeStates.value.set(key, isActive)
+      })
     })
+    }
   },
   { immediate: true }
 )
-
 const projectStates = ref(new Map())
 
 const toggleDown = (projectId) => {
@@ -74,6 +74,18 @@ const isProjectOpen = (projectId) => {
   }
   return page.url.includes(projectId)
 }
+watch(
+  () => page.props.projects,
+  (newProjects) => {
+    if (newProjects?.project) {
+      newProjects.project.forEach(project => {
+        projectStates.value.set(project.id, page.url.includes(project.id))
+      })
+    }
+  },
+  { immediate: true, deep: true }
+)
+
 </script>
 
 <template>
@@ -96,7 +108,7 @@ const isProjectOpen = (projectId) => {
     <nav class="px-2">
       <ul class="space-y-1">
         <li v-for="item in menuItems" :key="item.text">
-          <Link :href="item.path" :class="`flex items-center ${page.url == item.path ? 'bg-blue text-light hover:bg-button-hover' : ''} gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100`">
+          <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
             <component :is="item.icon" class="w-5 h-5" />
             {{ item.text }}
           </Link>
@@ -108,7 +120,7 @@ const isProjectOpen = (projectId) => {
     <div class="mt-6">
       <div class="px-4 mb-2 border-b border-neutral mx-2">
         Projects
-      </div>
+      </div>  
       <div v-for="project in page.props.projects.project" :key="project.id" class="w-full my-2">
         <button @click="toggleDown(project.id)" class="flex w-full flex-row px-5 justify-between items-center">
           <p class="text-lg">{{ project.name }}</p>
@@ -133,7 +145,7 @@ const isProjectOpen = (projectId) => {
     </div>
 
     <!-- Meeting Summaries -->
-    <div v-if="page.url != '/home'" class="mt-6 px-4">
+    <div class="mt-6 px-4">
       <a href="/meetings" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
         <CalendarDays class="w-5 h-5" />
         Meeting Summaries
@@ -141,17 +153,3 @@ const isProjectOpen = (projectId) => {
     </div>
   </aside>
 </template>
-<style scoped>
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-  max-height: 300px;
-  overflow: hidden;
-}
-
-.list-enter-from,
-.list-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-</style>
