@@ -47,8 +47,13 @@ class ScrumController extends Controller
                 $activity->date = Carbon::parse($activity->date)->diffForHumans();
                 return $activity;
             });
-    
-        $totalMembers = ProjectMembers::where('project_id', $projectDetails->id)->count();
+        $onTime = MeetingParticipants::where('meeting_id', $projectDetails->id)
+        ->where('status', 'on time')->count();
+        $late = MeetingParticipants::where('meeting_id', $projectDetails->id)
+        ->where('status', 'late')->count();
+        $absent = MeetingParticipants::where('meeting_id', $projectDetails->id)
+        ->where('status', 'absent')->count();
+        $totalMembers = MeetingParticipants::where('meeting_id', $projectDetails->id)->count();
     
         return Inertia::render('Scrum/ScrumDashboard', [
             'projectDetails' => $projectDetails,
@@ -59,6 +64,9 @@ class ScrumController extends Controller
             'meetings' => $meetings,
             'sprints' => $sprints,
             'activities' => $activities,
+            'onTime' => $onTime,
+            'late' => $late,
+            'absent' => $absent,
             'totalMembers' => $totalMembers,
         ]);
     }

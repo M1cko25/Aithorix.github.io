@@ -49,15 +49,13 @@ const isItemActive = (projectId, itemPath) => {
 watch(
   () => page.url,
   (newUrl) => {
-    if (page.props.projects?.project?.length){
-      page.props.projects.project.forEach(project => {
+    page.props.projects.project.forEach(project => {
       props.projectItems.forEach(item => {
         const key = `${project.id}-${item.path}`
         const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
         activeStates.value.set(key, isActive)
       })
     })
-    }
   },
   { immediate: true }
 )
@@ -132,8 +130,8 @@ watch(
             <Link
               :href="item.path + project.id" @click="activateLink(item.text)"
               class="flex items-center gap-3 px-4 py-2 rounded-lg"
-              :class="item.active ? 'bg-blue text-light hover:bg-button-hover' : 'text-gray-700'"
-            >
+              :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' 
+              : 'text-gray-700'">
               <component :is="item.icon" class="w-5 h-5" />
               {{ item.text }}
             </Link>
