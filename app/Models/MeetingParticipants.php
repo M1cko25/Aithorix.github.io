@@ -11,7 +11,8 @@ class MeetingParticipants extends Model
     use HasFactory;
     protected $fillable = [
         'meeting_id',
-        'user_id'
+        'user_id',
+        'status'
     ];
 
     public function meeting() {

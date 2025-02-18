@@ -1,5 +1,6 @@
 <script setup>
 import Sidebar from '../../Components/Sidebar.vue';
+import Header from '../../Components/Header.vue';
 import Button from '../../Components/Button.vue';
 import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'
 import { ref } from 'vue'
@@ -37,7 +38,7 @@ const activities = ref([
 </script>
 <template>
     <Sidebar />
-
+    <Header/>
     <Head title=" | Timeline" />
     <div class="min-h-screen overflow-y-auto">
         <div class="ml-64 pt-16">

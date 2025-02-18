@@ -14,8 +14,8 @@ class ProjectMembersSeeder extends Seeder
     public function run(): void
     {
         ProjectMembers::factory()->create([
-            'project_id' => 3,
-            'user_id' => 3,
+            'project_id' => 1,
+            'user_id' => 2,
             'role' => 'Scrum Master',
         ]);
     }
