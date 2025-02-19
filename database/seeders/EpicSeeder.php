@@ -13,6 +13,26 @@ class EpicSeeder extends Seeder
      */
     public function run(): void
     {
-        Epic::factory(3)->create();
+        Epic::create(
+        //     [
+        //     'project_id' => 1,
+        //     'name' => 'Epic 1',
+        //     'description' => 'Epic 1 description',
+        //     'progress_precent' => 0,
+        //     'key' => 'AITH-E1',
+        //     'order' => 1,
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ], 
+        [
+            'project_id' => 1,
+            'name' => 'Epic 2',
+            'description' => 'Epic 2 description',
+            'progress_precent' => 0,
+            'key' => 'AITH-E2',
+            'order' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

@@ -11,7 +11,8 @@ import {
   Rocket,
   CalendarDays,
   Search,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
 
@@ -133,7 +134,7 @@ watch(
               :href="item.path + project.id" @click="activateLink(item.text)"
               class="flex items-center gap-3 px-4 py-2 rounded-lg"
               :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' 
-              : 'text-gray-700'">
+              : 'text-dark'">
               <component :is="item.icon" class="w-5 h-5" />
               {{ item.text }}
             </Link>
@@ -153,3 +154,17 @@ watch(
     </div>
   </aside>
 </template>
+<style>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+  max-height: 300px; /* Adjust based on your content height */
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+</style>

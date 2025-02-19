@@ -13,8 +13,6 @@ class Epic extends Model
         'project_id',
         'name',
         'description',
-        'start_date',
-        'end_date',
         'progress_precent',
         'key',
         'order',

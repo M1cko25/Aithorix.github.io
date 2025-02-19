@@ -7,62 +7,37 @@ import { Filter, ArrowUpDown, MoreHorizontal, ChevronRight,
 import { usePage } from '@inertiajs/vue3';
 import draggable from "vuedraggable";
 import TextField from '../../Components/TextField.vue'
+import axios from 'axios';
 
 const page = usePage().props;
 
 const searchQuery = ref('')
-const epicSelected = ref('Login and Register')
 const newEpic = ref('')
 
-const epics = ref(page.epics)
+const projEpics = ref(page.epics)
+const epics = ref([])
+projEpics.value.sort((a, b) => a.order - b.order).forEach(epic => {
+    epics.value.push({
+      epic_id: epic.id,
+      name: epic.name,
+      isActive: epic.order === 1 ? true : false,
+      description: epic.description,
+      key: epic.key,
+      order: epic.order,
+      progress: epic.progress_percent + '%',
+      tasks: page.backlogs.filter(backlog => backlog.epic_id === epic.id) || []
+    })
+  })
 
-const tasks = ref([
-  {
-    id: 1,
-    title: 'Wireframe',
-    type: 'Story',
-    status: 'To Do',
-    assignees: [
-      '/placeholder.svg?height=32&width=32',
-      '/placeholder.svg?height=32&width=32'
-    ]
-  },
-  {
-    id: 2,
-    title: 'User Flow',
-    type: 'Bug',
-    status: 'In Progress',
-    assignees: ['/placeholder.svg?height=32&width=32']
-  },
-  {
-    id: 3,
-    title: 'UI Design',
-    type: 'Task',
-    status: 'Done',
-    assignees: [
-      '/placeholder.svg?height=32&width=32',
-      '/placeholder.svg?height=32&width=32'
-    ]
-  },
-  {
-    id: 4,
-    title: 'UX Design',
-    type: 'Story',
-    status: 'To Do',
-    assignees: [
-      '/placeholder.svg?height=32&width=32',
-      '/placeholder.svg?height=32&width=32'
-    ]
-  }
-])
+const epicSelected = ref(epics.value[0])
 
 const statusOptions = ['To Do', 'In Progress', 'Done']
 
-const taskCounts = {
-  todo: 6,
-  inProgress: 3,
-  completed: 6
-}
+const taskCounts = ref({
+  todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
+  inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
+  completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
+})
 
 const isCreatingEpic = ref(false);
 const isCreatingTask = ref(false);
@@ -71,8 +46,14 @@ const selectEpic = (selectedEpic) => {
   epics.value.forEach(epic => {
     epic.isActive = epic === selectedEpic;
   });
-  selectedEpic.value = selectedEpic.name;
-  epicSelected.value = selectedEpic.name;
+  epicSelected.value = selectedEpic;
+  
+  // Update counts
+  taskCounts.value = {
+    todo: selectedEpic.tasks.filter(task => task.status === 'To Do').length,
+    inProgress: selectedEpic.tasks.filter(task => task.status === 'In Progress').length,
+    completed: selectedEpic.tasks.filter(task => task.status === 'Done').length
+  }
 }
 
 const createEpic = ()=> {
@@ -81,9 +62,19 @@ const createEpic = ()=> {
 
 const createNewEpic = () => {
   if (newEpic.value.trim().length > 0) {
-    epics.value.push({ name: newEpic.value, isActive: false });
+    axios.post('/scrum/epic-create', {
+      name: newEpic.value,
+      key: page.projectDetails.key + '-E' + (projEpics.value.length + 1),
+      projectId: page.projectDetails.id
+    })
+    .then(response => {
+      epics.value.push({ name: newEpic.value, isActive: false });
+    })
+    .catch(error => {
+      console.error('Error making epic:', error);
+    });
     newEpic.value = '';
-    isCreatingEpic.value = false;
+    isCreatingEpic.value = false;   
   } else {
     isCreatingEpic.value = false;
   }
@@ -112,16 +103,51 @@ const selectType = (type) => {
 
 const createTask = () => {
   if (newTask.value.trim().length > 0) {
-    tasks.value.push({
-      id: tasks.value.length + 1,
+    const activeEpic = epics.value.find(epic => epic.isActive);
+    axios.post('/scrum/backlog-create', {
       title: newTask.value,
-      type: selectedType.value.name,
+      description: '',
+      priority: 'Low',
       status: statusOptions[0],
-      assignees: []
+      type: selectedType.value.name,
+      epicId: activeEpic.epic_id,
+      order: activeEpic.order + 1,
+      projectId: page.projectDetails.id
     })
-    newTask.value = '';
+    .then(response => {
+      epics.value[activeEpic.order - 1].tasks.push({
+        id: response.data.id,
+        title: newTask.value,
+        description: '',
+        priority: 'Low',
+        type: selectedType.value.name,
+        status: statusOptions[0],
+        assignees: [],
+        epic_id: activeEpic.epic_id
+      });
+      newTask.value = '';
+    })
+    .catch(error => {
+      console.error('Error making task:', error);
+    });
     isCreatingTask.value = false;
   }
+}
+
+const handleDragEnd = () => {
+  const updatedEpics = epics.value.map((epic, index) => ({
+    ...epic,
+    order: index + 1
+  }));
+  axios.post('/scrum/epics-reorder', {
+    epics: updatedEpics
+  })
+  .then(response => {
+    epics.value = updatedEpics;
+  })
+  .catch(error => {
+    console.error('Error updating epic order:', error);
+  });
 }
 </script>
 
@@ -167,8 +193,8 @@ const createTask = () => {
             class="space-y-2"
             item-key="name"
             :group="{ name: 'epics' }"
-            @start="drag=true" 
-            @end="drag=false"
+            @start="drag=true"
+            @end="handleDragEnd"
           >
           <template #item="{ element: epic }">
             <button @click="selectEpic(epic)"
@@ -195,8 +221,8 @@ const createTask = () => {
       <div @click="isCreatingEpic = false" class="flex-1 bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-4">
-            <h2 class="text-xl font-semibold">{{ epicSelected }}</h2>
-            <div class="text-sm text-gray-500">4 Tasks</div>
+            <h2 class="text-xl font-semibold">{{ epicSelected.name }}</h2>
+            <div class="text-sm text-gray-500">{{ epicSelected.tasks.length }} {{epicSelected.tasks.length > 1 ? 'backlogs' : 'backlog'}}</div>
             <button class="p-1 hover:bg-gray-100 rounded">
               <Edit2 class="w-4 h-4" />
             </button>
@@ -221,10 +247,10 @@ const createTask = () => {
         <!-- Tasks -->
         <div>
           <draggable 
-            v-model="tasks" 
+            v-model="epicSelected.tasks" 
             class="space-y-2"
             item-key="id"
-            :group="{ name: 'tasks' }"
+            :group="{ name: 'epicSelected.tasks' }"
             @start="drag=true" 
             @end="drag=false"
           >

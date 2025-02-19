@@ -9,5 +9,8 @@ Route::controller(ScrumController::class)->group(function(){
         Route::get('/scrum/board', 'getBoardDatas')->name('scrum-board');
         Route::get('/scrum/timeline', 'getTimelineDatas')->name('scrum-timeline');
         Route::get('/scrum/backlog', 'getBacklogDatas')->name('scrum-backlog');
+        Route::post('/scrum/epics-reorder', 'updateEpicOrder')->name('epics-reorder');
+        Route::post('/scrum/epic-create', 'createEpic')->name('epic-create');
+        Route::post('/scrum/backlog-create', 'createBacklog')->name('backlog-create');
     });
 });

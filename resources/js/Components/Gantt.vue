@@ -66,46 +66,42 @@ const data = ref([{
      })
      const toolbarOptions = ref(['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']);
      const editSettings = ref({
-         allowAdding: true,
          allowEditing: true,
          allowTaskbarEditing: true,
          allowDeleting: true,
-         allowTaskbarEditing: true,
          allowDependencyEditing: true,
          showDeleteConfirmDialog: true,
          allowAdding: true,
-         mode: 'auto',
+         mode: 'Normal'
      })
 
      const labelSettings = {
-        rightLabel: '<img src=""',
+        rightLabel: '',
         taskLabel: '${taskData.TaskName}'
     };
-    const addSubTask = (parentTask) => {
-  const newTaskID = tasks.value.length + 1;
-  tasks.value.push({
-    TaskID: newTaskID,
-    TaskName: `New Task ${newTaskID}`,
-    StartDate: new Date(),
-    Duration: 3,
-    parentID: parentTask.TaskID, // Assign as a subtask
-  });
-};
+//     const addSubTask = (parentTask) => {
+//   const newTaskID = tasks.value.length + 1;
+//   tasks.value.push({
+//     TaskID: newTaskID,
+//     TaskName: `New Task ${newTaskID}`,
+//     StartDate: new Date(),
+//     Duration: 3,
+//     parentID: parentTask.TaskID, // Assign as a subtask
+//   });
+// };
 
 provide("gantt", [Edit, Selection, Toolbar]);
 </script>
 
 <template>
   <ejs-gantt :dataSource='data' :treeColumnIndex='1' child='subtasks' 
-  :taskFields= 'taskFields' height="100%" :toolbar="toolbarOptions"
-  :editSettings="editSettings" allowTaskbarEditing="true" :labelSettings="labelSettings">
+  :taskFields='taskFields' height="100%" :toolbar="toolbarOptions"
+  :editSettings="editSettings" :labelSettings="labelSettings" :allowTaskbarEditing="true"
+  :allowDragAndDrop="true" :allowResizing="true">
         <e-columns class="border border-dark">
             <e-column field='TaskName' headerText='Task Name' textAlign='Left' width=200></e-column>
             <e-column field='StartDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
             <e-column field='Duration' headerText='Duration' textAlign='Right' width=80></e-column>
-            <template #columnTemplate="{ data }">
-              <button @click="addSubTask(data)" class="p-1"><Plus/></button>
-            </template>
        </e-columns>
     </ejs-gantt>
 </template>

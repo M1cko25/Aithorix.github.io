@@ -13,6 +13,7 @@ use App\Models\MeetingParticipants;
 use App\Models\ProjectMembers;
 use Carbon\Carbon;
 use App\Models\Epic;
+use Illuminate\Support\Facades\Auth;
 
 class ScrumController extends Controller
 {
@@ -20,15 +21,15 @@ class ScrumController extends Controller
         $projectDetails = Project::where('id', $request->query('id'))->first();
     
         $toDoBacklogs = Backlogs::where('project_id', $projectDetails->id)
-            ->where('status', 'to do')
+            ->where('status', 'To Do')
             ->count();
             
         $progressBacklogs = Backlogs::where('project_id', $projectDetails->id)
-            ->where('status', 'in_progress')
+            ->where('status', 'In Progress')
             ->count();
             
         $completedBacklogs = Backlogs::where('project_id', $projectDetails->id)
-            ->where('status', 'completed')
+            ->where('status', 'Done')
             ->count();
             
         $meetingCreated = Meetings::where('project_id', $projectDetails->id)
@@ -100,7 +101,51 @@ class ScrumController extends Controller
         $backlogs = Backlogs::where('project_id', $projectDetails->id)->get();
         return Inertia::render('Scrum/ScrumBacklog', [
             'projectDetails' => $projectDetails,
+            'backlogs' => $backlogs,
             'epics' => $epics,
         ]);
+    }
+
+    public function updateEpicOrder(Request $request) {
+        $epics = $request->epics;
+        
+        foreach($epics as $index => $epic) {
+            Epic::where('id', $epic['epic_id'])
+                ->update(['order' => $index + 1]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function createEpic(Request $request) {
+        $projId = $request->projectId;
+        $epicNum = Epic::where('project_id', $projId)->count() + 1;
+        Epic::create([
+            'project_id' => $projId,
+            'name' => $request->name,
+            'description' => '',
+            'progress_precent' => 0,
+            'key' => $request->key,
+            'order' => $epicNum + 1,
+        ]);
+        return response()->json(['success' => true]);
+    }
+
+    public function createBacklog(Request $request) {
+        $projId = $request->projectId;
+        $backlogNum = Backlogs::where('project_id', $projId)
+        ->where('epic_id', $request->epicId)
+        ->count() + 1;
+        Backlogs::create([
+            'title' => $request->title,
+            'project_id' => $projId,
+            'type' => $request->type,
+            'description' => '',
+            'priority' => $request->priority,
+            'epic_id' => $request->epicId,
+            'creator_id' => Auth::user()->id,
+            'status' => 'To Do',
+            'order' => $request->order,
+        ]);
+        return response()->json(['success' => true]);
     }
 }
