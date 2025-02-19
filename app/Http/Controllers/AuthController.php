@@ -21,46 +21,45 @@ class AuthController extends Controller
 
     public function login(Request $request) {
         //validation
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+        // Check if user exists first
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return redirect()->back()->withErrors([
+                'email' => 'Email not found'
+            ])->onlyInput('email');
+        }
+        $userId = User::where('email', $request->email)->value('id');
+        $projectMember = ProjectMembers::where('user_id', $userId)->get();
+        $projects = [];
+        foreach ($projectMember as $member) {
+            $project = Project::where('id', $member->project_id)->first();
+            array_push($projects, $project);
+        }
+        $members = [];
+        foreach ($projects as $project) {
+            $member = ProjectMembers::where('project_id', $project->id)->get();
+            array_push($members, $member);
+        }
 
-        // try {
-            // Check if user exists first
-            $user = User::where('email', $request->email)->first();
-            if (!$user) {
-                return redirect()->back()->withErrors([
-                    'email' => 'Email not found'
-                ])->onlyInput('email');
-            }
-            $userId = User::where('email', $request->email)->value('id');
-            $projects = Project::where('owner_id', $userId)->get();
-            $members = [];
-            foreach ($projects as $project) {
-                $member = ProjectMembers::where('project_id', $project->id)->get();
-                array_push($members, $member);
-            }
+        if (!$projects) {
+            Auth::login($user);
+            return redirect()->route('template');
+        }
 
-            if (!$projects) {
-                Auth::login($user);
-                return redirect()->route('template');
-            }
-
-            //log in
-            if (Auth::attempt($credentials, $request->remember)) {
-                session_start();
-                $request->session()->regenerate();
-                session()->put('isLoggedin', true);
-                session()->put('user', $user);
-                session()->put('projects', $projects);
-                session()->put('members', $members);
-                return redirect()->route('home');
-            }
-            return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
-        // } catch (\Exception $e) {
-        //     return redirect()->back()->withErrors(['email' => 'error: ' . $e->getMessage()]);
-        // }
+        //log in
+        if (Auth::attempt($credentials, $request->remember)) {
+            session_start();
+            $request->session()->regenerate();
+            session()->put('user', $user);
+            session()->put('projects', $projects);
+            session()->put('members', $members);
+            return redirect()->route('home');
+        }
+        return redirect()->back()->withErrors(['password' => 'Incorrect password'])->onlyInput('password');
     }
 
     public function verify(Request $request) {

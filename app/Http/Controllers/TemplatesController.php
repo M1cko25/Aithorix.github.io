@@ -53,6 +53,7 @@ class TemplatesController extends Controller
                 'key' => $request->key,
                 'owner_id' => $request->owner_id,
                 'template' => $request->template,
+                'members' => count($request->members),
             ]);
             foreach($request->members as $member) {
                 ProjectMembers::create([

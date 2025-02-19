@@ -15,5 +15,6 @@ class Project extends Model
         'key',
         'owner_id',
         'template',
+        'members'
     ];
 }
