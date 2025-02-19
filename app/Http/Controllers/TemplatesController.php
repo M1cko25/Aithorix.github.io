@@ -21,7 +21,7 @@ class TemplatesController extends Controller
     }
 
     public function createProject(Request $request){
-        $credentials = $request->validate([
+        $request->validate([
             'name' => 'required',
             'key' => 'required|min:2|max:4',
             'owner_id' => 'required|integer',

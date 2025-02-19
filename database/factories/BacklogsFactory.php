@@ -19,9 +19,12 @@ class BacklogsFactory extends Factory
         return [
             'title' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
+            'type' => $this->faker->randomElement(['task', 'bug', 'feature']),
+            'priority' => $this->faker->randomElement(['low', 'medium', 'high']),
+            'epic_id' => 1,
             'project_id' => 1,
             'creator_id' => 3,
-            'status' => $this->faker->randomElement(['pending', 'in_progress', 'completed']),
+            'status' => $this->faker->randomElement(['to do', 'in_progress', 'completed']),
             'created_at' => now(),
             'updated_at' => now(),
         ];

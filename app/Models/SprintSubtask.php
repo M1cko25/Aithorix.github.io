@@ -5,20 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Backlogs extends Model
+class SprintSubtask extends Model
 {
-    /** @use HasFactory<\Database\Factories\BacklogsFactory> */
+    /** @use HasFactory<\Database\Factories\SprintSubtaskFactory> */
     use HasFactory;
-
     protected $fillable = [
+        'task_id',
         'title',
         'description',
-        'type',
         'status',
-        'priority',
-        'project_id',
-        'epic_id',
-        'creator_id',
-        'order'
     ];
 }
