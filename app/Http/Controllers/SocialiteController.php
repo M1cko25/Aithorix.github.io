@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
-use phpseclib3\Crypt\RC2;
+use App\Models\ProjectMembers;
 
 class SocialiteController extends Controller
 {
@@ -24,15 +24,26 @@ class SocialiteController extends Controller
         $user = User::where('google_id', $gooleUser->id)->first();
         if ($user) {
             $userId = User::where('google_id', $gooleUser->id)->value('id');
-            $project = Project::where('owner_id', $userId)->first();
-            if (!$project) {
+            $projectMember = ProjectMembers::where('user_id', $userId)->get();
+            $projects = [];
+            foreach ($projectMember as $member) {
+                $project = Project::where('id', $member->project_id)->first();
+                array_push($projects, $project);
+            }
+            $members = [];
+            foreach ($projects as $project) {
+                $member = ProjectMembers::where('project_id', $project->id)->get();
+                array_push($members, $member);
+            }
+            if (!$projects) {
                 Auth::login($user);
                 return redirect()->route('template');
             }
-            session()->put('project', $project);
+            session()->put('projects', $projects);
+            session()->put('members', $members);
             session()->put('user', $user);
             Auth::login($user);
-            return redirect()->route('scrum-board');
+            return redirect()->route('home');
         } else {
             $newUser = User::create([
                 'name' => $gooleUser->name,
@@ -62,15 +73,26 @@ class SocialiteController extends Controller
         $user = User::where('slack_id', $slackUser->id)->first();
         if ($user) {
             $userId = User::where('slack_id', $slackUser->id)->value('id');
-            $project = Project::where('owner_id', $userId)->first();
+            $projectMember = ProjectMembers::where('user_id', $userId)->get();
+            $projects = [];
+            foreach ($projectMember as $member) {
+                $project = Project::where('id', $member->project_id)->first();
+                array_push($projects, $project);
+            }
+            $members = [];
+            foreach ($projects as $project) {
+                $member = ProjectMembers::where('project_id', $project->id)->get();
+                array_push($members, $member);
+            }
             if (!$project) {
                 Auth::login($user);
                 return redirect()->route('template');
             }
-            session()->put('project', $project);
+            session()->put('projects', $projects);
+            session()->put('members', $members);
             session()->put('user', $user);
             Auth::login($user);
-            return redirect()->route('scrum-board');
+            return redirect()->route('home');
         } else {
             $newUser = User::create([
                 'name' => $slackUser->name,

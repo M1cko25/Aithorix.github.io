@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('owner_id');
             $table->unique(['owner_id', 'key']);
             $table->string('template');
+            $table->integer('members');
             $table->timestamps();
         });
     }

@@ -49,13 +49,15 @@ const isItemActive = (projectId, itemPath) => {
 watch(
   () => page.url,
   (newUrl) => {
-    page.props.projects.project.forEach(project => {
+    if (page.props.projects?.project?.length) {
+      page.props.projects.project.forEach(project => {
       props.projectItems.forEach(item => {
         const key = `${project.id}-${item.path}`
         const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
         activeStates.value.set(key, isActive)
       })
     })
+    }
   },
   { immediate: true }
 )
