@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\ProjectMembers;
+use App\Models\Meetings;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MeetingParticipants>
@@ -16,10 +18,12 @@ class MeetingParticipantsFactory extends Factory
      */
     public function definition(): array
     {
+        $projectMember = ProjectMembers::inRandomOrder()->first();
+
         return [
-            'meeting_id' => $this->faker->numberBetween(1, 10),
-            'user_id' => $this->faker->numberBetween(1, 3),
-            'status' => $this->faker->randomElement(['on time', 'late', 'absent']),
-        ];
+            // 'meeting_id' => 1,
+            // 'user_id' => 3,
+            // 'status' => $this->faker->randomElement(['on time', 'late', 'absent']),
+        ]; 
     }
 }

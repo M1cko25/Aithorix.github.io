@@ -5,4 +5,4 @@ use App\Http\Controllers\HomeController;
 
 //routes
 Route::inertia('/', 'Landing')->name('landing');
-Route::get('/home', [HomeController::class, 'getUserDatas'])->name('home');
+Route::get('/home', [HomeController::class, 'getUserDatas'])->name('home')->middleware('auth');

@@ -59,7 +59,7 @@ const handleCreateTask = () => {
             @end="$emit('update:tasks', tasks)"
         >
             <template #item="{ element: task }">
-                <div class="p-4 bg-white rounded-lg shadow-sm">
+                <div class="p-4 cursor-grab bg-white rounded-lg shadow-sm">
                     <div class="flex flex-col gap-2">
                         <div class="flex flex-row justify-between items-center">
                             <div class="flex flex-row items-center gap-2">

@@ -14,16 +14,7 @@ const searchQuery = ref('')
 const epicSelected = ref('Login and Register')
 const newEpic = ref('')
 
-const epics = ref([
-  { 
-    name: 'Login and Register',
-    isActive: true
-  },
-  { 
-    name: 'Project Creation',
-    isActive: false
-  }
-])
+const epics = ref(page.epics)
 
 const tasks = ref([
   {

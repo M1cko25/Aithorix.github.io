@@ -12,13 +12,15 @@ use App\Models\Activity;
 use App\Models\MeetingParticipants;
 use App\Models\ProjectMembers;
 use Carbon\Carbon;
+use App\Models\Epic;
+
 class ScrumController extends Controller
 {
     public function getDashboardDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
     
         $toDoBacklogs = Backlogs::where('project_id', $projectDetails->id)
-            ->where('status', 'pending')
+            ->where('status', 'to do')
             ->count();
             
         $progressBacklogs = Backlogs::where('project_id', $projectDetails->id)
@@ -93,8 +95,12 @@ class ScrumController extends Controller
     }
     public function getBacklogDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
+
+        $epics = Epic::where('project_id', $projectDetails->id)->get();
+        $backlogs = Backlogs::where('project_id', $projectDetails->id)->get();
         return Inertia::render('Scrum/ScrumBacklog', [
             'projectDetails' => $projectDetails,
+            'epics' => $epics,
         ]);
     }
 }

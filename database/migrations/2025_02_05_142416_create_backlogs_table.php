@@ -17,15 +17,14 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->string('type')->default('task');
             $table->string('status')->default('to-do');
+            $table->string('priority')->default('low');
             $table->unsignedBigInteger('project_id');
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->unsignedBigInteger('creator_id');
-            $table->foreign('creator_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('assigned_to')->nullable();
-            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('sprint_id')->nullable();
-            $table->foreign('sprint_id')->references('id')->on('sprints')->onDelete('cascade');
-            $table->unsignedBigInteger('sprint_order')->nullable();
+            $table->foreign('creator_id')->references('id')->on('project_members')->onDelete('cascade');
+            $table->unsignedBigInteger('epic_id');
+            $table->foreign('epic_id')->references('id')->on('epics')->onDelete('cascade');
+            $table->unsignedBigInteger('order')->nullable();
             $table->timestamps();
         });
     }
