@@ -99,6 +99,7 @@ provide("gantt", [Edit, Selection, Toolbar]);
   :editSettings="editSettings" :labelSettings="labelSettings" :allowTaskbarEditing="true"
   :allowDragAndDrop="true" :allowResizing="true">
         <e-columns class="border border-dark">
+            <e-column field='TaskID' headerText='Task ID' textAlign='Left' width=70></e-column>
             <e-column field='TaskName' headerText='Task Name' textAlign='Left' width=200></e-column>
             <e-column field='StartDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
             <e-column field='Duration' headerText='Duration' textAlign='Right' width=80></e-column>

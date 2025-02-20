@@ -3,20 +3,24 @@ import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue'
 import { ref } from 'vue'
 import { Filter, ArrowUpDown, MoreHorizontal, ChevronRight, 
-  Edit2, User, ClipboardList, Bookmark, Bug  } from 'lucide-vue-next'
+  Edit2, User, ClipboardList, Bookmark, Bug, Trash  } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3';
 import draggable from "vuedraggable";
 import TextField from '../../Components/TextField.vue'
 import axios from 'axios';
+import Overlay from '../../Components/Overlay.vue'
+import Modal from '../../Components/Modal.vue'
 
 const page = usePage().props;
 
 const searchQuery = ref('')
 const newEpic = ref('')
 
-const projEpics = ref(page.epics)
+const projEpics = ref(page.epics || [])
 const epics = ref([])
-projEpics.value.sort((a, b) => a.order - b.order).forEach(epic => {
+
+if (projEpics.value.length > 0) {
+  projEpics.value.sort((a, b) => a.order - b.order).forEach(epic => {
     epics.value.push({
       epic_id: epic.id,
       name: epic.name,
@@ -28,19 +32,25 @@ projEpics.value.sort((a, b) => a.order - b.order).forEach(epic => {
       tasks: page.backlogs.filter(backlog => backlog.epic_id === epic.id) || []
     })
   })
+} else {
+  epics.value = []
+}
 
-const epicSelected = ref(epics.value[0])
+const epicSelected = ref(epics.value[0] || {
+  name: 'No Epic Created',
+  tasks: [],
+  epic_id: null
+})
 
 const statusOptions = ['To Do', 'In Progress', 'Done']
 
 const taskCounts = ref({
-  todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
-  inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
-  completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
+  todo: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'To Do').length : 0,
+  inProgress: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'In Progress').length : 0,
+  completed: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'Done').length : 0
 })
 
 const isCreatingEpic = ref(false);
-const isCreatingTask = ref(false);
 
 const selectEpic = (selectedEpic) => {
   epics.value.forEach(epic => {
@@ -96,6 +106,8 @@ const newTask = ref('');
 const isOpen = ref(false)
 const selectedType = ref(taskTypes.value[0])
 
+const isDeleteModalOpen = ref(false);
+
 const selectType = (type) => {
   selectedType.value = type
   isOpen.value = false
@@ -125,6 +137,7 @@ const createTask = () => {
         assignees: [],
         epic_id: activeEpic.epic_id
       });
+      console.log(response.data.id);
       newTask.value = '';
     })
     .catch(error => {
@@ -149,14 +162,102 @@ const handleDragEnd = () => {
     console.error('Error updating epic order:', error);
   });
 }
+
+const isOverlayOpen = ref(false)
+const isEpicOverlayOpen = ref(false)
+const overlayPosition = ref({ x: 0, y: 0 })
+const overlayEpicPosition = ref({ x: 0, y: 0 })
+const selectedTaskToUpdate = ref([]);
+const TaskOverlayButtons = ref([
+  {
+    text: 'Edit Task',
+    function: () => {
+      isOverlayOpen.value = false
+    }
+  },
+  {
+    text: 'Delete Task',
+    function: (eventTarget) => {
+      isDeleteModalOpen.value = true
+      isOverlayOpen.value = false
+    }
+  },
+  {
+    text: 'Open Task',
+    function: () => {   
+      isOverlayOpen.value = false
+    }
+  }
+])
+const EpicOverlayButtons = ref([
+  {
+    text: 'Edit Epic',
+    function: () => {
+      isEpicOverlayOpen.value = false
+    }
+  },
+  {
+    text: 'Delete Epic',
+    function: () => {
+      isEpicOverlayOpen.value = false
+    }
+  },
+  {
+    text: 'Open Epic',
+    function: () => {
+      isEpicOverlayOpen.value = false
+    }
+  }
+])
+
+const deleteTask = () => {
+  selectedTaskToUpdate.value.forEach(task => {
+    axios.post('/scrum/backlog-delete', {
+      id: task.id,
+      epicId: task.epic_id,
+      title: task.title,
+      projectId: page.projectDetails.id
+    })
+    .then(response => {
+      epics.value[task.epic_id - 1].tasks = epics.value[task.epic_id - 1].tasks.filter(t => t.id !== task.id);
+      selectedTaskToUpdate.value = [];
+      isDeleteModalOpen.value = false;
+      console.log(response);
+    })
+    .catch(error => {
+      console.error('Error deleting task:', error);
+    });
+  });
+}
 </script>
 
 <template>
   <Head title="| Backlog" />
-  <Header @click="isCreatingEpic = false; isCreatingTask = false"/>
-  <Sidebar @click="isCreatingEpic = false; isCreatingTask = false"/>
-  <div @click.self="isCreatingEpic = false; isCreatingTask = false" class="ml-64 pt-16 p-6">
-    <div @click="isCreatingEpic = false; isCreatingTask = false" class="flex items-center justify-between">
+  <Header />
+  <Sidebar />
+  <Overlay 
+    :isOpen="isEpicOverlayOpen" 
+    :buttons="EpicOverlayButtons"
+    :position="overlayEpicPosition.value"
+    @close="isEpicOverlayOpen = false"
+  />
+  <Overlay 
+    :isOpen="isOverlayOpen" 
+    :buttons="TaskOverlayButtons"
+    :position="overlayPosition.value"
+    @close="isOverlayOpen = false"
+  />
+  <Modal v-model:modelValue="isDeleteModalOpen" title="Delete Task">
+    <div class="text-center flex flex-col gap-4">
+      <p>Are you sure you want to delete this task?</p>
+      <div class="flex flex-row justify-center w-full gap-4">
+        <button class="btn-cancel w-full" @click="isDeleteModalOpen = false">No</button>
+        <button class="btn-primary w-full" @click="deleteTask">Yes</button>
+      </div>
+    </div>
+  </Modal>
+  <div class="ml-64 pt-16 p-6 mb-5">
+    <div class="flex items-center justify-between">
       <div class="py-6 flex items-center">
         <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> > Backlog</span></h1>
       </div>
@@ -165,7 +266,7 @@ const handleDragEnd = () => {
     </div>
 
     <!-- Controls -->
-    <div @click="isCreatingEpic = false; isCreatingTask = false" class="flex gap-4 mb-6">
+    <div  class="flex gap-4 mb-6">
       <div class="flex-1 max-w-md">
         <TextField v-model="searchQuery" type="search" placeholder="Search" class="w-full" />
       </div>
@@ -184,7 +285,7 @@ const handleDragEnd = () => {
     <!-- Two Column Layout -->
     <div class="flex gap-6">
       <!-- Epic List -->
-      <div @click.self="isCreatingEpic = false; isCreatingTask = false" class="w-64 bg-white rounded-xl shadow-sm p-4">
+      <div class="w-64 bg-white rounded-xl shadow-sm p-4">
         <h2 class="text-xl font-semibold mb-4">Epic</h2>
         
         <div class="space-y-2">
@@ -206,26 +307,25 @@ const handleDragEnd = () => {
             </button>
           </template>
           </draggable>
-          <div v-if="isCreatingEpic" class="mt-4" :ref="epicInputRef">
-            <input v-model="newEpic" type="text" placeholder="Set new milestone" class="w-full px-4 py-2 outline-none" />
-            <button @click="createNewEpic" class="btn-cancel mt-2 w-full">Create</button>
+          <div v-if="isCreatingEpic" class="mt-4 relative">
+            <div class="relative z-20">
+              <input v-model="newEpic" type="text" placeholder="Set new milestone" class="w-full px-4 py-2 outline-none" />
+              <button @click="createNewEpic" class="btn-cancel mt-2 w-full">Create</button>
+            </div>
+            <div class="fixed inset-0 z-10" @click="isCreatingEpic = false"></div>
           </div>
         </div>
-
         <button v-if="!isCreatingEpic" @click="createEpic" class="btn-cancel w-full mt-4 gap-4">
           <span class="text-xl">+</span> Create Epic
         </button>
       </div>
 
       <!-- Task List -->
-      <div @click="isCreatingEpic = false" class="flex-1 bg-white rounded-xl shadow-sm p-6">
+      <div class="flex-1 bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-4">
             <h2 class="text-xl font-semibold">{{ epicSelected.name }}</h2>
-            <div class="text-sm text-gray-500">{{ epicSelected.tasks.length }} {{epicSelected.tasks.length > 1 ? 'backlogs' : 'backlog'}}</div>
-            <button class="p-1 hover:bg-gray-100 rounded">
-              <Edit2 class="w-4 h-4" />
-            </button>
+            <div v-if="epics.length > 0" class="text-sm text-gray-500">{{ epicSelected.tasks.length }} {{epicSelected.tasks.length > 1 ? 'backlogs' : 'backlog'}}</div>
           </div>
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
@@ -233,33 +333,55 @@ const handleDragEnd = () => {
               <span class="px-3 py-1 bg-orange-100 text-orange-600 rounded-full">{{ taskCounts.inProgress }}</span>
               <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full">{{ taskCounts.completed }}</span>
             </div>
-            <button class="btn-primary">
-              Complete Sprint
+            <button v-if="epics.length > 0" class="btn-primary">
+              Start Sprint
             </button>
-            <button><MoreHorizontal/></button>
+            <button v-if="epics.length > 0" @click="(event) => {
+                    isEpicOverlayOpen = true
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    overlayEpicPosition.value = {
+                      x: rect.x - 270,
+                      y: rect.y + rect.height,
+                    }
+                    event.stopPropagation()
+                  }"><MoreHorizontal/></button>
           </div>
         </div>
 
-        <div @click="isCreatingEpic = false" class="text-sm text-gray-500 mb-6">
-          Dec. 1, 2024 - Dec. 14, 2024
+        <div @click="isCreatingEpic = false" class="text-sm text-gray-500 flex w-full justify-between mb-6">
+          <p>Dec. 1, 2024 - Dec. 14, 2024</p>
+          <button v-if="selectedTaskToUpdate.length > 1" @click="isDeleteModalOpen = true">
+            <Trash class="w-5 h-5 text-error" />
+          </button>
         </div>
-
         <!-- Tasks -->
         <div>
-          <draggable 
+          <draggable
             v-model="epicSelected.tasks" 
             class="space-y-2"
             item-key="id"
-            :group="{ name: 'epicSelected.tasks' }"
+            :group="{ name: 'tasks' }"
             @start="drag=true" 
             @end="drag=false"
           >
             <template #item="{ element: task }">
               <div
                 class="flex cursor-grab items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 cursor-move"
-              >
-                <input type="checkbox" class="w-5 h-5 rounded border-gray-300" />
-                
+                >
+              <input 
+                type="checkbox" 
+                class="w-5 h-5 rounded border-gray-300"
+                @change="(event) => {
+                  if (event.target.checked) {
+                    if (!selectedTaskToUpdate.some(t => t.id === task.id)) {
+                      selectedTaskToUpdate.push(task)
+                    }
+                  } else {
+                    selectedTaskToUpdate = selectedTaskToUpdate.filter(t => t.id !== task.id)
+                  }
+                }"
+                :checked="selectedTaskToUpdate.some(t => t.id === task.id)"
+              />
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
                     <ClipboardList v-if="task.type == 'Task'" class="w-5 h-5" />
@@ -293,15 +415,24 @@ const handleDragEnd = () => {
                     />
                   </div>
                 </div>
-
-                <button class="p-2 hover:bg-gray-100 rounded">
+                <button class="p-2 hover:bg-gray-100 rounded" @click="(event) => {
+                    isOverlayOpen = true
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    overlayPosition.value = {
+                      x: rect.x - 270,
+                      y: rect.y + rect.height,
+                    }
+                    event.stopPropagation()
+                    selectedTaskToUpdate = [];
+                    selectedTaskToUpdate.push(task)
+                  }">
                   <MoreHorizontal class="w-5 h-5" />
                 </button>
               </div>
             </template>
           </draggable>
-          <div v-if="isCreatingTask" class="flex flex-row gap-4 mt-4">
-            <div class="relative">
+          <div v-if="isCreatingTask" class="flex flex-row gap-4 mt-4 relative">
+            <div class="relative z-20">
               <button @click="isOpen = !isOpen" class=" flex items-center gap-2 px-4 py-2 border rounded-lg">
                 <component :is="selectedType.icon" class="w-5 h-5" />
                 <span>{{ selectedType.name }}</span>
@@ -319,10 +450,13 @@ const handleDragEnd = () => {
                 </button>
               </div>
             </div>
-            <input type="text" v-model="newTask" placeholder="Add new task" class="w-full px-4 py-2 outline-none" />
-            <button @click="createTask" class="btn-primary">Create</button>
+            <div class="relative z-20 flex w-full flex-row">
+              <input type="text" v-model="newTask" placeholder="Add new task" class="w-full px-4 py-2 outline-none" />
+              <button @click="createTask" class="btn-primary">Create</button>
+            </div>
+            <div class="fixed inset-0 z-10" @click="isCreatingTask = false"></div>
           </div>
-          <button v-if="!isCreatingTask" @click="()=>{isCreatingTask = true}" class="btn-cancel w-full mt-6 ">Create backlog</button>
+          <button v-if="!isCreatingTask" @click="isCreatingTask = true" class="btn-cancel w-full mt-6 ">Create backlog</button>
         </div>
       </div>
     </div>

@@ -24,16 +24,16 @@ const stats = ref([
     period: 'at the last 7 days'
   },
   {
+    icon: Calendar,
+    label: 'Backlog Created',
+    value: page.backlogCreated,
+    period: 'in the last 7 days'
+  },
+  {
     icon: Video,
     label: 'Meeting Created',
     value: page.meetingCreated,
     period: 'at the last 7 days'
-  },
-  {
-    icon: Calendar,
-    label: 'Sprints',
-    value: page.sprints,
-    period: 'in the last 7 days'
   }
 ])
 

@@ -83,7 +83,7 @@ const taskCreating = ref({
     </div>
 
     <!-- Kanban Board -->
-    <div class="px-6 pb-6 flex gap-6">
+    <div class="px-6 pb-6 flex h-full gap-6">
       <KanbanColumn 
         v-for="column in columns"
         :key="column.id"

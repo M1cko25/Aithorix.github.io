@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Backlogs;
 use App\Models\Meetings;
-use App\Models\Sprint;
 use App\Models\Project;
 use Inertia\Inertia;
 use App\Models\Activity;
@@ -14,6 +13,7 @@ use App\Models\ProjectMembers;
 use Carbon\Carbon;
 use App\Models\Epic;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ScrumController extends Controller
 {
@@ -30,16 +30,18 @@ class ScrumController extends Controller
             
         $completedBacklogs = Backlogs::where('project_id', $projectDetails->id)
             ->where('status', 'Done')
+            ->where('updated_at', '>=', Carbon::now()->subDays(7))
             ->count();
             
         $meetingCreated = Meetings::where('project_id', $projectDetails->id)
-            ->count();
+        ->where('created_at', '>=', Carbon::now()->subDays(7))
+        ->count();
             
         $meetings = Meetings::where('project_id', $projectDetails->id)
             ->get(['id','date', 'start_time', 'end_time']);
             
-        $sprints = Sprint::where('project_id', $projectDetails->id)
-            ->count();
+        $backlogCreated = Backlogs::where('project_id', $projectDetails->id)
+        ->where('created_at', '>=', Carbon::now()->subDays(7))->count();
             
         $activities = Activity::with('user:id,name,avatar')
             ->where('project_id', $projectDetails->id)
@@ -71,7 +73,7 @@ class ScrumController extends Controller
             'completedBacklogs' => $completedBacklogs,
             'meetingCreated' => $meetingCreated,
             'meetings' => $meetings,
-            'sprints' => $sprints,
+            'backlogCreated' => $backlogCreated,
             'activities' => $activities,
             'onTime' => $onTime,
             'late' => $late,
@@ -135,7 +137,8 @@ class ScrumController extends Controller
         $backlogNum = Backlogs::where('project_id', $projId)
         ->where('epic_id', $request->epicId)
         ->count() + 1;
-        Backlogs::create([
+        $epic = Epic::where('id', $request->epicId)->first();
+        $backlogCreated = Backlogs::create([
             'title' => $request->title,
             'project_id' => $projId,
             'type' => $request->type,
@@ -146,6 +149,40 @@ class ScrumController extends Controller
             'status' => 'To Do',
             'order' => $request->order,
         ]);
-        return response()->json(['success' => true]);
+        $this->registerUpdate($projId, Auth::user()->id, "created " . $request->title . " in ", $epic->name);
+        return response()->json(['success' => true, 'id' => $backlogCreated->id]);
+    }
+
+    public function deleteBacklog(Request $request) {
+        $backlog = Backlogs::where('id', $request->id)->first();
+        $backlog->delete();
+        $epic = Epic::where('id', $request->epicId)->first();
+        $desc = "deleted " . $request->title . " in ";
+        $updateResult = $this->registerUpdate($request->projectId, Auth::user()->id, $desc, $epic->name);
+        if ($updateResult) {
+            return response()->json(['success' => true]);;
+        }
+    }
+
+    private function registerUpdate($projectId ,$userId, $description,$subject) {
+        try {
+            $activity = Activity::create([ 
+                'user_id' => $userId,
+                'description' => $description,
+                'date' => now(),
+                'project_id' => $projectId,
+                'update' => $subject
+            ]);
+            Log::info('Activity created:', ['activity' => $activity]);
+            return true;
+        } catch(\Exception $e) {
+            Log::error('Activity creation failed:', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            throw $e;
+        }
     }
 }
+

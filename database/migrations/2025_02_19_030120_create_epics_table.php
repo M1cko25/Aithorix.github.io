@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->string('name');
             $table->text('description');
+            $table->string('status');
             $table->integer('progress_precent');
             $table->string('key');
             $table->integer('order');
