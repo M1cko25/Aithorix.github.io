@@ -15,12 +15,11 @@ interface Course {
 }
 
 // Filtering and Sorting
-const selectedStatus = ref('all')
+const selectedStatus = ref('')
 const statusOptions = [
-    { value: 'all', label: 'All Courses' },
-    { value: 'active', label: 'Active' },
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'completed', label: 'Completed' }
+    { value: 'Low Priority', label: 'Low Priority' },
+    { value: 'Medium Priority', label: 'Medium Priority' },
+    { value: 'HIgh Priority', label: 'High Priority' }
 ]
 
 const showAddModal = ref(false)
@@ -152,27 +151,19 @@ const toggleMenu = (course: Course, event: Event) => {
                             <h1 class="text-2xl font-semibold text-gray-900">Course Management</h1>
 
                             <!-- Create Meeting Button -->
-                            <button class="btn btn-primary">
-                                <Video class="w-6 h-6 mr-2" />
-                                Create Meeting
-                            </button>
+
                         </div>
-                        <div class="flex items-center justify-between pt-6 pb-4">
+                        <div class="flex gap-64 items-center justify-between pt-6 pb-4">
                             <div class="flex gap-4">
+
                                 <!-- Dropdown for Status -->
-                                <select v-model="selectedStatus"
+                                <!-- <select v-model="selectedStatus"
                                     class="inline-flex items-center gap-2 px-6 py-2 border rounded-md hover:bg-gray-50">
                                     <option v-for="option in statusOptions" :key="option.value" :value="option.value">
                                         {{ option.label }}
                                     </option>
-                                </select>
+                                </select> -->
 
-                                <!-- Filter Button -->
-                                <button
-                                    class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
-                                    <Filter class="w-4 h-4" />
-                                    <span class="sr-only">Filter courses</span>
-                                </button>
 
                                 <div class="flex items-center gap-2 rounded-lg border px-3">
 
@@ -192,6 +183,20 @@ const toggleMenu = (course: Course, event: Event) => {
                                         <span class="sr-only">Table view</span>
                                     </button>
                                 </div>
+
+                                <!-- Filter Button -->
+                                <button
+                                    class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
+                                    <Filter class="w-4 h-4" />
+                                    <span class="sr-only">Filter courses</span>
+                                </button>
+                            </div>
+
+                            <div class="flex gap-4">
+                                <button class="btn btn-primary">
+                                    <Video class="w-6 h-6 mr-2" />
+                                    Create Meeting
+                                </button>
 
                                 <!-- Add Course Button -->
                                 <button @click="showAddModal = true"
@@ -379,31 +384,6 @@ const toggleMenu = (course: Course, event: Event) => {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Card View -->
-                    <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div v-for="course in courses" :key="course.id" class="bg-white p-4 rounded-lg border">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-medium text-gray-900">{{ course.title }}</h3>
-                                    <p class="text-sm text-gray-500 mt-1">{{ course.time }}</p>
-                                </div>
-                                <button class="p-1 hover:bg-gray-100 rounded">
-                                    <MoreHorizontal class="w-5 h-5 text-gray-500" />
-                                </button>
-                            </div>
-
-                            <p class="text-sm text-gray-600 mt-3">{{ course.description }}</p>
-
-                            <div class="flex gap-2 mt-4">
-                                <span v-for="tag in course.tags" :key="tag"
-                                    class="px-2.5 py-1 text-xs font-medium rounded-md" :class="getTagClass(tag)">
-                                    {{ tag }}
-                                </span>
-                            </div>
-                        </div>
-                    </div> -->
-
                 </div>
             </main>
         </div>
