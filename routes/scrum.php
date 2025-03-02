@@ -2,13 +2,21 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ScrumController;
+use App\Http\Middleware\ProjectMiddleware;
 
 Route::controller(ScrumController::class)->group(function(){
-    Route::middleware('auth')->group(function(){
+    Route::middleware(['auth', ProjectMiddleware::class])->group(function(){
         Route::get('/scrum/dashboard', 'getDashboardDatas')->name('scrum-dashboard');
         Route::get('/scrum/board', 'getBoardDatas')->name('scrum-board');
         Route::get('/scrum/timeline', 'getTimelineDatas')->name('scrum-timeline');
         Route::get('/scrum/backlog', 'getBacklogDatas')->name('scrum-backlog');
         Route::get('/scrum/trim', 'getTrimDatas')->name('scrum-trim');
+        Route::post('/scrum/epics-reorder', 'updateEpicOrder')->name('epics-reorder');
+        Route::post('/scrum/backlog-delete', 'deleteBacklog')->name('backlog-delete');
+        Route::post('/scrum/backlog-create', 'createBacklog')->name('backlog-create');
+        Route::post('/scrum/epic-create', 'createEpic')->name('epic-create');
+        Route::post('/scrum/backlog-status-update', 'updateBacklogStatus')->name('backlog-status-update');
+        Route::post('/scrum/epic-status-update', 'updateEpicStatus')->name('epic-status-update');
+        Route::post('/scrum/start-sprint', 'startSprint')->name('start-sprint');
     });
 });
