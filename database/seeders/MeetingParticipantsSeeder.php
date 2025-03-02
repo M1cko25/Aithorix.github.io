@@ -14,11 +14,11 @@ class MeetingParticipantsSeeder extends Seeder
     public function run(): void
     {
         $participants = [
-        // [
-        //     'meeting_id' => 1,
-        //     'user_id' => 3,
-        //     'status' => 'on time',
-        // ], 
+        [
+            'meeting_id' => 1,
+            'user_id' => 3,
+            'status' => 'on time',
+        ], 
         [
             'meeting_id' => 1,
             'user_id' => 1,

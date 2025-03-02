@@ -38,10 +38,10 @@ const close = () => {
 };
 </script>
 <template>
-    <div v-if="show" class="w-screen h-screen bg-dark/50 absolute z-8"></div>
+    <div v-if="show" class="w-screen min-h-screen bg-dark/50 absolute z-8"></div>
     <Transition name="modal-pop">
         <div v-if="show" @click.self="close" class="absolute w-screen h-screen z-10 flex flex-col justify-center items-center">
-            <div class="bg-light p-6 rounded-lg shadow-md lg:w-1/2 w-full h-fit">
+            <div class="bg-light p-4 rounded-lg shadow-md lg:w-1/2 w-full h-fit max-h-screen overflow-y-auto">
                 <header v-if="props.title" class="flex flex-row justify-between border-b border-dark p-4">
                     <div class="flex flex-col">
                         <h1 class="text-xl">{{ props.title }}</h1>
