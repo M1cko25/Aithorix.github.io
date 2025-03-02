@@ -50,13 +50,40 @@ const handleCreateTask = () => {
             Create Task
         </button>
 
+        <div
+            v-if="isCreatingTask"
+            class="p-4 bg-white rounded-lg shadow-sm flex flex-col gap-3 mt-4"
+        >
+            <input
+                v-model="newTaskTitle"
+                type="text"
+                class="outline-none truncate"
+                name="title"
+                placeholder="Task to be done"
+            />
+            <div class="flex items-center justify-between">
+                <select v-model="selectedType">
+                    <option v-for="type in taskTypes" :value="type">
+                        {{ type }}
+                    </option>
+                </select>
+                <Button :click="handleCreateTask" class="btn-primary"
+                    >Create</Button
+                >
+            </div>
+        </div>
+
         <draggable
-            v-bind="tasks"
-            :list="tasks"
-            group="tasks"
-            item-key="id"
-            class="mt-4 space-y-3"
-            @end="$emit('update:tasks', tasks)"
+        v-bind="tasks"
+        :list="tasks"
+        group="tasks"
+        item-key="id"
+        class="mt-4 space-y-3 min-h-60"
+        :force-fallback="true"
+        :animation="150"
+        ghost-class="ghost-card"
+        drag-class="drag-card"
+        @end="$emit('update:tasks', tasks)"
         >
             <template #item="{ element: task }">
                 <div class="p-4 cursor-grab bg-white rounded-lg shadow-sm">
@@ -89,27 +116,25 @@ const handleCreateTask = () => {
             </template>
         </draggable>
 
-        <div
-            v-if="isCreatingTask"
-            class="p-4 bg-white rounded-lg shadow-sm flex flex-col gap-3"
-        >
-            <input
-                v-model="newTaskTitle"
-                type="text"
-                class="outline-none truncate"
-                name="title"
-                placeholder="Task to be done"
-            />
-            <div class="flex items-center justify-between">
-                <select v-model="selectedType">
-                    <option v-for="type in taskTypes" :value="type">
-                        {{ type }}
-                    </option>
-                </select>
-                <Button :click="handleCreateTask" class="btn-primary"
-                    >Create</Button
-                >
-            </div>
-        </div>
+        
     </div>
 </template>
+<style scoped>
+.ghost-card {
+    opacity: 0.5;
+    background: #F3F4F6;
+    border: 2px dashed #9CA3AF;
+    user-select: none;
+}
+
+.drag-card {
+    opacity: 0.9;
+    transform: rotate(3deg);
+    user-select: none;
+}
+
+/* Add this class to prevent text selection in the entire kanban column */
+.w-80 {
+    user-select: none;
+}
+</style>

@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sprint_tasks', function (Blueprint $table) {
+        Schema::create('subtasks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sprint_id');
-            $table->foreign('sprint_id')->references('id')->on('sprints')->onDelete('cascade');
-            $table->unsignedBigInteger('backlog_id');
-            $table->foreign('backlog_id')->references('id')->on('backlogs')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sprint_tasks');
+        Schema::dropIfExists('subtasks');
     }
 };

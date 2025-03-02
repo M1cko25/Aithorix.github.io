@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sprints', function (Blueprint $table) {
+        Schema::create('epics', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('description')->nullable();
-            $table->date('start_date');
-            $table->date('end_date');
             $table->unsignedBigInteger('project_id');
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            $table->string('status')->default('active');
-            $table->unsignedBigInteger('sprint_order')->nullable();
+            $table->string('name');
+            $table->text('description');
+            $table->string('status');
+            $table->integer('progress_percent');
+            $table->string('key');
+            $table->integer('order');
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sprints');
+        Schema::dropIfExists('epics');
     }
 };

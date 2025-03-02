@@ -11,7 +11,8 @@ import {
   Rocket,
   CalendarDays,
   Search,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
 
@@ -33,11 +34,11 @@ const props = defineProps({
 const searchQuery = ref('')
 const currentProject = ref('Scrum Project')
 
-const menuItems = [
-  { icon: Home, text: 'Home', path: '/home' },
-  { icon: Briefcase, text: 'My Work', path: '/work' },
-  { icon: Star, text: 'Starred', path: '/starred' },
-]
+const menuItems = ref([
+  { icon: Home, text: 'Home', path: '/home', isActive: true },
+  { icon: Briefcase, text: 'My Work', path: '/work', isActive: false },
+  { icon: Star, text: 'Starred', path: '/starred', isActive: false },
+])
 
 const activeStates = ref(new Map())
 
@@ -51,13 +52,20 @@ watch(
   (newUrl) => {
     if (page.props.projects?.project?.length) {
       page.props.projects.project.forEach(project => {
-      props.projectItems.forEach(item => {
-        const key = `${project.id}-${item.path}`
-        const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
-        activeStates.value.set(key, isActive)
+        props.projectItems.forEach(item => {
+          const key = `${project.id}-${item.path}`
+          const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
+          activeStates.value.set(key, isActive)
+        })
       })
-    })
     }
+    menuItems.value.forEach(item => {
+        if (item.path == newUrl) {
+          item.isActive = true
+        } else {
+          item.isActive = false
+        }
+      })
   },
   { immediate: true }
 )
@@ -108,7 +116,8 @@ watch(
     <nav class="px-2">
       <ul class="space-y-1">
         <li v-for="item in menuItems" :key="item.text">
-          <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+          <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+          :class="item.isActive ? 'bg-blue text-light hover:bg-button' : ''">
             <component :is="item.icon" class="w-5 h-5" />
             {{ item.text }}
           </Link>
@@ -130,10 +139,10 @@ watch(
           <ul v-show="isProjectOpen(project.id)" class="space-y-1 px-2">
           <li v-for="item in props.projectItems" :key="item.text">
             <Link
-              :href="item.path + project.id" @click="activateLink(item.text)"
+              :href="item.path + project.id"
               class="flex items-center gap-3 px-4 py-2 rounded-lg"
               :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' 
-              : 'text-gray-700'">
+              : 'text-dark'">
               <component :is="item.icon" class="w-5 h-5" />
               {{ item.text }}
             </Link>
@@ -153,3 +162,17 @@ watch(
     </div>
   </aside>
 </template>
+<style>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+  max-height: 300px; /* Adjust based on your content height */
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+</style>

@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('epics', function (Blueprint $table) {
+        Schema::create('sprints', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('project_id');
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->string('name');
-            $table->text('description');
+            $table->unsignedBigInteger('epic_id');
+            $table->foreign('epic_id')->references('id')->on('epics');
             $table->date('start_date');
             $table->date('end_date');
-            $table->integer('progress_precent');
-            $table->string('key');
-            $table->integer('order');
+            $table->integer('status');
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('epics');
+        Schema::dropIfExists('sprints');
     }
 };
