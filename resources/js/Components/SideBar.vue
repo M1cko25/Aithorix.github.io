@@ -27,6 +27,7 @@ const props = defineProps({
       { id: 'timeline', icon: ChartGantt, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
       { id: 'backlog', icon: Logs, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
       { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { id: 'trim', icon: ChartGantt, text: 'Trim', path: '/scrum/trim?id=', active: false },
     ]
   }
 })

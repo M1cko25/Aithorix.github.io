@@ -250,5 +250,13 @@ class ScrumController extends Controller
         $this->registerUpdate($request->projectId, Auth::user()->id, "started a sprint named " . $request->name, $epic->name);
         return redirect()->back()->with('success', 'Sprint started successfully.');
     }
+
+    public function getTrimDatas(Request $request) {
+        $projectDetails = Project::where('id', $request->query('id'))->first();
+    
+        return Inertia::render('Scrum/ScrumTrim', [
+            'projectDetails' => $projectDetails,
+        ]);
+    }
 }
 
