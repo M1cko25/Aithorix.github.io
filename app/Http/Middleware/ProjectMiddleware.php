@@ -17,7 +17,7 @@ class ProjectMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $projectId = $request->query('id');
+        $projectId = $request->query('id') ?? $request->input('projectId');
         
         if (!$projectId) {
             return redirect('/home');

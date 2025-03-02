@@ -7,7 +7,7 @@
     },
     "devDependencies": {
         "autoprefixer": "^10.4.20",
-        "axios": "^1.7.9",
+        "axios": "^1.8.1",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.5.1",
@@ -18,7 +18,7 @@
         "@inertiajs/inertia": "^0.11.1",
         "@inertiajs/vue3": "^2.0.2",
         "@syncfusion/ej2-material-theme": "^28.2.6",
-        "@syncfusion/ej2-vue-calendars": "^28.2.3",
+        "@syncfusion/ej2-vue-calendars": "^28.2.7",
         "@syncfusion/ej2-vue-gantt": "^28.2.6",
         "@vitejs/plugin-vue": "^5.2.1",
         "@vueuse/motion": "^2.2.6",

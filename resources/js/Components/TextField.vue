@@ -62,7 +62,7 @@ function onInput(event) {
         <div :class="`txt-primary flex flex-row ${style}`">
             <img v-if="icon && !hasButton" :src="icon" class="h-fit w-fit" alt="icon">
             <div v-if="type == 'search'" type="submit"><Search class="h-fit w-fit" /></div>
-            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-3`" @input="onInput" 
+            <input :type="type" :class="`bg-transparent h-full w-full outline-none p-3 text-left ${type == 'textarea' ? 'break-words align-text-top': ''}`" @input="onInput" 
             :value="modelValue" autocomplete="email" @keyup.enter="$emit('onEnter')"
              :name="name" :placeholder="placeholder">
             <button v-if="hasButton" @click="click">
@@ -80,4 +80,5 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: inherit !important;
     transition: background-color 5000s ease-in-out 0s;
 }
+
 </style>

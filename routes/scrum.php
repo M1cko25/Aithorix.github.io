@@ -11,8 +11,11 @@ Route::controller(ScrumController::class)->group(function(){
         Route::get('/scrum/timeline', 'getTimelineDatas')->name('scrum-timeline');
         Route::get('/scrum/backlog', 'getBacklogDatas')->name('scrum-backlog');
         Route::post('/scrum/epics-reorder', 'updateEpicOrder')->name('epics-reorder');
-        Route::post('/scrum/epic-create', 'createEpic')->name('epic-create');
-        Route::post('/scrum/backlog-create', 'createBacklog')->name('backlog-create');
         Route::post('/scrum/backlog-delete', 'deleteBacklog')->name('backlog-delete');
+        Route::post('/scrum/backlog-create', 'createBacklog')->name('backlog-create');
+        Route::post('/scrum/epic-create', 'createEpic')->name('epic-create');
+        Route::post('/scrum/backlog-status-update', 'updateBacklogStatus')->name('backlog-status-update');
+        Route::post('/scrum/epic-status-update', 'updateEpicStatus')->name('epic-status-update');
+        Route::post('/scrum/start-sprint', 'startSprint')->name('start-sprint');
     });
 });

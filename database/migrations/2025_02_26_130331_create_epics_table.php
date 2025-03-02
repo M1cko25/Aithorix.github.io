@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description');
             $table->string('status');
-            $table->integer('progress_precent');
+            $table->integer('progress_percent');
             $table->string('key');
             $table->integer('order');
             $table->timestamps();

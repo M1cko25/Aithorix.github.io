@@ -18,10 +18,8 @@ class DatabaseSeeder extends Seeder
         // ProjectSeeder::class,
         // ActivitySeeder::class,
         EpicSeeder::class,
-        
         // BacklogsSeeder::class,
         // MeetingsSeeder::class,
-        // SprintSeeder::class,
         // MeetingParticipantsSeeder::class,
         
     ]);
