@@ -103,4 +103,12 @@ class ScrumController extends Controller
             'epics' => $epics,
         ]);
     }
+
+    public function getTrimDatas(Request $request) {
+        $projectDetails = Project::where('id', $request->query('id'))->first();
+    
+        return Inertia::render('Scrum/ScrumTrim', [
+            'projectDetails' => $projectDetails,
+        ]);
+    }
 }
