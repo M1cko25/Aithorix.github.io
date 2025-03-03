@@ -2,18 +2,21 @@ import { ref, onMounted } from 'vue';
 import axios from "axios";
 
 export function updateEpicStatus(epics, epicSelected, projectDetails) {
-    const newStatus = epicSelected.status === 'On Sprint' ? 'Completed' : 'On Sprint';
-    
     return axios.post('/scrum/epic-status-update', {
         epicId: epicSelected.epic_id,
-        status: newStatus,
+        status: epicSelected.status === 'On Sprint' ? 'Completed' : 'On Sprint',
         projectId: projectDetails.id
     })
     .then(response => {
-        epicSelected.status = newStatus;
-        const epicIndex = epics.value.findIndex(e => e.epic_id === epicSelected.epic_id);
-        if (epicIndex !== -1) {
-            epics.value[epicIndex].status = newStatus;
+        // Update the status in the local state
+        epicSelected.status = epicSelected.status === 'On Sprint' ? 'Completed' : 'On Sprint';
+        
+        // Update the status in the epics array
+        if (epics.value) {
+            const epicIndex = epics.value.findIndex(e => e.epic_id === epicSelected.epic_id);
+            if (epicIndex !== -1) {
+                epics.value[epicIndex].status = epicSelected.status;
+            }
         }
         return response;
     })

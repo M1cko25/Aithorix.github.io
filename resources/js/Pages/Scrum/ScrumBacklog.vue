@@ -7,7 +7,8 @@ import BacklogContainer from './ScrumComponents/BacklogContainer.vue'
 import SprintModal from './ScrumComponents/SprintModal.vue'
 import CompletedSprintModal from './ScrumComponents/CompletedSprintModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
-import { ref, computed } from 'vue'
+import TaskModal from './ScrumComponents/TaskModal.vue'
+import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { Filter, ArrowUpDown, Trash, MoreHorizontal } from 'lucide-vue-next'
 import TextField from '../../Components/TextField.vue'
@@ -46,6 +47,8 @@ const selectedTaskToUpdate = ref([])
 const isDeleteModalOpen = ref(false)
 const openSprint = ref(false)
 const openCompleteSprint = ref(false)
+const isTaskModalOpen = ref(false)
+const selectedTaskToEdit = ref(null)
 
 // Task Counts
 const taskCounts = ref({
@@ -53,6 +56,9 @@ const taskCounts = ref({
   inProgress: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'In Progress').length : 0,
   completed: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'Done').length : 0
 })
+
+// Add sprint ref
+const sprint = ref(page.sprint || null)
 
 // Event Handlers
 const updateEpicOrder = (updatedEpics) => {
@@ -62,6 +68,13 @@ const updateEpicOrder = (updatedEpics) => {
 const updateEpicSelected = (epic) => {
   epicSelected.value = epic
   selectedTaskToUpdate.value = [] // Clear selected tasks when changing epics
+  
+  // Update task counts when epic changes
+  taskCounts.value = {
+    todo: epic.tasks ? epic.tasks.filter(task => task.status === 'To Do').length : 0,
+    inProgress: epic.tasks ? epic.tasks.filter(task => task.status === 'In Progress').length : 0,
+    completed: epic.tasks ? epic.tasks.filter(task => task.status === 'Done').length : 0
+  }
 }
 
 const handleSprintAction = () => {
@@ -72,22 +85,41 @@ const handleSprintAction = () => {
   }
 }
 
+// Add handler for sprint creation
+const handleSprintCreated = (newSprint) => {
+  sprint.value = newSprint
+}
+
 // Computed Properties
 const formatSprintDates = computed(() => {
-  if (!page.sprint?.start_date || !page.sprint?.end_date) return ''
-  
-  const formatDate = (date) => {
-    const month = date.toLocaleString('en-US', { month: 'short' })
-    const day = date.getDate()
-    return `${month}. ${day}`
-  }
-  
-  const startDate = new Date(page.sprint.start_date)
-  const endDate = new Date(page.sprint.end_date)
-  return `${formatDate(startDate)} - ${formatDate(endDate)}`
+  if (!sprint.value?.start_date || !sprint.value?.end_date) return ''
+    
+    const formatDate = (date) => {
+    const month = new Date(date).toLocaleString('en-US', { month: 'short' })
+    const day = new Date(date).getDate()
+      return `${month}. ${day}`
+    }
+    
+  return `${formatDate(sprint.value.start_date)} - ${formatDate(sprint.value.end_date)}`
 })
 
 const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
+
+// Watch for changes in epic tasks
+watch(() => epicSelected.value.tasks, (newTasks) => {
+  if (newTasks) {
+    taskCounts.value = {
+      todo: newTasks.filter(task => task.status === 'To Do').length,
+      inProgress: newTasks.filter(task => task.status === 'In Progress').length,
+      completed: newTasks.filter(task => task.status === 'Done').length
+    }
+  }
+}, { deep: true })
+
+const handleEditTask = (task) => {
+  selectedTaskToEdit.value = task
+  isTaskModalOpen.value = true
+}
 </script>
 
 <template>
@@ -106,12 +138,19 @@ const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
     v-model:isOpen="openSprint"
     :epicSelected="epicSelected"
     :epics="epics"
+    @sprintCreated="handleSprintCreated"
   />
 
   <CompletedSprintModal 
     v-model:isOpen="openCompleteSprint"
     :epicSelected="epicSelected"
     :epics="epics"
+  />
+
+  <TaskModal
+    v-model:isOpen="isTaskModalOpen"
+    :task="selectedTaskToEdit"
+    :epicSelected="epicSelected"
   />
 
   <div class="ml-64 pt-16 p-6 mb-5">
@@ -162,21 +201,21 @@ const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
               <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full">{{ taskCounts.completed }}</span>
             </div>
             <button 
-              class="btn-primary"
+                class="btn-primary"
               @click="handleSprintAction"
             >
-              {{ epicSelected.status === 'On Sprint' ? 'Complete Sprint' : 'Start Sprint' }}
+                {{ epicSelected.status === 'On Sprint' ? 'Complete Sprint' : 'Start Sprint' }}
             </button>
           </div>
         </div>
 
         <div v-if="epics.length > 0" class="text-sm text-gray-500 flex w-full justify-between mb-6">
-          <p>{{ epicSelected.status == 'On Sprint' ? formatSprintDates : '' }}</p>
+          <p>{{ epicSelected.status === 'On Sprint' ? formatSprintDates : '' }}</p>
           <button v-if="showTrashButton" @click="isDeleteModalOpen = true" class="btn-cancel text-error">
-          <Trash class="w-5 h-5" />
-          Delete Selected ({{ selectedTaskToUpdate.length }})
+            <Trash class="w-5 h-5" />
+            Delete Selected ({{ selectedTaskToUpdate.length }})
           </button>
-        </div>
+                </div>
 
         <BacklogContainer 
           v-if="epics.length > 0"
@@ -185,6 +224,7 @@ const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
           :taskCounts="taskCounts"
           :epics="epics"
           @delModalOpen="isDeleteModalOpen = $event"
+          @editTask="handleEditTask"
         />
         
         <div v-else-if="epics.length == 0" class="flex flex-col gap-4 justify-center items-center mt-6">

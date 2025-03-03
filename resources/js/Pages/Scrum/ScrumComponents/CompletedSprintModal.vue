@@ -2,6 +2,7 @@
 import Modal from '../../../Components/Modal.vue'
 import { usePage } from '@inertiajs/vue3'
 import { updateEpicStatus } from '../ScrumServices/epicApi'
+import axios from 'axios'
 
 const page = usePage().props
 
@@ -13,9 +14,43 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen'])
 
-const handleComplete = () => {
-  updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
-  emit('update:isOpen', false)
+const handleComplete = async () => {
+  try {
+    // First update the epic status to Completed
+    await axios.post('/scrum/epic-status-update', {
+      epicId: props.epicSelected.epic_id,
+      status: 'Completed',
+      projectId: page.projectDetails.id
+    })
+
+    // Update sprint status to Completed
+    if (page.sprint?.epic_id === props.epicSelected.epic_id) {
+      await axios.post('/scrum/complete-sprint', {
+        epicId: props.epicSelected.epic_id,
+        projectId: page.projectDetails.id
+      })
+    }
+
+    // Update the local epic status
+    if (props.epicSelected) {
+      props.epicSelected.status = 'Completed'
+    }
+
+    // Find and update the epic in the epics array
+    if (props.epics.value) {
+      const epicIndex = props.epics.value.findIndex(e => e.epic_id === props.epicSelected.epic_id)
+      if (epicIndex !== -1) {
+        props.epics.value[epicIndex].status = 'Completed'
+      }
+    }
+
+    emit('update:isOpen', false)
+    
+    // Refresh the page to get updated sprint data
+    window.location.reload()
+  } catch (error) {
+    console.error('Error completing sprint:', error)
+  }
 }
 
 const updateModalState = (value) => {

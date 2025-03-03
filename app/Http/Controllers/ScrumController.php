@@ -15,6 +15,11 @@ use App\Models\Epics;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Sprints;
+use App\Models\TaskAttachments;
+use Illuminate\Support\Facades\Storage;
+use App\Models\TaskComments;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 
 class ScrumController extends Controller
@@ -106,7 +111,18 @@ class ScrumController extends Controller
         }
         $sprint = [];
         $epics = Epics::where('project_id', $projectDetails->id)->get();
-        $backlogs = Backlogs::where('project_id', $projectDetails->id)->get();
+        $backlogs = Backlogs::with(['attachments', 'assignees'])
+            ->where('project_id', $projectDetails->id)
+            ->get();
+        $comments = TaskComments::where('task_id', $backlogs->pluck('id'))->get();
+        
+        // Fix project members loading
+        $projectMembers = User::whereIn('id', function($query) use ($projectDetails) {
+            $query->select('user_id')
+                ->from('project_members')
+                ->where('project_id', $projectDetails->id);
+        })->select('id', 'name', 'avatar')->get();
+
         foreach ($epics as $epic) {
             if ($epic->status == "On Sprint") {
                 $sprint = Sprints::where('epic_id', $epic->id)
@@ -119,6 +135,8 @@ class ScrumController extends Controller
             'backlogs' => $backlogs,
             'epics' => $epics,
             'sprint' => $sprint,
+            'comments' => $comments,
+            'projectMembers' => $projectMembers,
         ]);
     }
 
@@ -182,7 +200,6 @@ class ScrumController extends Controller
         }
         return response()->json(['success' => false], 404);
     }
-    
 
     private function registerUpdate($projectId ,$userId, $description,$subject) {
         try {
@@ -249,6 +266,234 @@ class ScrumController extends Controller
         ]);
         $this->registerUpdate($request->projectId, Auth::user()->id, "started a sprint named " . $request->name, $epic->name);
         return redirect()->back()->with('success', 'Sprint started successfully.');
+    }
+
+    public function completeSprint(Request $request) {
+        $sprint = Sprints::where('epic_id', $request->epicId)
+            ->where('status', 'Active')
+            ->first();
+
+        if ($sprint) {
+            $sprint->status = 'Completed';
+            $sprint->save();
+
+            $epic = Epics::where('id', $request->epicId)->first();
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "completed sprint for ",
+                $epic->name
+            );
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Sprint not found'], 404);
+    }
+
+    public function updateBacklog(Request $request) {
+        $backlog = Backlogs::where('id', $request->id)->first();
+        
+        if ($backlog) {
+            $backlog->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'type' => $request->type,
+                'priority' => $request->priority,
+                'status' => $request->status
+            ]);
+
+            $epic = Epics::where('id', $request->epicId)->first();
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "updated task " . $request->title . " in ",
+                $epic->name
+            );
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Task not found'], 404);
+    }
+
+    public function uploadAttachment(Request $request) {
+        $request->validate([
+            'file' => 'required|file|max:10240', // 10MB max file size
+            'id' => 'required|exists:backlogs,id',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $fileName = $file->getClientOriginalName();
+                
+                // Store file in public storage
+                $filePath = Storage::disk('public')->put('attachments', $file);
+
+                // Create attachment record
+                $taskAttachment = new TaskAttachments();
+                $taskAttachment->task_id = $request->id;
+                $taskAttachment->file_path = $filePath;
+                $taskAttachment->file_name = $fileName;
+                $taskAttachment->file_size = $file->getSize();
+                $taskAttachment->file_type = $file->getMimeType();
+                $taskAttachment->save();
+
+                // Log activity
+                $backlog = Backlogs::with('epic')->find($request->id);
+                $this->registerUpdate(
+                    $request->projectId,
+                    Auth::user()->id,
+                    "attached file " . $fileName . " to task in ",
+                    $backlog->epic->name
+                );
+
+                // Return success response with file details
+                return response()->json([
+                    'success' => true,
+                    'id' => $taskAttachment->id,
+                    'file_path' => $filePath,
+                    'name' => $fileName,
+                    'size' => $file->getSize(),
+                    'type' => $file->getMimeType(),
+                    'message' => 'File uploaded successfully'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No file uploaded'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('File upload error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addComment(Request $request)
+    {
+        $request->validate([
+            'taskId' => 'required|exists:backlogs,id',
+            'comment' => 'required|string',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $comment = TaskComments::create([
+                'task_id' => $request->taskId,
+                'user_id' => Auth::id(),
+                'comment' => $request->comment
+            ]);
+
+            // Load the user relationship
+            $comment->load('user');
+
+            $backlog = Backlogs::with('epic')->find($request->taskId);
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "commented on task " . $backlog->title . " in ",
+                $backlog->epic->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'comment' => $comment
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error adding comment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding comment'
+            ], 500);
+        }
+    }
+
+    public function getProjectMembers($projectId)
+    {
+        try {
+            $members = ProjectMembers::where('project_id', $projectId)
+                ->with('user:id,name,avatar')
+                ->get()
+                ->map(function ($member) {
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'name' => $member->user->name,
+                        'avatar' => $member->user->avatar,
+                        'role' => $member->role
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'members' => $members
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting project members: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving project members'
+            ], 500);
+        }
+    }
+
+    public function updateTaskAssignees(Request $request)
+    {
+        $request->validate([
+            'taskId' => 'required|exists:backlogs,id',
+            'assignees' => 'required|array',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $backlog = Backlogs::with('epic')->find($request->taskId);
+            
+            // Clear existing assignees
+            DB::table('task_assignees')->where('task_id', $request->taskId)->delete();
+            
+            // Add new assignees
+            foreach ($request->assignees as $assigneeId) {
+                DB::table('task_assignees')->insert([
+                    'task_id' => $request->taskId,
+                    'user_id' => $assigneeId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+            // Get updated assignees with correct data structure
+            $updatedAssignees = User::whereIn('id', $request->assignees)
+                ->select('id', 'name', 'avatar')
+                ->get();
+
+            // Log activity
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "updated assignees for task " . $backlog->title . " in ",
+                $backlog->epic->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'assignees' => $updatedAssignees,
+                'message' => 'Assignees updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating assignees: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating assignees'
+            ], 500);
+        }
     }
 }
 
