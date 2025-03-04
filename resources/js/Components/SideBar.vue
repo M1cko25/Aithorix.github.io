@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { 
-  Home, 
-  Briefcase, 
+import {
+  Home,
+  Briefcase,
   Star,
   LayoutDashboard,
   Kanban,
@@ -21,10 +21,10 @@ const props = defineProps({
   projectItems: {
     type: Array,
     default: [
-      { id: 'dashboard', icon: LayoutDashboard, text: 'Dashboard', path: '/scrum/dashboard?id=', active: false },
-      { id: 'board', icon: Kanban, text: 'Board', path: '/scrum/board?id=', active: true },
-      { id: 'timeline', icon: ChartGantt, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
-      { id: 'backlog', icon: Logs, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
+      { id: 'dashboard', icon: LayoutDashboard, text: 'Course', path: '/educ/course-management?id=', active: true },
+      { id: 'board', icon: Kanban, text: 'Calendar', path: '/educ/calendar-view?id=', active: false },
+      { id: 'timeline', icon: ChartGantt, text: 'Tracker', path: '/educ/assignment-tracker?id=', active: false },
+      { id: 'backlog', icon: Logs, text: 'Resources', path: '/educ/resources?id=', active: false },
       { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
     ]
   }
@@ -51,12 +51,12 @@ watch(
   (newUrl) => {
     if (page.props.projects?.project?.length) {
       page.props.projects.project.forEach(project => {
-      props.projectItems.forEach(item => {
-        const key = `${project.id}-${item.path}`
-        const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
-        activeStates.value.set(key, isActive)
+        props.projectItems.forEach(item => {
+          const key = `${project.id}-${item.path}`
+          const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
+          activeStates.value.set(key, isActive)
+        })
       })
-    })
     }
   },
   { immediate: true }
@@ -93,12 +93,8 @@ watch(
     <!-- Search Section -->
     <div class="p-4">
       <div class="relative">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search"
-          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
+        <input v-model="searchQuery" type="text" placeholder="Search"
+          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" />
         <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
         <Filter class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
       </div>
@@ -109,8 +105,8 @@ watch(
       <ul class="space-y-1">
         <li v-for="item in menuItems" :key="item.text">
           <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
-            <component :is="item.icon" class="w-5 h-5" />
-            {{ item.text }}
+          <component :is="item.icon" class="w-5 h-5" />
+          {{ item.text }}
           </Link>
         </li>
       </ul>
@@ -120,28 +116,27 @@ watch(
     <div class="mt-6">
       <div class="px-4 mb-2 border-b border-neutral mx-2">
         Projects
-      </div>  
+      </div>
       <div v-for="project in page.props.projects.project" :key="project.id" class="w-full my-2">
         <button @click="toggleDown(project.id)" class="flex w-full flex-row px-5 justify-between items-center">
           <p class="text-lg">{{ project.name }}</p>
-          <ChevronDown :class="{ 'transform rotate-180 transition-transform duration-300': projectStates.get(project.id) }"/>
+          <ChevronDown
+            :class="{ 'transform rotate-180 transition-transform duration-300': projectStates.get(project.id) }" />
         </button>
         <Transition name="list">
           <ul v-show="isProjectOpen(project.id)" class="space-y-1 px-2">
-          <li v-for="item in props.projectItems" :key="item.text">
-            <Link
-              :href="item.path + project.id" @click="activateLink(item.text)"
-              class="flex items-center gap-3 px-4 py-2 rounded-lg"
-              :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' 
-              : 'text-gray-700'">
+            <li v-for="item in props.projectItems" :key="item.text">
+              <Link :href="item.path + project.id" @click="activateLink(item.text)"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg" :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover'
+                  : 'text-gray-700'">
               <component :is="item.icon" class="w-5 h-5" />
               {{ item.text }}
-            </Link>
-          </li>
-        </ul>
-      </Transition>
+              </Link>
+            </li>
+          </ul>
+        </Transition>
       </div>
-      
+
     </div>
 
     <!-- Meeting Summaries -->
