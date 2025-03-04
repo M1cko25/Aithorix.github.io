@@ -91,9 +91,19 @@ class ScrumController extends Controller
     
     public function getBoardDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
+        
+        // Get all epics for the project
+        $epics = Epics::where('project_id', $projectDetails->id)->get();
+        
+        // Get all backlogs with their assignees
+        $backlogs = Backlogs::with(['assignees', 'attachments'])
+            ->where('project_id', $projectDetails->id)
+            ->get();
 
         return Inertia::render('Scrum/ScrumBoard', [
             'projectDetails' => $projectDetails,
+            'epics' => $epics,
+            'backlogs' => $backlogs,
         ]);
     }
 
