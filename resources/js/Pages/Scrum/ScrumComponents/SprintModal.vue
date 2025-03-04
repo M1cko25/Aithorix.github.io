@@ -1,11 +1,12 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import { DatePickerComponent } from '@syncfusion/ej2-vue-calendars'
 import TextField from '../../../Components/TextField.vue'
 import DropDown from '../../../Components/DropDown.vue'
 import Modal from '../../../Components/Modal.vue'
 import { updateEpicStatus } from '../ScrumServices/epicApi'
+import axios from 'axios'
 
 const page = usePage().props
 const props = defineProps({
@@ -14,15 +15,15 @@ const props = defineProps({
   epics: Object,
 })
 
-const emit = defineEmits(['update:isOpen'])
+const emit = defineEmits(['update:isOpen', 'sprintCreated'])
 
 const form = ref({
   name: '',
   description: '',
   start_date: '',
   end_date: '',
-  epic_id: null,
-  projectId: page.projectDetails.id
+  epic_id: props.epicSelected?.epic_id,
+  projectId: props.epicSelected?.project_id
 })
 
 const sprintSpans = [
@@ -42,14 +43,13 @@ const calculateEndDate = (startDate, weeks) => {
   return date.toISOString().split('T')[0]
 }
 
-// Set initial dates when modal opens
+// Set initial dates and name when modal opens
 watch(() => props.isOpen, (newValue) => {
   if (newValue) {
-    const today = new Date()
-    form.value.start_date = today.toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0]
+    form.value.start_date = today
     form.value.end_date = calculateEndDate(today, 1)
-    form.value.epic_id = props.epicSelected.epic_id
-    form.value.name = `${props.epicSelected.name} Sprint`
+    form.value.name = `${props.epicSelected.name} Sprint` // Set default name based on epic
     selectedSpan.value = sprintSpans[0]
   }
 })
@@ -57,8 +57,7 @@ watch(() => props.isOpen, (newValue) => {
 // Watch for sprint span changes
 watch(() => selectedSpan.value, (newSpan) => {
   if (newSpan.value !== 'custom') {
-    const startDate = new Date(form.value.start_date)
-    form.value.end_date = calculateEndDate(startDate, newSpan.value)
+    form.value.end_date = calculateEndDate(form.value.start_date, newSpan.value)
   }
 })
 
@@ -76,15 +75,44 @@ watch([() => form.value.start_date, () => form.value.end_date], ([newStart, newE
   }
 }, { immediate: true })
 
+// Watch for epic changes to update sprint name
+watch(() => props.epicSelected, (newEpic) => {
+  if (newEpic) {
+    form.value.name = `${newEpic.name} Sprint`
+  }
+}, { immediate: true })
+
 const submit = () => {
-  router.post('/scrum/start-sprint', form.value)
-  updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
-  emit('update:isOpen', false)
+  axios.post('/scrum/start-sprint', {
+    ...form.value,
+    epic_id: props.epicSelected.epic_id,
+    projectId: page.projectDetails.id
+  })
+  .then((response) => {
+    updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
+    // Emit the sprint data to update parent component
+    emit('sprintCreated', {
+      epic_id: props.epicSelected.epic_id,
+      start_date: form.value.start_date,
+      end_date: form.value.end_date,
+      name: form.value.name,
+      status: 'Active'
+    })
+    emit('update:isOpen', false)
+  })
+  .catch(error => {
+    console.error('Error starting sprint:', error)
+  })
 }
 
 const updateModalState = (value) => {
   emit('update:isOpen', value)
 }
+
+// Get minimum date for end date input
+const getMinEndDate = computed(() => {
+  return form.value.start_date || new Date().toISOString().split('T')[0]
+})
 </script>
 
 <template>
@@ -122,6 +150,7 @@ const updateModalState = (value) => {
           <input 
             v-model="form.start_date"
             type="date"
+            :min="new Date().toISOString().split('T')[0]"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -130,6 +159,7 @@ const updateModalState = (value) => {
           <input 
             v-model="form.end_date"
             type="date"
+            :min="getMinEndDate"
             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -151,4 +181,4 @@ const updateModalState = (value) => {
       </div>
     </div>
   </Modal>
-</template> 
+</template>

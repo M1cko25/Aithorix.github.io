@@ -27,7 +27,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate'])
+const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask'])
 
 const isOpen = ref(false);
 const newTask = ref('');
@@ -76,6 +76,7 @@ const TaskOverlayButtons = ref([
   {
     text: 'Edit Task',
     function: () => {
+      emit('editTask', props.selectedTaskToUpdate[0])
       isOverlayOpen.value = false
     }
   },
@@ -89,10 +90,23 @@ const TaskOverlayButtons = ref([
   {
     text: 'Open Task',
     function: () => {   
+      emit('editTask', props.selectedTaskToUpdate[0])
       isOverlayOpen.value = false
     }
   }
 ])
+
+const handleTaskClick = (task, event) => {
+  // Prevent opening modal when clicking checkbox or status dropdown
+  if (
+    event.target.type === 'checkbox' || 
+    event.target.tagName === 'SELECT' ||
+    event.target.closest('select')
+  ) {
+    return
+  }
+  emit('editTask', task)
+}
 </script>
 <template>
     <Overlay
@@ -101,6 +115,7 @@ const TaskOverlayButtons = ref([
     :position="overlayPosition"
     @close="isOverlayOpen = false"
   />
+
     <div>
         <draggable
         v-model="props.epicSelected.tasks" 
@@ -113,6 +128,7 @@ const TaskOverlayButtons = ref([
         <template #item="{ element: task }">
             <div
             class="flex cursor-grab items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 cursor-move"
+            @click="handleTaskClick(task, $event)"
             >
             <input 
             type="checkbox" 
@@ -145,12 +161,13 @@ const TaskOverlayButtons = ref([
 
             <div class="w-20">
                 <div class="flex -space-x-2">
-                <img 
+                <img v-if="task.assignees.length > 0"
                     v-for="(assignee, index) in task.assignees"
                     :key="index"
-                    :src="assignee"
+                    :src="assignee.avatar"
                     class="w-8 h-8 rounded-full border-2 border-white"
                 />
+                <p v-else class="text-dark">No assigned</p>
                 </div>
             </div>
             <button class="p-2 hover:bg-gray-100 rounded" @click="(event) => {
