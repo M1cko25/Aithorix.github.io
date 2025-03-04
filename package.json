@@ -20,6 +20,7 @@
         "@syncfusion/ej2-material-theme": "^28.2.6",
         "@syncfusion/ej2-vue-calendars": "^28.2.3",
         "@syncfusion/ej2-vue-gantt": "^28.2.6",
+        "@syncfusion/ej2-vue-schedule": "^28.2.7",
         "@vitejs/plugin-vue": "^5.2.1",
         "@vueuse/motion": "^2.2.6",
         "apexcharts": "^4.4.0",
