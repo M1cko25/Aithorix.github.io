@@ -67,7 +67,6 @@ const taskCreating = ref({
         </Button>
       </div>
     </div>
-
     <!-- Board Controls -->
     <div class="px-6 pb-6 flex items-center gap-4">
       <div class="relative flex-1 max-w-md">
