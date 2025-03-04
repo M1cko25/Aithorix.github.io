@@ -161,12 +161,13 @@ const handleTaskClick = (task, event) => {
 
             <div class="w-20">
                 <div class="flex -space-x-2">
-                <img 
+                <img v-if="task.assignees.length > 0"
                     v-for="(assignee, index) in task.assignees"
                     :key="index"
-                    :src="assignee"
+                    :src="assignee.avatar"
                     class="w-8 h-8 rounded-full border-2 border-white"
                 />
+                <p v-else class="text-dark">No assigned</p>
                 </div>
             </div>
             <button class="p-2 hover:bg-gray-100 rounded" @click="(event) => {

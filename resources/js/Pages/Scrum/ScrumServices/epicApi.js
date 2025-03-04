@@ -26,7 +26,7 @@ export function updateEpicStatus(epics, epicSelected, projectDetails) {
     });
 }
 
-export function createNewEpic(epics, epicProcessing, epicSelected, newEpic, projEpics, projectDetails) {
+export function createNewEpic(epics, epicProcessing, newEpic, projEpics, projectDetails) {
   epicProcessing = true;
   if (newEpic.trim().length > 0) {
     return axios.post('/scrum/epic-create', {
@@ -34,31 +34,34 @@ export function createNewEpic(epics, epicProcessing, epicSelected, newEpic, proj
       key: projectDetails.key + '-E' + (projEpics.length + 1),
       projectId: projectDetails.id
     }, {
-    headers: {
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
     })
     .then(response => {
       epics.forEach(epic => {
-        if (epic.isActive) {
-          epic.isActive = false;
-        }
+        epic.isActive = false;
       });
+
       const newEpicObj = {
         epic_id: response.data.id,
         name: newEpic,
         isActive: true,
         description: '',
-        key: response.data.key,
+        key: projectDetails.key + '-E' + (projEpics.length + 1),
         order: projEpics.length + 1,
         progress: '0%',
         tasks: []
-      }
-    epics.push(newEpicObj);
-    projEpics.push(response.data);
+      };
+
+      epics.push(newEpicObj);
+      projEpics.push(response.data);
+      
+      return newEpicObj; // Return the new epic object
     });
   }
+  return Promise.resolve(null);
 }
 
 

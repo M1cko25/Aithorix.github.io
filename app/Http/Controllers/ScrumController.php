@@ -114,7 +114,20 @@ class ScrumController extends Controller
         $backlogs = Backlogs::with(['attachments', 'assignees'])
             ->where('project_id', $projectDetails->id)
             ->get();
-        $comments = TaskComments::where('task_id', $backlogs->pluck('id'))->get();
+
+        // Initialize comments as an associative array
+        $comments = [];
+
+        foreach ($backlogs as $backlog) {
+            // Get comments for this specific task and store them with the task ID as key
+            $taskComments = TaskComments::with('user')
+                ->where('task_id', $backlog->id)
+                ->get();
+            
+            if ($taskComments->isNotEmpty()) {
+                $comments[$backlog->id] = $taskComments;
+            }
+        }
         
         // Fix project members loading
         $projectMembers = User::whereIn('id', function($query) use ($projectDetails) {
@@ -130,6 +143,7 @@ class ScrumController extends Controller
                 ->first();
             }
         }
+        Log::info('Task comments:', ['comments' => $comments]);
         return Inertia::render('Scrum/ScrumBacklog', [
             'projectDetails' => $projectDetails,
             'backlogs' => $backlogs,
@@ -492,6 +506,102 @@ class ScrumController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating assignees'
+            ], 500);
+        }
+    }
+
+    public function updateEpic(Request $request)
+    {
+        $request->validate([
+            'epicId' => 'required|exists:epics,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $epic = Epics::findOrFail($request->epicId);
+            
+            $epic->update([
+                'name' => $request->name,
+                'description' => $request->description ?? ''
+            ]);
+
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "updated epic ",
+                $request->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Epic updated successfully',
+                'epic' => $epic // Return updated epic data
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating epic: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating epic'
+            ], 500);
+        }
+    }
+
+    public function deleteEpic(Request $request)
+    {
+        $request->validate([
+            'epicId' => 'required|exists:epics,id',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            $epic = Epics::findOrFail($request->epicId);
+            
+            // Get all backlog IDs associated with this epic
+            $backlogIds = Backlogs::where('epic_id', $epic->id)->pluck('id')->toArray();
+            
+            if (!empty($backlogIds)) {
+                // Delete task comments
+                TaskComments::whereIn('task_id', $backlogIds)->delete();
+                
+                // Delete task attachments
+                TaskAttachments::whereIn('task_id', $backlogIds)->delete();
+                
+                // Delete task assignees
+                DB::table('task_assignees')->whereIn('task_id', $backlogIds)->delete();
+                
+                // Delete backlogs
+                Backlogs::whereIn('id', $backlogIds)->delete();
+            }
+            
+            // Delete any active sprints associated with this epic
+            Sprints::where('epic_id', $epic->id)->delete();
+            
+            // Finally, delete the epic
+            $epic->delete();
+            
+            DB::commit();
+
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "deleted epic ",
+                $epic->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Epic deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting epic: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting epic: ' . $e->getMessage()
             ], 500);
         }
     }

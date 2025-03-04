@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import { ClipboardList, Bug, Bookmark, Flag, Clock, User, X } from 'lucide-vue-next'
+import { ClipboardList, Bug, Bookmark, Flag, Clock, User, X, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -30,12 +30,12 @@ const priorities = [
 const statuses = ['To Do', 'In Progress', 'Done']
 
 const form = ref({
-  title: props.task?.title || '',
-  description: props.task?.description || '',
-  type: props.task?.type || 'Task',
-  priority: props.task?.priority || 'Low',
-  status: props.task?.status || 'To Do',
-  assignees: props.task?.assignees || [],
+  title: '',
+  description: '',
+  type: 'Task',
+  priority: 'Low',
+  status: 'To Do',
+  assignees: [],
   attachments: []
 })
 
@@ -48,17 +48,32 @@ const newComment = ref('')
 const comments = ref(page.comments || [])
 const projectMembers = ref([])
 const showAssigneeDropdown = ref(false)
+const errors = ref({
+  title: '',
+  description: '',
+  type: '',
+  priority: '',
+  status: ''
+})
+const isSaving = ref(false)
 
 watch(() => props.task, (newTask) => {
   if (newTask) {
     form.value = { 
-      ...newTask,
+      title: newTask.title || '',
+      description: newTask.description || '',
+      type: newTask.type || 'Task',
+      priority: newTask.priority || 'Low',
+      status: newTask.status || 'To Do',
+      assignees: newTask.assignees || [],
       attachments: newTask.attachments || []
     }
     attachments.value = newTask.attachments || []
   }
-  if (newTask?.comments) {
-    comments.value = newTask.comments
+  if (newTask && page.comments && page.comments[newTask.id]) {
+    comments.value = page.comments[newTask.id];
+  } else {
+    comments.value = [];
   }
 }, { immediate: true })
 
@@ -160,11 +175,27 @@ const formatFileSize = (bytes) => {
 }
 
 const saveChanges = async () => {
+  // Reset errors
+  errors.value = {
+    title: '',
+    description: '',
+    type: '',
+    priority: '',
+    status: ''
+  }
+
+  // Validate title only (description can be empty)
+  if (!form.value.title || !form.value.title.trim()) {
+    errors.value.title = 'Task title is required'
+    return
+  }
+
+  isSaving.value = true
   try {
     const response = await axios.post('/scrum/backlog-update', {
       id: props.task.id,
-      title: form.value.title,
-      description: form.value.description,
+      title: form.value.title.trim(),
+      description: form.value.description || '', // Handle empty description
       type: form.value.type,
       priority: form.value.priority,
       status: form.value.status,
@@ -174,11 +205,21 @@ const saveChanges = async () => {
 
     if (response.data.success) {
       // Update the original task with new data
-      Object.assign(props.task, form.value)
+      Object.assign(props.task, {
+        ...form.value,
+        title: form.value.title.trim(),
+        description: form.value.description || ''
+      })
       emit('update:isOpen', false)
     }
   } catch (error) {
-    console.error('Error saving task:', error)
+    if (error.response?.data?.errors) {
+      errors.value = error.response.data.errors
+    } else {
+      console.error('Error saving task:', error)
+    }
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -201,21 +242,27 @@ onBeforeUnmount(() => {
 })
 
 const addComment = async () => {
-  if (!newComment.value.trim()) return
+  if (!newComment.value.trim()) return;
 
   try {
     const response = await axios.post('/scrum/add-comment', {
       taskId: props.task.id,
       comment: newComment.value,
       projectId: page.projectDetails.id
-    })
+    });
 
     if (response.data.success) {
-      comments.value.push(response.data.comment)
-      newComment.value = ''
+      // Initialize the comments array for this task if it doesn't exist
+      if (!page.comments[props.task.id]) {
+        page.comments[props.task.id] = [];
+      }
+      // Add the new comment to both the local state and the page comments
+      comments.value.push(response.data.comment);
+      page.comments[props.task.id].push(response.data.comment);
+      newComment.value = '';
     }
   } catch (error) {
-    console.error('Error adding comment:', error)
+    console.error('Error adding comment:', error);
   }
 }
 
@@ -271,12 +318,19 @@ const toggleAssignee = async (member) => {
         <div class="bg-white rounded-lg shadow-xl w-[90vw] max-h-[90vh] flex flex-col">
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b">
-            <input 
-              v-model="form.title"
-              type="text"
-              class="text-xl font-semibold w-full bg-transparent border-0 focus:ring-0 focus:outline-none"
-              placeholder="Task title"
-            />
+            <div class="flex-1">
+              <input 
+                v-model="form.title"
+                type="text"
+                class="text-xl font-semibold w-full bg-transparent border-0 focus:ring-0 focus:outline-none"
+                :class="{ 'border-red-500': errors.title }"
+                placeholder="Task title"
+              />
+              <div v-if="errors.title" class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                <AlertCircle class="w-4 h-4" />
+                {{ errors.title }}
+              </div>
+            </div>
             <button @click="updateModalState(false)" class="p-1 hover:bg-gray-100 rounded">
               <X class="w-5 h-5" />
             </button>
@@ -508,7 +562,7 @@ const toggleAssignee = async (member) => {
 
                   <!-- Comments list -->
                   <div v-if="comments.length > 0" class="space-y-4">
-                    <div 
+                    <div  
                       v-for="comment in comments" 
                       :key="comment.id"
                       class="bg-white p-4 rounded-lg border border-gray-200"
@@ -539,12 +593,18 @@ const toggleAssignee = async (member) => {
 
           <!-- Footer -->
           <div class="px-6 py-4 border-t bg-gray-50 flex justify-between items-center">
-            <div class="text-sm text-dark">
+            <div class="text-sm text-gray-500">
               Press Esc to close
             </div>
             <div class="flex gap-3">
               <button @click="updateModalState(false)" class="btn-cancel">Cancel</button>
-              <button @click="saveChanges" class="btn-primary">Save Changes</button>
+              <button 
+                @click="saveChanges" 
+                class="btn-primary"
+                :disabled="isSaving"
+              >
+                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+              </button>
             </div>
           </div>
         </div>

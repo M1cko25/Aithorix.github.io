@@ -8,6 +8,7 @@ import SprintModal from './ScrumComponents/SprintModal.vue'
 import CompletedSprintModal from './ScrumComponents/CompletedSprintModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 import TaskModal from './ScrumComponents/TaskModal.vue'
+import EpicModal from './ScrumComponents/EpicModal.vue'
 import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { Filter, ArrowUpDown, Trash, MoreHorizontal } from 'lucide-vue-next'
@@ -49,6 +50,8 @@ const openSprint = ref(false)
 const openCompleteSprint = ref(false)
 const isTaskModalOpen = ref(false)
 const selectedTaskToEdit = ref(null)
+const isEpicModalOpen = ref(false)
+const epicToEdit = ref(null)
 
 // Task Counts
 const taskCounts = ref({
@@ -120,6 +123,38 @@ const handleEditTask = (task) => {
   selectedTaskToEdit.value = task
   isTaskModalOpen.value = true
 }
+
+const handleEditEpic = (epic) => {
+  epicToEdit.value = epic
+  isEpicModalOpen.value = true
+}
+
+const handleEpicDeleted = (deletedEpicId) => {
+  // Remove the deleted epic from epics array
+  epics.value = epics.value.filter(epic => epic.epic_id !== deletedEpicId)
+  
+  // If the deleted epic was selected, select the first available epic
+  if (epicSelected.value.epic_id === deletedEpicId && epics.value.length > 0) {
+    const newSelectedEpic = epics.value[0]
+    newSelectedEpic.isActive = true
+    epicSelected.value = newSelectedEpic
+    
+    // Update task counts for the newly selected epic
+    taskCounts.value = {
+      todo: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'To Do').length : 0,
+      inProgress: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'In Progress').length : 0,
+      completed: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'Done').length : 0
+    }
+  } else if (epics.value.length === 0) {
+    // If no epics remain, reset the selected epic
+    epicSelected.value = {
+      name: 'No Epic Created',
+      tasks: [],
+      epic_id: null
+    }
+    taskCounts.value = { todo: 0, inProgress: 0, completed: 0 }
+  }
+}
 </script>
 
 <template>
@@ -151,6 +186,12 @@ const handleEditTask = (task) => {
     v-model:isOpen="isTaskModalOpen"
     :task="selectedTaskToEdit"
     :epicSelected="epicSelected"
+  />
+
+  <EpicModal
+    v-model:isOpen="isEpicModalOpen"
+    :epic="epicToEdit"
+    @epicDeleted="handleEpicDeleted"
   />
 
   <div class="ml-64 pt-16 p-6 mb-5">
@@ -185,6 +226,7 @@ const handleEditTask = (task) => {
         :taskCounts="taskCounts"
         @updateEpicOrder="updateEpicOrder"
         @updateEpicSelected="updateEpicSelected"
+        @editEpic="handleEditEpic"
       />
 
       <!-- Task List -->

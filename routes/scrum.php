@@ -14,6 +14,8 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/backlog-delete', 'deleteBacklog')->name('backlog-delete');
         Route::post('/scrum/backlog-create', 'createBacklog')->name('backlog-create');
         Route::post('/scrum/epic-create', 'createEpic')->name('epic-create');
+        Route::post('/scrum/epic-update', 'updateEpic')->name('epic-update');
+        Route::post('/scrum/epic-delete', 'deleteEpic')->name('epic-delete');
         Route::post('/scrum/backlog-status-update', 'updateBacklogStatus')->name('backlog-status-update');
         Route::post('/scrum/backlog-update', 'updateBacklog')->name('backlog-update');
         Route::post('/scrum/epic-status-update', 'updateEpicStatus')->name('epic-status-update');
