@@ -23,7 +23,7 @@ export function createTask(newTask, statusOptions, taskCounts, selectedType, epi
         title: newTask,
         description: '',
         priority: 'Low',
-        status: statusOptions[0],
+        status: 'To Do',
         type: selectedType.name,
         epicId: activeEpic.epic_id,
         order: activeEpic.order + 1,
@@ -36,7 +36,7 @@ export function createTask(newTask, statusOptions, taskCounts, selectedType, epi
           description: '',
           priority: 'Low',
           type: selectedType.name,
-          status: statusOptions[0],
+          status: 'To Do',
           assignees: [],
           epic_id: activeEpic.epic_id
         });

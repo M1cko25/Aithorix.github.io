@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\TaskComments;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\TaskStatusCol;
 
 
 class ScrumController extends Controller
@@ -91,9 +92,36 @@ class ScrumController extends Controller
     
     public function getBoardDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
+        
+        // Get all epics for the project
+        $epics = Epics::where('project_id', $projectDetails->id)->get();
+        
+        // Get all backlogs with their assignees
+        $backlogs = Backlogs::with(['assignees', 'attachments'])
+            ->where('project_id', $projectDetails->id)
+            ->get();
 
+        $comments = [];
+
+        foreach ($backlogs as $backlog) {
+            // Get comments for this specific task and store them with the task ID as key
+            $taskComments = TaskComments::with('user')
+                ->where('task_id', $backlog->id)
+                ->get();
+            
+            if ($taskComments->isNotEmpty()) {
+                $comments[$backlog->id] = $taskComments;
+            }
+        }
+        $taskStatus = TaskStatusCol::where('project_id', $projectDetails->id)
+            ->orderBy('id')
+            ->get();
         return Inertia::render('Scrum/ScrumBoard', [
             'projectDetails' => $projectDetails,
+            'epics' => $epics,
+            'backlogs' => $backlogs,
+            'comments' => $comments,
+            'columns' => $taskStatus,
         ]);
     }
 
@@ -143,7 +171,9 @@ class ScrumController extends Controller
                 ->first();
             }
         }
-        Log::info('Task comments:', ['comments' => $comments]);
+        $taskStatus = TaskStatusCol::where('project_id', $projectDetails->id)
+            ->orderBy('id')
+            ->get();
         return Inertia::render('Scrum/ScrumBacklog', [
             'projectDetails' => $projectDetails,
             'backlogs' => $backlogs,
@@ -151,6 +181,7 @@ class ScrumController extends Controller
             'sprint' => $sprint,
             'comments' => $comments,
             'projectMembers' => $projectMembers,
+            'columns' => $taskStatus,
         ]);
     }
 
@@ -602,6 +633,78 @@ class ScrumController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting epic: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addColumn(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $column = TaskStatusCol::create([
+                'title' => $request->title,
+                'project_id' => $request->projectId
+            ]);
+
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "added new column ",
+                $request->title
+            );
+
+            return response()->json([
+                'success' => true,
+                'id' => $column->id,
+                'message' => 'Column added successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error adding column: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding column'
+            ], 500);
+        }
+    }
+
+    public function deleteColumn(Request $request)
+    {
+        $request->validate([
+            'columnId' => 'required',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $column = TaskStatusCol::findOrFail($request->columnId);
+            
+            // Update all tasks in this column to 'To Do' status
+            Backlogs::where('project_id', $request->projectId)
+                ->where('status', $column->title)
+                ->update(['status' => 'To Do']);
+
+            // Delete the column
+            $column->delete();
+
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "deleted column ",
+                $column->title
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Column deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting column: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting column'
             ], 500);
         }
     }
