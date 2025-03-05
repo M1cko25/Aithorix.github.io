@@ -1,13 +1,22 @@
 <script setup>
 import { ref, nextTick } from 'vue';
 import { X, Send } from 'lucide-vue-next';
+import { useAI } from '../api/useAi';
+
+const { response, sendPrompt } = useAI();
+const userPrompt = ref('');
 
 const isOpen = ref(false);
 const input = ref('');
-const messages = ref([]);
+const messages = ref([
+  {
+    role: 'assistant',
+    content: "Hi! I'm LIRA, your AI assistant. I can help you with your project management tasks. How can I assist you today?"
+  }
+]);
 const isLoading = ref(false);
 const messagesContainer = ref(null);
-const chatWidth = ref(380); // Default width
+const chatWidth = ref(380);
 const isResizing = ref(false);
 const startX = ref(0);
 const startWidth = ref(0);
@@ -22,23 +31,31 @@ const scrollToBottom = async () => {
 const sendMessage = async () => {
   if (!input.value.trim() || isLoading.value) return;
 
-  const userMessage = input.value;
+  const userMessage = input.value.trim();
   input.value = '';
   
   // Add user message
   messages.value.push({ role: 'user', content: userMessage });
   await scrollToBottom();
   
-  // Simulate AI response
+  // Get AI response
   isLoading.value = true;
-  setTimeout(() => {
+  try {
+    const aiResponse = await sendPrompt(userMessage);
     messages.value.push({
       role: 'assistant',
-      content: "Aww, that’s sweet! I appreciate you. 💙 How’s your day going?"
+      content: aiResponse || "I apologize, but I'm having trouble processing your request right now. Please try again later."
     });
+  } catch (error) {
+    console.error('Error getting AI response:', error);
+    messages.value.push({
+      role: 'assistant',
+      content: "I apologize, but I encountered an error. Please try again."
+    });
+  } finally {
     isLoading.value = false;
-    scrollToBottom();
-  }, 1000);
+    await scrollToBottom();
+  }
 };
 
 const startResize = (e) => {
@@ -61,6 +78,14 @@ const stopResize = () => {
   isResizing.value = false;
   document.removeEventListener('mousemove', handleResize);
   document.removeEventListener('mouseup', stopResize);
+};
+
+// Handle enter key
+const handleKeyPress = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 };
 </script>
 
@@ -88,7 +113,7 @@ const stopResize = () => {
     >
       <div
         v-if="isOpen"
-        class="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+        class="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 z-50"
         :style="{ width: `${chatWidth}px` }"
       >
         <!-- Resize handle -->
@@ -117,11 +142,7 @@ const stopResize = () => {
 
         <!-- Messages -->
         <div class="h-[300px] overflow-y-auto px-6 py-4" ref="messagesContainer">
-          <div v-if="messages.length === 0" class="flex items-center justify-center h-full">
-            <p class="text-gray-400 text-sm">Start a conversation...</p>
-          </div>
-          
-          <div v-else class="space-y-4">
+          <div class="space-y-4">
             <div
               v-for="(message, index) in messages"
               :key="index"
@@ -132,14 +153,22 @@ const stopResize = () => {
                 class="max-w-[80%] rounded-2xl px-4 py-2"
                 :class="message.role === 'user' ? 'bg-blue text-white' : 'bg-gray-100 text-gray-900'"
               >
-                {{ message.content }}
+                <span v-html="message.content"></span>
+              </div>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div v-if="isLoading" class="flex justify-start">
+              <div class="bg-gray-100 rounded-2xl px-4 py-2 flex items-center space-x-1">
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Input area -->
-         
         <div class="border-t bg-white px-6 py-4">
           <form @submit.prevent="sendMessage" class="relative">
             <input
@@ -148,6 +177,7 @@ const stopResize = () => {
               placeholder="Write something..."
               class="w-full pl-4 pr-12 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-500/20 transition-all"
               :disabled="isLoading"
+              @keypress="handleKeyPress"
             />
             <button
               type="submit"
