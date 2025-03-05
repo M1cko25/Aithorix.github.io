@@ -21,4 +21,25 @@ class Backlogs extends Model
         'creator_id',
         'order'
     ];
+
+    public function attachments()
+    {
+        return $this->hasMany(TaskAttachments::class, 'task_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(TaskComments::class, 'task_id');
+    }
+
+    public function epic()
+    {
+        return $this->belongsTo(Epics::class, 'epic_id');
+    }
+
+    public function assignees()
+    {
+        return $this->belongsToMany(User::class, 'task_assignees', 'task_id', 'user_id')
+            ->select(['users.id', 'name', 'avatar']);
+    }
 }

@@ -6,6 +6,7 @@ import TextField from '../../../Components/TextField.vue'
 import DropDown from '../../../Components/DropDown.vue'
 import Modal from '../../../Components/Modal.vue'
 import { updateEpicStatus } from '../ScrumServices/epicApi'
+import axios from 'axios'
 
 const page = usePage().props
 const props = defineProps({
@@ -14,7 +15,7 @@ const props = defineProps({
   epics: Object,
 })
 
-const emit = defineEmits(['update:isOpen'])
+const emit = defineEmits(['update:isOpen', 'sprintCreated'])
 
 const form = ref({
   name: '',
@@ -82,9 +83,26 @@ watch(() => props.epicSelected, (newEpic) => {
 }, { immediate: true })
 
 const submit = () => {
-  router.post('/scrum/start-sprint', form.value)
-  updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
-  emit('update:isOpen', false)
+  axios.post('/scrum/start-sprint', {
+    ...form.value,
+    epic_id: props.epicSelected.epic_id,
+    projectId: page.projectDetails.id
+  })
+  .then((response) => {
+    updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
+    // Emit the sprint data to update parent component
+    emit('sprintCreated', {
+      epic_id: props.epicSelected.epic_id,
+      start_date: form.value.start_date,
+      end_date: form.value.end_date,
+      name: form.value.name,
+      status: 'Active'
+    })
+    emit('update:isOpen', false)
+  })
+  .catch(error => {
+    console.error('Error starting sprint:', error)
+  })
 }
 
 const updateModalState = (value) => {
@@ -163,4 +181,4 @@ const getMinEndDate = computed(() => {
       </div>
     </div>
   </Modal>
-</template> 
+</template>
