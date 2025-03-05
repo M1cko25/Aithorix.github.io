@@ -32,7 +32,6 @@ const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 
 const isOpen = ref(false);
 const newTask = ref('');
 const isCreatingTask = ref(false);
-const statusOptions = ['To Do', 'In Progress', 'Done']
 const taskTypes = ref([{
   name: 'Task',
   icon: ClipboardList
@@ -166,15 +165,15 @@ onUnmounted(() => {
 
             <select 
                 v-model="task.status"
-                class="px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 text-blue-600 bg-blue-50"
                 :class="{
                 'text-gray-700 bg-gray-50': task.status === 'To Do',
                 'text-orange-600 bg-orange-50': task.status === 'In Progress',
-                'text-green-600 bg-green-50': task.status === 'Done'
+                'text-green-600 bg-green-50': task.status === 'Done',
                 }"
                 @change="updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)">
-                <option v-for="status in statusOptions" :key="status" :value="status">
-                {{ status }}
+                <option v-for="status in page.columns" :key="status.id" :value="status.title">
+                {{ status.title }}
                 </option>
             </select>
 

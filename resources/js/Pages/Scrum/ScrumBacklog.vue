@@ -54,11 +54,21 @@ const isEpicModalOpen = ref(false)
 const epicToEdit = ref(null)
 
 // Task Counts
-const taskCounts = ref({
-  todo: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'To Do').length : 0,
-  inProgress: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'In Progress').length : 0,
-  completed: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'Done').length : 0
-})
+const calculateTaskCounts = () => {
+  const counts = {};
+  
+  // For each column, count tasks with matching status
+  page.columns.forEach(column => {
+    const columnKey = column.title.toLowerCase().replace(/\s+/g, '');
+    counts[columnKey] = epicSelected.value.tasks.filter(
+      task => task.status === column.title
+    ).length;
+  });
+  
+  return counts;
+};
+
+const taskCounts = computed(() => calculateTaskCounts());
 
 // Add sprint ref
 const sprint = ref(page.sprint || null)
@@ -73,11 +83,7 @@ const updateEpicSelected = (epic) => {
   selectedTaskToUpdate.value = [] // Clear selected tasks when changing epics
   
   // Update task counts when epic changes
-  taskCounts.value = {
-    todo: epic.tasks ? epic.tasks.filter(task => task.status === 'To Do').length : 0,
-    inProgress: epic.tasks ? epic.tasks.filter(task => task.status === 'In Progress').length : 0,
-    completed: epic.tasks ? epic.tasks.filter(task => task.status === 'Done').length : 0
-  }
+  taskCounts.value = calculateTaskCounts()
 }
 
 const handleSprintAction = () => {
@@ -111,11 +117,7 @@ const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
 // Watch for changes in epic tasks
 watch(() => epicSelected.value.tasks, (newTasks) => {
   if (newTasks) {
-    taskCounts.value = {
-      todo: newTasks.filter(task => task.status === 'To Do').length,
-      inProgress: newTasks.filter(task => task.status === 'In Progress').length,
-      completed: newTasks.filter(task => task.status === 'Done').length
-    }
+    taskCounts.value = calculateTaskCounts()
   }
 }, { deep: true })
 
@@ -140,11 +142,7 @@ const handleEpicDeleted = (deletedEpicId) => {
     epicSelected.value = newSelectedEpic
     
     // Update task counts for the newly selected epic
-    taskCounts.value = {
-      todo: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'To Do').length : 0,
-      inProgress: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'In Progress').length : 0,
-      completed: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'Done').length : 0
-    }
+    taskCounts.value = calculateTaskCounts()
   } else if (epics.value.length === 0) {
     // If no epics remain, reset the selected epic
     epicSelected.value = {
@@ -152,7 +150,7 @@ const handleEpicDeleted = (deletedEpicId) => {
       tasks: [],
       epic_id: null
     }
-    taskCounts.value = { todo: 0, inProgress: 0, completed: 0 }
+    taskCounts.value = calculateTaskCounts()
   }
 }
 </script>
@@ -238,9 +236,19 @@ const handleEpicDeleted = (deletedEpicId) => {
           </div>
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-              <span class="px-3 py-1 bg-light-blue text-blue-600 rounded-full">{{ taskCounts.todo }}</span>
-              <span class="px-3 py-1 bg-orange-100 text-orange-600 rounded-full">{{ taskCounts.inProgress }}</span>
-              <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full">{{ taskCounts.completed }}</span>
+              <span 
+                v-for="column in page.columns" 
+                :key="column.id" 
+                class="px-3 py-1 rounded-full"
+                :class="{
+                  'bg-light-blue text-blue-600': column.title === 'To Do',
+                  'bg-orange-100 text-orange-600': column.title === 'In Progress',
+                  'bg-green-100 text-green-600': column.title === 'Done',
+                  'bg-gray-100 text-gray-600': !['To Do', 'In Progress', 'Done'].includes(column.title)
+                }"
+              >
+                {{ taskCounts[column.title.toLowerCase().replace(/\s+/g, '')] || 0 }}
+              </span>
             </div>
             <button 
                 class="btn-primary"

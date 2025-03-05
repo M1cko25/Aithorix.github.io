@@ -25,5 +25,7 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/add-comment', 'addComment')->name('add-comment');
         Route::get('/scrum/project-members/{projectId}', 'getProjectMembers')->name('get-project-members');
         Route::post('/scrum/update-assignees', 'updateTaskAssignees')->name('update-assignees');
+        Route::post('/scrum/add-column', 'addColumn')->name('add-column');
+        Route::post('/scrum/delete-column', 'deleteColumn')->name('delete-column');
     });
 });

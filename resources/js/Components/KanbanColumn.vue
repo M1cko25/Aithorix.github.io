@@ -4,6 +4,7 @@ import Button from "../Components/Button.vue";
 import { ref, onMounted, onUnmounted } from "vue";
 import { usePage } from "@inertiajs/vue3";
 import draggable from "vuedraggable";
+import Overlay from "../Components/Overlay.vue";
 
 const page = usePage().props;
 const taskTypes = ref([{
@@ -19,18 +20,48 @@ const taskTypes = ref([{
 
 const props = defineProps({
     title: String,
-    tasks: Array,
+    tasks: {
+        type: Array,
+        default: () => []
+    },
     isCreatingTask: Boolean,
     createTask: Function,
     columnId: String,
     taskNum: Number
 });
 
-const emit = defineEmits(['create-new-task', 'update:tasks', 'taskMoved']);
+const emit = defineEmits(['create-new-task', 'update:tasks', 'taskMoved', 'editTask', 'deleteTask']);
 
 const newTaskTitle = ref("");
 const isOpen = ref(false);
 const selectedType = ref(taskTypes.value[0]);
+const overlayPosition = ref({ x: 0, y: 0 });
+const isOverlayOpen = ref(false);
+const selectedTask = ref(null);
+
+const TaskOverlayButtons = ref([
+  {
+    text: 'Edit Task',
+    function: () => {
+      emit('editTask', selectedTask.value);
+      isOverlayOpen.value = false;
+    }
+  },
+  {
+    text: 'Delete Task',
+    function: () => {
+      emit('deleteTask', selectedTask.value);
+      isOverlayOpen.value = false;
+    }
+  },
+  {
+    text: 'Open Task',
+    function: () => {   
+      emit('editTask', selectedTask.value);
+      isOverlayOpen.value = false;
+    }
+  }
+]);
 
 const handleCreateTask = () => {
     if (newTaskTitle.value.trim().length > 0) {
@@ -80,13 +111,40 @@ const handleDragAdd = (evt) => {
     const task = evt.item.__draggable_context.element;
     emit('taskMoved', task, props.columnId);
 }
+
+const handleMoreClick = (event, task) => {
+    event.stopPropagation();
+    selectedTask.value = task;
+    isOverlayOpen.value = true;
+    const rect = event.currentTarget.getBoundingClientRect();
+    overlayPosition.value = {
+        x: rect.x - 270,
+        y: rect.y + rect.height,
+    };
+};
+
+const handleTaskClick = (task, event) => {
+    // Prevent opening modal when clicking more options button
+    if (event.target.closest('button')) return;
+    emit('editTask', task);
+}
 </script>
 
 <template>
     <div class="w-80 bg-gray-100 rounded-lg p-4 h-full">
+        <Overlay
+            :isOpen="isOverlayOpen" 
+            :buttons="TaskOverlayButtons"
+            :position="overlayPosition"
+            @close="isOverlayOpen = false"
+        />
+        
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium">{{ title }}</h3>
-            <span class="text-sm text-gray-500">{{ tasks.length }}</span>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500">{{ tasks.length }}</span>
+                <slot name="column-header-actions"></slot>
+            </div>
         </div>
 
         <button
@@ -147,7 +205,10 @@ const handleDragAdd = (evt) => {
             @add="handleDragAdd"
         >
             <template #item="{ element: task }">
-                <div class="p-4 cursor-grab bg-white rounded-lg shadow-sm">
+                <div 
+                    class="p-4 cursor-grab bg-white rounded-lg shadow-sm"
+                    @click="(event) => handleTaskClick(task, event)"
+                >
                     <div class="flex flex-col gap-2">
                         <div class="flex flex-row justify-between items-center">
                             <div class="flex flex-row items-center gap-2">
@@ -165,7 +226,9 @@ const handleDragAdd = (evt) => {
                                 />
                                 <h1 class="truncate">{{ task.title }}</h1>
                             </div>
-                            <button><Ellipsis /></button>
+                            <button @click="(event) => handleMoreClick(event, task)">
+                                <Ellipsis class="w-4 h-4" />
+                            </button>
                         </div>
                         <p class="text-xs px-2 py-1 bg-blue w-fit rounded-full text-light">
                             {{ page.projectDetails.key + "-" + task.id }}
