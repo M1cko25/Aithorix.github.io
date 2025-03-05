@@ -15,17 +15,15 @@ import { Filter, ArrowUpDown, Trash, MoreHorizontal } from 'lucide-vue-next'
 import TextField from '../../Components/TextField.vue'
 import graphics from '../../graphics'
 
-// Initialize page data
 const page = usePage().props
 const projEpics = ref(page.epics || [])
 const epics = ref([])
 
-// Initialize epics data
 if (projEpics.value.length > 0) {
   epics.value = projEpics.value
     .sort((a, b) => a.order - b.order)
     .map(epic => ({
-      epic_id: epic.id,
+      id: epic.id,
       name: epic.name,
       isActive: epic.order === 1,
       description: epic.description,
@@ -37,7 +35,6 @@ if (projEpics.value.length > 0) {
     }))
 }
 
-// UI State
 const searchQuery = ref('')
 const epicSelected = ref(epics.value[0] || {
   name: 'No Epic Created',
@@ -53,11 +50,9 @@ const selectedTaskToEdit = ref(null)
 const isEpicModalOpen = ref(false)
 const epicToEdit = ref(null)
 
-// Task Counts
 const calculateTaskCounts = () => {
   const counts = {};
-  
-  // For each column, count tasks with matching status
+
   page.columns.forEach(column => {
     const columnKey = column.title.toLowerCase().replace(/\s+/g, '');
     counts[columnKey] = epicSelected.value.tasks.filter(
@@ -70,19 +65,15 @@ const calculateTaskCounts = () => {
 
 const taskCounts = computed(() => calculateTaskCounts());
 
-// Add sprint ref
 const sprint = ref(page.sprint || null)
 
-// Event Handlers
 const updateEpicOrder = (updatedEpics) => {
   epics.value = updatedEpics
 }
 
 const updateEpicSelected = (epic) => {
   epicSelected.value = epic
-  selectedTaskToUpdate.value = [] // Clear selected tasks when changing epics
-  
-  // Update task counts when epic changes
+  selectedTaskToUpdate.value = [] 
   taskCounts.value = calculateTaskCounts()
 }
 
@@ -94,12 +85,10 @@ const handleSprintAction = () => {
   }
 }
 
-// Add handler for sprint creation
 const handleSprintCreated = (newSprint) => {
   sprint.value = newSprint
 }
 
-// Computed Properties
 const formatSprintDates = computed(() => {
   if (!sprint.value?.start_date || !sprint.value?.end_date) return ''
     
@@ -114,7 +103,6 @@ const formatSprintDates = computed(() => {
 
 const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
 
-// Watch for changes in epic tasks
 watch(() => epicSelected.value.tasks, (newTasks) => {
   if (newTasks) {
     taskCounts.value = calculateTaskCounts()
@@ -132,19 +120,14 @@ const handleEditEpic = (epic) => {
 }
 
 const handleEpicDeleted = (deletedEpicId) => {
-  // Remove the deleted epic from epics array
   epics.value = epics.value.filter(epic => epic.epic_id !== deletedEpicId)
   
-  // If the deleted epic was selected, select the first available epic
   if (epicSelected.value.epic_id === deletedEpicId && epics.value.length > 0) {
     const newSelectedEpic = epics.value[0]
     newSelectedEpic.isActive = true
     epicSelected.value = newSelectedEpic
-    
-    // Update task counts for the newly selected epic
     taskCounts.value = calculateTaskCounts()
   } else if (epics.value.length === 0) {
-    // If no epics remain, reset the selected epic
     epicSelected.value = {
       name: 'No Epic Created',
       tasks: [],

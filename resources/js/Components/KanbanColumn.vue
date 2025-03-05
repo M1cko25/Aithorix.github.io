@@ -126,6 +126,7 @@ const handleMoreClick = (event, task) => {
 const handleTaskClick = (task, event) => {
     // Prevent opening modal when clicking more options button
     if (event.target.closest('button')) return;
+    console.log(page.epicSelected)
     emit('editTask', task);
 }
 </script>

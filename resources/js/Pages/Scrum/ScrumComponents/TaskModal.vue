@@ -181,7 +181,7 @@ const saveChanges = async () => {
     errors.value.title = 'Task title is required'
     return
   }
-  console.log(props.epicSelected.epic_id)
+
   isSaving.value = true
   try {
     const response = await axios.post('/scrum/backlog-update', {
@@ -191,19 +191,23 @@ const saveChanges = async () => {
       type: form.value.type,
       priority: form.value.priority,
       status: form.value.status,
-      epicId: props.epicSelected.epic_id,
-      projectId: page.projectDetails.id
+      epicId: props.epicSelected.id,
+      projectId: page.projectDetails.id,
+      assignees: form.value.assignees ? form.value.assignees.map(a => a.id) : []
     })
 
     if (response.data.success) {
+      // Create a complete updated task object
       const updatedTask = {
         ...props.task,
         ...form.value,
         title: form.value.title.trim(),
-        description: form.value.description || ''
+        description: form.value.description || '',
+        epic_id: props.epicSelected.id
       }
+      
+      // Emit the complete updated task
       emit('update:task', updatedTask)
-      emit('taskUpdated', updatedTask)
       emit('update:isOpen', false)
     }
   } catch (error) {

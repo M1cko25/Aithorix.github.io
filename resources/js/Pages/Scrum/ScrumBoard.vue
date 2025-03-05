@@ -58,12 +58,10 @@ const updateTaskStatus = async (task, newStatus) => {
 
     if (response.data.success) {
       task.status = newStatus
-      // Re-organize tasks after successful status update
       organizeTasksByStatus()
     }
   } catch (error) {
     console.error('Error updating task status:', error)
-    // Revert the task to its original column if there's an error
     organizeTasksByStatus()
   }
 }
@@ -77,7 +75,6 @@ const handleTaskMove = (task, newColumnId) => {
 
 const organizeTasksByStatus = () => {
   if (backlogs.value.length > 0) {
-    // Update the tasks in each column
     toDoTasks.value = backlogs.value.filter(task => task.status === 'To Do')
     inProgressTasks.value = backlogs.value.filter(task => task.status === 'In Progress')
     doneTasks.value = backlogs.value.filter(task => task.status === 'Done')
@@ -90,16 +87,13 @@ const filterTasksByEpic = () => {
     return
   }
 
-  // Filter backlogs based on selected epic
   const filteredBacklogs = backlogs.value.filter(task => task.epic_id === selectedEpic.value.id)
   
-  // Update the tasks in each column
   columns.value.forEach(column => {
     column.tasks = filteredBacklogs.filter(task => task.status === column.title)
   })
 }
 
-// Watch for changes in selectedEpic
 watch(selectedEpic, () => {
   filterTasksByEpic()
 })
@@ -122,19 +116,16 @@ const TaskNum = computed(() => {
 })
 
 const handleClickOutside = (event) => {
-  // Only handle clicks if we're not clicking the create task button or inside the task creation area
   const taskCreationAreas = document.querySelectorAll('.task-creation-area')
   const createTaskButtons = document.querySelectorAll('.create-task-button')
   let shouldClose = true
 
-  // Check if click was inside task creation area
   taskCreationAreas.forEach(area => {
     if (area && area.contains(event.target)) {
       shouldClose = false
     }
   })
 
-  // Check if click was on create task button
   createTaskButtons.forEach(button => {
     if (button && button.contains(event.target)) {
       shouldClose = false
@@ -149,16 +140,13 @@ const handleClickOutside = (event) => {
 }
 
 const createTask = (colId) => {
-  // First close any other open task creators
   Object.keys(taskCreating.value).forEach(key => {
     taskCreating.value[key] = false
   })
-  // Then open the selected one
   taskCreating.value[colId] = true
 }
 
 const createNewTask = async (taskData, columnId) => {
-  // Get the column title from the column ID
   const column = columns.value.find(col => col.id === columnId);
   if (!column) return;
 
@@ -167,8 +155,8 @@ const createNewTask = async (taskData, columnId) => {
       title: taskData.title,
       type: taskData.type.name,
       priority: 'Low',
-      status: column.title, // Use the actual column title
-      epicId: selectedEpic.value.id, // Use the selected epic instead of first epic
+      status: column.title, 
+      epicId: selectedEpic.value.epic_id, 
       projectId: page.projectDetails.id
     })
 
@@ -180,24 +168,16 @@ const createNewTask = async (taskData, columnId) => {
         status: column.title,
         priority: 'Low',
         assignees: [],
-        epic_id: selectedEpic.value.id
+        epic_id: selectedEpic.value.epic_id
       }
-      
-      // Add to backlogs array
       backlogs.value.push(newTask)
-      
-      // Re-filter tasks to update columns
       filterTasksByEpic()
-      
-      // Reset task creation state
       taskCreating.value[columnId] = false
     }
   } catch (error) {
     console.error('Error creating task:', error)
   }
 }
-
-// Add new functions for column management
 const addColumn = async () => {
   if (newColumnTitle.value.trim()) {
     try {
@@ -233,16 +213,13 @@ const removeColumn = async (columnId) => {
       })
 
       if (response.data.success) {
-        // Move tasks back to 'To Do' column if the column is being removed
         const tasksToMove = columns.value[columnIndex].tasks
         const toDoColumn = columns.value.find(col => col.title === 'To Do')
         if (toDoColumn && tasksToMove.length > 0) {
-          // Update status of all tasks in the column being deleted
           for (const task of tasksToMove) {
             await updateTaskStatus(task, 'To Do')
           }
         }
-        // Remove the column from the array
         columns.value.splice(columnIndex, 1)
       }
     } catch (error) {
@@ -270,75 +247,29 @@ const handleDeleteTask = (task) => {
     isDeleteModalOpen.value = true;
 }
 
-// Add a watch for when the delete modal closes
 watch(isDeleteModalOpen, (newValue) => {
     if (!newValue && selectedTaskToDelete.value) {
-        // Remove the task from backlogs array
         backlogs.value = backlogs.value.filter(t => t.id !== selectedTaskToDelete.value.id);
-        // Re-filter tasks in columns
         filterTasksByEpic();
-        // Reset the selected task
         selectedTaskToDelete.value = null;
     }
 });
 
-// Add this watch to handle task updates in the board
 watch(selectedTaskToEdit, (newTask) => {
   if (newTask) {
-    // Find and update the task in backlogs array
     const taskIndex = backlogs.value.findIndex(t => t.id === newTask.id);
     if (taskIndex !== -1) {
       backlogs.value[taskIndex] = { ...backlogs.value[taskIndex], ...newTask };
-      // Re-filter tasks to update columns
       filterTasksByEpic();
     }
   }
 });
 
-// Add this new function after the updateTaskStatus function
-const handleTaskUpdate = async (updatedTask) => {
-  try {
-    // First update the task in the backend
-    const response = await axios.post('/scrum/backlog-update', {
-      id: updatedTask.id,
-      title: updatedTask.title,
-      description: updatedTask.description,
-      type: updatedTask.type,
-      priority: updatedTask.priority,
-      status: updatedTask.status,
-      epicId: selectedEpic.value.epic_id,
-      projectId: page.projectDetails.id,
-      assignees: updatedTask.assignees ? updatedTask.assignees.map(a => a.id) : []
-    });
-
-    if (response.data.success) {
-      // Update the task in backlogs array
-      const index = backlogs.value.findIndex(t => t.id === updatedTask.id);
-      if (index !== -1) {
-        backlogs.value[index] = { 
-          ...backlogs.value[index], 
-          ...updatedTask,
-          epic_id: selectedEpic.value.epic_id
-        };
-        
-        // Update the task's status if it changed
-        if (backlogs.value[index].status !== updatedTask.status) {
-          backlogs.value[index].status = updatedTask.status;
-        }
-      }
-
-      // Update comments if they exist in the response
-      if (response.data.comments) {
-        if (!page.comments) page.comments = {};
-        page.comments[updatedTask.id] = response.data.comments;
-      }
-
-      // Re-filter tasks to update columns
-      filterTasksByEpic();
-    }
-  } catch (error) {
-    console.error('Error updating task:', error);
-    throw error; // Propagate the error to handle it in the TaskModal
+const handleTaskUpdate = (updatedTask) => {
+  const taskIndex = backlogs.value.findIndex(t => t.id === updatedTask.id);
+  if (taskIndex !== -1) {
+    backlogs.value[taskIndex] = { ...backlogs.value[taskIndex], ...updatedTask };
+    filterTasksByEpic();
   }
 }
 </script>
