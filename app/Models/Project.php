@@ -17,4 +17,9 @@ class Project extends Model
         'template',
         'members'
     ];
+
+    public function epics()
+    {
+        return $this->hasMany(Epic::class);
+    }
 }

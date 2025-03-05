@@ -99,8 +99,11 @@ class ScrumController extends Controller
 
     public function getTimelineDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
-        return  Inertia::render('Scrum/ScrumTimeline', [
+        $epics = Epics::where('project_id', $projectDetails->id)->get(); // Fetch epics
+    
+        return Inertia::render('Scrum/ScrumTimeline', [
             'projectDetails' => $projectDetails,
+            'epics' => $epics, // Pass epics to the view
         ]);
     }
     public function getBacklogDatas(Request $request) {
@@ -282,6 +285,19 @@ class ScrumController extends Controller
         return redirect()->back()->with('success', 'Sprint started successfully.');
     }
 
+    public function getTrimDatas(Request $request) {
+        if ($request->query('id')) {
+            $projectDetails = Project::where('id', $request->query('id'))->first();
+        } else {
+            $projectDetails = Project::where('id', $request->projectId)->first();
+        }
+        $epics = Epics::where('project_id', $projectDetails->id)->get();
+    
+        return Inertia::render('Scrum/ScrumTrim', [
+            'epics' => $epics,
+        ]);
+    }
+    
     public function completeSprint(Request $request) {
         $sprint = Sprints::where('epic_id', $request->epicId)
             ->where('status', 'Active')

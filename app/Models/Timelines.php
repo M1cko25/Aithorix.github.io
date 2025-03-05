@@ -9,6 +9,7 @@ class Timelines extends Model
 {
     /** @use HasFactory<\Database\Factories\TimelinesFactory> */
     use HasFactory;
+
     protected $fillable = [
         'project_id',
         'user_id',
