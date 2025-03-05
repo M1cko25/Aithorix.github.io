@@ -27,7 +27,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask'])
+const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask', 'taskUpdated'])
 
 const isOpen = ref(false);
 const newTask = ref('');
@@ -125,6 +125,22 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+// Add watch for task updates
+watch(() => props.epicSelected.tasks, (newTasks) => {
+    if (newTasks) {
+        emit('updateCounts')
+    }
+}, { deep: true })
+
+const handleTaskStatusChange = async (task) => {
+    try {
+        await updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)
+        emit('taskUpdated', task)
+    } catch (error) {
+        console.error('Error updating task status:', error)
+    }
+}
 </script>
 <template>
     <Overlay
@@ -171,7 +187,7 @@ onUnmounted(() => {
                 'text-orange-600 bg-orange-50': task.status === 'In Progress',
                 'text-green-600 bg-green-50': task.status === 'Done',
                 }"
-                @change="updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)">
+                @change="handleTaskStatusChange(task)">
                 <option v-for="status in page.columns" :key="status.id" :value="status.title">
                 {{ status.title }}
                 </option>

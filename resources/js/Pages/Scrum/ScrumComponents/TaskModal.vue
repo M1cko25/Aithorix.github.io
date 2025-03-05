@@ -206,7 +206,7 @@ const saveChanges = async () => {
         epic_id: props.epicSelected.id
       }
       
-      // Emit the complete updated task
+      // Emit both the modal close and task update
       emit('update:task', updatedTask)
       emit('update:isOpen', false)
     }

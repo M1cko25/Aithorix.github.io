@@ -136,6 +136,28 @@ const handleEpicDeleted = (deletedEpicId) => {
     taskCounts.value = calculateTaskCounts()
   }
 }
+
+const handleTaskUpdate = (updatedTask) => {
+  // Find and update the task in epicSelected.tasks
+  const taskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id)
+  if (taskIndex !== -1) {
+    epicSelected.value.tasks[taskIndex] = { ...epicSelected.value.tasks[taskIndex], ...updatedTask }
+    
+    // Update task counts
+    taskCounts.value = {
+      todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
+      inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
+      completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
+    }
+  }
+}
+
+// Add watch for task updates from TaskModal
+watch(() => selectedTaskToEdit.value, (newTask) => {
+  if (newTask) {
+    handleTaskUpdate(newTask)
+  }
+}, { deep: true })
 </script>
 
 <template>
@@ -167,12 +189,7 @@ const handleEpicDeleted = (deletedEpicId) => {
     v-model:isOpen="isTaskModalOpen"
     :task="selectedTaskToEdit"
     :epicSelected="epicSelected"
-    @taskUpdated="(updatedTask) => {
-        const taskIndex = epicSelected.tasks.findIndex(t => t.id === updatedTask.id)
-        if (taskIndex !== -1) {
-            epicSelected.tasks[taskIndex] = updatedTask
-        }
-    }"
+    @update:task="handleTaskUpdate"
   />
 
   <EpicModal

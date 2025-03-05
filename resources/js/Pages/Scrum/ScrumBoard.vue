@@ -305,13 +305,14 @@ const handleTaskUpdate = (updatedTask) => {
             <Users class="w-5 h-5" />
           </button>
         </div>
+        <div class="flex items-center gap-4">
+          <button><Share2/></button>
+          <button><Star/></button>
+          <Link :href="route('meeting-home')">
+            <Video />
+          </Link>
+        </div>
       </div>
-      <div class="flex items-center gap-4">
-        <button><Share2/></button>
-        <button><Star/></button>
-        <Link :href="route('meeting-home')">
-        <Video />
-      </Link>
       <!-- Board Controls -->
       <div class="px-6 pb-6 flex items-center gap-4">
         <div class="relative flex-1 max-w-md">
@@ -405,7 +406,6 @@ const handleTaskUpdate = (updatedTask) => {
           </div>
         </div>
       </div>
-    </div>
   </div>
   </div>
   <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />

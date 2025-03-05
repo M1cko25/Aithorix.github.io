@@ -231,17 +231,19 @@ const handleTaskClick = (task, event) => {
                                 <Ellipsis class="w-4 h-4" />
                             </button>
                         </div>
-                        <p class="text-xs px-2 py-1 bg-blue w-fit rounded-full text-light">
-                            {{ page.projectDetails.key + "-" + task.id }}
-                        </p>
-                        <div v-if="task.assignees && task.assignees.length > 0" class="flex -space-x-2">
-                            <img
-                                v-for="assignee in task.assignees" 
-                                :key="assignee.id"
-                                :src="assignee.avatar"
-                                :alt="assignee.name"
-                                class="w-6 h-6 rounded-full border-2 border-white"
-                            />
+                        <div class="flex flex-row items-center justify-between">
+                            <p class="text-xs px-2 py-1 bg-blue w-fit rounded-full text-light">
+                                {{ page.projectDetails.key + "-" + task.id }}
+                            </p>
+                            <div v-if="task.assignees && task.assignees.length > 0" class="flex -space-x-2">
+                                <img
+                                    v-for="assignee in task.assignees" 
+                                    :key="assignee.id"
+                                    :src="assignee.avatar"
+                                    :alt="assignee.name"
+                                    class="w-6 h-6 rounded-full border-2 border-white"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

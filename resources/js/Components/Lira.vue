@@ -2,7 +2,7 @@
 import { ref, nextTick } from 'vue';
 import { X, Send } from 'lucide-vue-next';
 
-const isOpen = ref(true);
+const isOpen = ref(false);
 const input = ref('');
 const messages = ref([]);
 const isLoading = ref(false);
@@ -34,7 +34,7 @@ const sendMessage = async () => {
   setTimeout(() => {
     messages.value.push({
       role: 'assistant',
-      content: "I'm here to help! What would you like to know?"
+      content: "Aww, that’s sweet! I appreciate you. 💙 How’s your day going?"
     });
     isLoading.value = false;
     scrollToBottom();
