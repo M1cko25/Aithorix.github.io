@@ -184,6 +184,12 @@ const handleEpicDeleted = (deletedEpicId) => {
     v-model:isOpen="isTaskModalOpen"
     :task="selectedTaskToEdit"
     :epicSelected="epicSelected"
+    @taskUpdated="(updatedTask) => {
+        const taskIndex = epicSelected.tasks.findIndex(t => t.id === updatedTask.id)
+        if (taskIndex !== -1) {
+            epicSelected.tasks[taskIndex] = updatedTask
+        }
+    }"
   />
 
   <EpicModal

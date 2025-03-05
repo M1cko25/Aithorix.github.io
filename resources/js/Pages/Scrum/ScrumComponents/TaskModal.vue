@@ -203,6 +203,7 @@ const saveChanges = async () => {
         description: form.value.description || ''
       }
       emit('update:task', updatedTask)
+      emit('taskUpdated', updatedTask)
       emit('update:isOpen', false)
     }
   } catch (error) {
