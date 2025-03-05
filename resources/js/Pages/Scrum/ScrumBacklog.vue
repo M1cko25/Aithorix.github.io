@@ -15,17 +15,15 @@ import { Filter, ArrowUpDown, Trash, MoreHorizontal } from 'lucide-vue-next'
 import TextField from '../../Components/TextField.vue'
 import graphics from '../../graphics'
 
-// Initialize page data
 const page = usePage().props
 const projEpics = ref(page.epics || [])
 const epics = ref([])
 
-// Initialize epics data
 if (projEpics.value.length > 0) {
   epics.value = projEpics.value
     .sort((a, b) => a.order - b.order)
     .map(epic => ({
-      epic_id: epic.id,
+      id: epic.id,
       name: epic.name,
       isActive: epic.order === 1,
       description: epic.description,
@@ -37,7 +35,6 @@ if (projEpics.value.length > 0) {
     }))
 }
 
-// UI State
 const searchQuery = ref('')
 const epicSelected = ref(epics.value[0] || {
   name: 'No Epic Created',
@@ -53,31 +50,31 @@ const selectedTaskToEdit = ref(null)
 const isEpicModalOpen = ref(false)
 const epicToEdit = ref(null)
 
-// Task Counts
-const taskCounts = ref({
-  todo: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'To Do').length : 0,
-  inProgress: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'In Progress').length : 0,
-  completed: epicSelected.value.tasks ? epicSelected.value.tasks.filter(task => task.status === 'Done').length : 0
-})
+const calculateTaskCounts = () => {
+  const counts = {};
 
-// Add sprint ref
+  page.columns.forEach(column => {
+    const columnKey = column.title.toLowerCase().replace(/\s+/g, '');
+    counts[columnKey] = epicSelected.value.tasks.filter(
+      task => task.status === column.title
+    ).length;
+  });
+  
+  return counts;
+};
+
+const taskCounts = computed(() => calculateTaskCounts());
+
 const sprint = ref(page.sprint || null)
 
-// Event Handlers
 const updateEpicOrder = (updatedEpics) => {
   epics.value = updatedEpics
 }
 
 const updateEpicSelected = (epic) => {
   epicSelected.value = epic
-  selectedTaskToUpdate.value = [] // Clear selected tasks when changing epics
-  
-  // Update task counts when epic changes
-  taskCounts.value = {
-    todo: epic.tasks ? epic.tasks.filter(task => task.status === 'To Do').length : 0,
-    inProgress: epic.tasks ? epic.tasks.filter(task => task.status === 'In Progress').length : 0,
-    completed: epic.tasks ? epic.tasks.filter(task => task.status === 'Done').length : 0
-  }
+  selectedTaskToUpdate.value = [] 
+  taskCounts.value = calculateTaskCounts()
 }
 
 const handleSprintAction = () => {
@@ -88,12 +85,10 @@ const handleSprintAction = () => {
   }
 }
 
-// Add handler for sprint creation
 const handleSprintCreated = (newSprint) => {
   sprint.value = newSprint
 }
 
-// Computed Properties
 const formatSprintDates = computed(() => {
   if (!sprint.value?.start_date || !sprint.value?.end_date) return ''
     
@@ -108,14 +103,9 @@ const formatSprintDates = computed(() => {
 
 const showTrashButton = computed(() => selectedTaskToUpdate.value.length > 0)
 
-// Watch for changes in epic tasks
 watch(() => epicSelected.value.tasks, (newTasks) => {
   if (newTasks) {
-    taskCounts.value = {
-      todo: newTasks.filter(task => task.status === 'To Do').length,
-      inProgress: newTasks.filter(task => task.status === 'In Progress').length,
-      completed: newTasks.filter(task => task.status === 'Done').length
-    }
+    taskCounts.value = calculateTaskCounts()
   }
 }, { deep: true })
 
@@ -130,31 +120,44 @@ const handleEditEpic = (epic) => {
 }
 
 const handleEpicDeleted = (deletedEpicId) => {
-  // Remove the deleted epic from epics array
   epics.value = epics.value.filter(epic => epic.epic_id !== deletedEpicId)
   
-  // If the deleted epic was selected, select the first available epic
   if (epicSelected.value.epic_id === deletedEpicId && epics.value.length > 0) {
     const newSelectedEpic = epics.value[0]
     newSelectedEpic.isActive = true
     epicSelected.value = newSelectedEpic
-    
-    // Update task counts for the newly selected epic
-    taskCounts.value = {
-      todo: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'To Do').length : 0,
-      inProgress: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'In Progress').length : 0,
-      completed: newSelectedEpic.tasks ? newSelectedEpic.tasks.filter(task => task.status === 'Done').length : 0
-    }
+    taskCounts.value = calculateTaskCounts()
   } else if (epics.value.length === 0) {
-    // If no epics remain, reset the selected epic
     epicSelected.value = {
       name: 'No Epic Created',
       tasks: [],
       epic_id: null
     }
-    taskCounts.value = { todo: 0, inProgress: 0, completed: 0 }
+    taskCounts.value = calculateTaskCounts()
   }
 }
+
+const handleTaskUpdate = (updatedTask) => {
+  // Find and update the task in epicSelected.tasks
+  const taskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id)
+  if (taskIndex !== -1) {
+    epicSelected.value.tasks[taskIndex] = { ...epicSelected.value.tasks[taskIndex], ...updatedTask }
+    
+    // Update task counts
+    taskCounts.value = {
+      todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
+      inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
+      completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
+    }
+  }
+}
+
+// Add watch for task updates from TaskModal
+watch(() => selectedTaskToEdit.value, (newTask) => {
+  if (newTask) {
+    handleTaskUpdate(newTask)
+  }
+}, { deep: true })
 </script>
 
 <template>
@@ -186,6 +189,7 @@ const handleEpicDeleted = (deletedEpicId) => {
     v-model:isOpen="isTaskModalOpen"
     :task="selectedTaskToEdit"
     :epicSelected="epicSelected"
+    @update:task="handleTaskUpdate"
   />
 
   <EpicModal
@@ -238,9 +242,19 @@ const handleEpicDeleted = (deletedEpicId) => {
           </div>
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-              <span class="px-3 py-1 bg-light-blue text-blue-600 rounded-full">{{ taskCounts.todo }}</span>
-              <span class="px-3 py-1 bg-orange-100 text-orange-600 rounded-full">{{ taskCounts.inProgress }}</span>
-              <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full">{{ taskCounts.completed }}</span>
+              <span 
+                v-for="column in page.columns" 
+                :key="column.id" 
+                class="px-3 py-1 rounded-full"
+                :class="{
+                  'bg-light-blue text-blue-600': column.title === 'To Do',
+                  'bg-orange-100 text-orange-600': column.title === 'In Progress',
+                  'bg-green-100 text-green-600': column.title === 'Done',
+                  'bg-gray-100 text-gray-600': !['To Do', 'In Progress', 'Done'].includes(column.title)
+                }"
+              >
+                {{ taskCounts[column.title.toLowerCase().replace(/\s+/g, '')] || 0 }}
+              </span>
             </div>
             <button 
                 class="btn-primary"

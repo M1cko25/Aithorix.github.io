@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Project;
 use App\Models\ProjectMembers;
 use App\Models\User;
+use App\Models\TaskStatusCol;
 
 class TemplatesController extends Controller
 {
@@ -66,6 +67,13 @@ class TemplatesController extends Controller
             foreach ($getAllProjects as $project) {
                 $member = ProjectMembers::where('project_id', $project->id)->get();
                 array_push($members, $member);
+            }
+            $taskTypes = ['To Do', 'In Progress', 'Done'];
+            foreach ($taskTypes as $taskType) {
+                TaskStatusCol::create([
+                    'title' => $taskType,
+                    'project_id' => $projectCreated->id
+                ]);
             }
             session()->put('projects', $getAllProjects);
             session()->put('members', $request->members);

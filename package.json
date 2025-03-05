@@ -27,6 +27,8 @@
         "lucide-vue-next": "^0.471.0",
         "vue-cal": "^4.10.2",
         "vue3-apexcharts": "^1.8.0",
-        "vuedraggable": "^4.1.0"
+        "vuedraggable": "^4.1.0",
+        "ziggy": "^2.4.0",
+        "ziggy-js": "^2.5.2"
     }
 }
