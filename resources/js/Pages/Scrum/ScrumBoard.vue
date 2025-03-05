@@ -1,14 +1,15 @@
 <script setup>
 import Sidebar from '../../Components/Sidebar.vue'
 import Header from '../../Components/Header.vue'
-import { ref, computed} from 'vue'
+import { ref, computed } from 'vue'
 import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2 } from 'lucide-vue-next'
 import Button from '../../Components/Button.vue'
 import KanbanColumn from '../../Components/KanbanColumn.vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, Link } from '@inertiajs/vue3'
+import Lira from '../../Components/Lira.vue'
 
 const page = usePage().props;
-
+const isLiraOpen = ref(false);
 const toDoTasks = ref([])
 const inProgressTasks = ref([]);
 const doneTasks = ref([]);
@@ -40,7 +41,6 @@ const taskCreating = ref({
   progress: false,
   done: false
 })
-
 </script>
 <template>
     <Head title="| Board" />
@@ -62,9 +62,10 @@ const taskCreating = ref({
       <div class="flex items-center gap-4">
         <button><Share2/></button>
         <button><Star/></button>
-        <Button text="Create Meeting" variant="primary" :style="`flex px-4 py-2 items-center gap-2`">
-          <Video/>
-        </Button>
+        <Link :href="route('meeting-home')">
+  <Video />
+</Link>
+        
       </div>
     </div>
 
@@ -103,4 +104,5 @@ const taskCreating = ref({
     </div>
   </div>
   </div>
+  <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />
 </template>

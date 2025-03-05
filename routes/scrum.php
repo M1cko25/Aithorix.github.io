@@ -27,3 +27,4 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/update-assignees', 'updateTaskAssignees')->name('update-assignees');
     });
 });
+Route::inertia('/scrum/meeting', 'Scrum/Meeting')->name('scrum-meeting')->middleware('auth');
