@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { Filter, ArrowUpDown, Video, MoreHorizontal, MoreVertical, Search, LayoutGrid, LayoutList, Table, Plus, Calendar, Clock, FileText } from 'lucide-vue-next'
+import { Filter, ArrowUpDown, Video, MoreHorizontal, MoreVertical, Search, LayoutGrid, LayoutList, Table, Plus, Calendar, Clock, FileText, PaperclipIcon, XIcon, UploadCloudIcon, TrashIcon } from 'lucide-vue-next'
 import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue'
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 interface Course {
-    id: number
-    title: string
-    description: string
-    type: string
-    subject: string
-    Date;
-    showMenu: boolean
+    id: number;
+    title: string;
+    description: string;
+    type: string;
+    subject: string;
+    Date: string;
+    time: string;
+    showMenu: boolean;
 }
 
 const showAddModal = ref(false)
@@ -24,7 +25,7 @@ const newCourse = ref({
     tags: [] as string[]
 })
 
-const courses: Course[] = [
+const courses = ref<Course[]>([
     {
         id: 1,
         title: "Mathematics",
@@ -32,44 +33,102 @@ const courses: Course[] = [
         type: "Document",
         subject: "Math",
         Date: "Dec 4, 2024",
+        time: "10:00 AM",
         showMenu: false
     },
-    {
-        id: 2,
-        title: "Mathematics",
-        description: "the science and study of quality, structure, space, and change.",
-        type: "Document",
-        subject: "Math",
-        Date: "Dec 4, 2024",
-        showMenu: false
-    },
-    {
-        id: 3,
-        title: "Mathematics",
-        description: "the science and study of quality, structure, space, and change.",
-        type: "Document",
-        subject: "Math",
-        Date: "Dec 4, 2024",
-        showMenu: false
-    },
-]
+]);
 
 const isValidForm = computed(() => {
     return newCourse.value.tags.length >= 2
 })
 
 const viewMode = ref('grid')
-const handleAddCourse = () => {
-    // Handle course creation logic here
-    showAddModal.value = false
+
+const filterOptions = [
+    'Name',
+    'Date Motified',
+    'Type',
+]
+const closeAllModals = () => {
+    isFilterModalOpen.value = false
+}
+const toggleFilterModal = () => {
+    closeAllModals()
+    isFilterModalOpen.value = !isFilterModalOpen.value
+}
+const isFilterModalOpen = ref(false)
+
+const handleStatusOption = (status: string) => {
+    console.log('Selected status:', status)
+    isFilterModalOpen.value = false
+}
+const moreButton = [
+    {
+        label: 'Edit Course',
+        action: 'edit',
+        class: 'text-gray-900 hover:bg-gray-100'
+    },
+    {
+        label: 'Delete Course',
+        action: 'delete',
+        class: 'text-red-500 hover:bg-gray-100'
+    }
+]
+const toggleMoreModal = () => {
+    closeAllModals()
+    isMoreModalOpen.value = !isMoreModalOpen.value
+}
+const isMoreModalOpen = ref(false)
+
+const handleMoreOption = (option: string) => {
+    console.log('Selected option:', option)
+    isMoreModalOpen.value = false
 }
 
-const toggleMenu = (course: Course, event: Event) => {
-    event.stopPropagation()
-    courses.forEach(c => {
-        c.showMenu = c === course ? !c.showMenu : false
-    })
-}
+const isOpen = ref(false);
+const isDragging = ref(false);
+const selectedFiles = ref([]);
+const fileInput = ref<HTMLInputElement | null>(null);
+
+// Methods
+
+const removeFile = (index) => {
+    selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index);
+};
+
+const uploadFiles = () => {
+    // Here you would typically implement the actual file upload logic
+    // For example, using FormData and fetch/axios to send to a server
+
+    console.log('Files to upload:', selectedFiles.value);
+
+    // Example implementation:
+    // const formData = new FormData();
+    // selectedFiles.value.forEach(file => {
+    //   formData.append('files', file);
+    // });
+
+    // fetch('/api/upload', {
+    //   method: 'POST',
+    //   body: formData
+    // })
+    // .then(response => response.json())
+    // .then(data => {
+    //   console.log('Upload successful', data);
+    //   isOpen.value = false;
+    //   selectedFiles.value = [];
+    // })
+    // .catch(error => {
+    //   console.error('Upload failed', error);
+    // });
+
+    // For this example, we'll just simulate a successful upload
+    setTimeout(() => {
+        isOpen.value = false;
+        selectedFiles.value = [];
+        alert('Files uploaded successfully!');
+    }, 1000);
+};
 </script>
 
 <template>
@@ -122,11 +181,22 @@ const toggleMenu = (course: Course, event: Event) => {
                                 </div>
 
                                 <!-- Filter Button -->
-                                <button
-                                    class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
-                                    <Filter class="w-4 h-4" />
-                                    <span class="sr-only">Filter courses</span>
-                                </button>
+                                <div class="relative">
+                                    <button @click="toggleFilterModal"
+                                        class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
+                                        <Filter class="w-4 h-4" />
+                                    </button>
+
+                                    <div v-if="isFilterModalOpen"
+                                        class="absolute top-full right-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[160px]">
+                                        <button v-for="status in filterOptions" :key="status"
+                                            @click="handleStatusOption(status)"
+                                            class="w-full px-4 py-2 text-left hover:bg-gray-100">
+                                            {{ status }}
+                                        </button>
+
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="flex gap-4">
@@ -136,9 +206,9 @@ const toggleMenu = (course: Course, event: Event) => {
                                 </button>
 
                                 <!-- Add Course Button -->
-                                <button @click="showAddModal = true"
+                                <button @click="isOpen = true"
                                     class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 border border-black-100">
-                                    <Plus class="mr-2 h-4 w-4" />
+                                    <PaperclipIcon class="mr-2 h-4 w-4" />
                                     Add Attachment
                                 </button>
                             </div>
@@ -187,42 +257,24 @@ const toggleMenu = (course: Course, event: Event) => {
                                     <td class="p-4">
                                         <div class="relative">
 
-                                            <!-- Menu Button -->
-                                            <button class="inline-flex items-center justify-center rounded-md text-sm
+                                            <button @click="toggleMoreModal" class="inline-flex items-center justify-center rounded-md text-sm
                                                 font-medium ring-offset-background transition-colors h-10 w-10
                                                 hover:bg-muted">
                                                 <MoreVertical class="h-6 w-6" />
-                                                <span class="sr-only">Open menu</span>
                                             </button>
 
                                             <!-- Menu Modal -->
-                                            <!-- <div v-if="course.showMenu"
-                                                class="menu-content absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                <div @click.self="course.showMenu = false" class="fixed inset-0"></div>
-                                                <div
-                                                    class="absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                    <div class="p-2">
-                                                        <div class="px-2 py-1.5 text-sm font-semibold">Actions</div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Resources
-                                                        </button>
-                                                        <div class="h-px my-1 -mx-1 bg-muted"></div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            Edit Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-500 hover:bg-accent">
-                                                            Delete Course
-                                                        </button>
-                                                    </div>
+                                            <div v-if="isMoreModalOpen"
+                                                class="absolute top-full right-10 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
+                                                <div class="p-2">
+                                                    <button v-for="item in moreButton" :key="item.action"
+                                                        @click="handleMoreOption(item.action)"
+                                                        class="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                                        :class="item.class">
+                                                        {{ item.label }}
+                                                    </button>
                                                 </div>
-                                            </div> -->
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -248,33 +300,20 @@ const toggleMenu = (course: Course, event: Event) => {
                                 <div class="relative">
 
                                     <!-- Menu Button -->
-                                    <button @click="course.showMenu = !course.showMenu"
+                                    <button @click="toggleMoreModal"
                                         class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 w-10 hover:bg-muted">
                                         <MoreVertical class="h-6 w-6" />
-                                        <span class="sr-only">Open menu</span>
                                     </button>
 
                                     <!-- Menu Modal -->
-                                    <div v-if="course.showMenu"
-                                        class="absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
+                                    <div v-if="isMoreModalOpen"
+                                        class="absolute top-full left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
                                         <div class="p-2">
-                                            <div class="px-2 py-1.5 text-sm font-semibold">Actions</div>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                View Course
-                                            </button>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                View Resources
-                                            </button>
-                                            <div class="h-px my-1 -mx-1 bg-muted"></div>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                Edit Course
-                                            </button>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-500 hover:bg-accent">
-                                                Delete Course
+                                            <button v-for="item in moreButton" :key="item.action"
+                                                @click="handleMoreOption(item.action)"
+                                                class="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                                :class="item.class">
+                                                {{ item.label }}
                                             </button>
                                         </div>
                                     </div>
@@ -302,70 +341,107 @@ const toggleMenu = (course: Course, event: Event) => {
         </div>
 
         <!-- Add Course Modal -->
-        <div v-if="showAddModal" class="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
-            <div
-                class="fixed left-[50%] top-[50%] z-50 w-full max-w-[800px] translate-x-[-50%] translate-y-[-50%] border bg-white p-6 shadow-lg rounded-lg">
-                <div class="flex flex-col text-center sm:text-left">
-                    <h2 class="text-lg font-semibold">Create New Course</h2>
-                    <p class="text-sm">Create a new course by filling out the information
-                        below.
-                    </p>
-                </div>
-                <form @submit.prevent="" class="space-y-6 py-4">
-                    <div class="space-y-4">
-                        <div class="">
+        <Teleport to="body">
+            <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="isOpen = false"></div>
 
-                            <!-- Title -->
-                            <label class="text-m font-medium leading-none">Course Title</label>
-                            <p class="text-sm text-muted-foreground">The name of your course as it will appear to
-                                students.</p>
-                        </div>
-                        <input v-model="newCourse.title"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="Mathematics" />
+                <!-- Modal content -->
+                <div class="relative w-full max-w-md p-6 mx-4 bg-white rounded-lg shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium">Add Attachment</h3>
+                    </div>
 
-                        <!-- Description -->
-                        <div class="">
-                            <label class="text-m font-medium leading-none">Description</label>
-                            <p class="text-sm text-muted-foreground">A brief description of the course content and
-                                objectives.</p>
-                        </div>
-                        <textarea v-model="newCourse.description"
-                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="Advanced Calculus and its applications..."></textarea>
+                    <form @submit.prevent="" class="space-y-6 py-4">
+                        <div class="space-y-4">
+                            <div class="">
 
-                        <div class="grid gap-4 sm:grid-cols-2">
-
-                            <!-- Date -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium leading-none">Date</label>
-                                <input v-model="newCourse.Date" type="date"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-                                </input>
+                                <!-- Title -->
+                                <label class="text-m font-medium leading-none">Resources Name</label>
+                                <p class="text-sm text-muted-foreground">The name of your file as it will appear to
+                                    students.</p>
                             </div>
-                            <!-- Time -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium leading-none">Time</label>
-                                <input v-model="newCourse.time" type="time"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" />
+                            <input v-model="newCourse.title"
+                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="" />
+
+                            <!-- Description -->
+                            <div class="">
+                                <label class="text-m font-medium leading-none">Description</label>
+                                <p class="text-sm text-muted-foreground">A brief description of the file content.</p>
+                            </div>
+                            <textarea v-model="newCourse.description"
+                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder=""></textarea>
+
+                            <div class="grid gap-4 sm:grid-cols-2">
+
+                                <!-- Date -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium leading-none">Type:</label>
+                                    <input
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                                    </input>
+                                </div>
+
+                                <!-- Time -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium leading-none">Subject:</label>
+                                    <input
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" />
+                                </div>
+                            </div>
+                            <div class="grid gap-4">
+                                <!-- Tags -->
+
                             </div>
                         </div>
-                        <div class="grid gap-4">
-                            <!-- Tags -->
+                    </form>
+                    <div class="mb-4">
 
+                        <!-- File input -->
+                        <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer"
+                            :class="[isDragging ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary']">
+                            <UploadCloudIcon class="w-10 h-10 mb-2 text-gray-400" />
+                            <p class="mb-1 text-sm font-medium text-gray-700">
+                                Drag files here or click to browse
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Supports JPG, PNG, PDF, and other common file types
+                            </p>
+                            <input ref="fileInput" type="file" multiple class="hidden" />
                         </div>
                     </div>
-                    <div class="flex justify-end space-x-4">
-                        <button type="button" @click="showAddModal = false"
-                            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground">
+
+                    <!-- Selected files list -->
+                    <div v-if="selectedFiles.length > 0" class="mb-4">
+                        <h4 class="mb-2 text-sm font-medium">Selected Files</h4>
+                        <ul class="space-y-2 max-h-40 overflow-y-auto">
+                            <li v-for="(index) in selectedFiles" :key="index"
+                                class="flex items-center justify-between p-2 text-sm bg-gray-50 rounded-md">
+                                <div class="flex items-center gap-2 truncate">
+                                    <FileText class="w-4 h-4 text-gray-500" />
+                                    <span class="truncate"></span>
+                                </div>
+                                <button @click="removeFile(index)" class="text-gray-500 hover:text-red-500">
+                                    <TrashIcon class="w-4 h-4" />
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex justify-end gap-2">
+                        <button @click="isOpen = false"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
                             Cancel
                         </button>
-                        <button type="submit" class="btn btn-primary" :disabled="!isValidForm">
-                            Create Course
+                        <button @click="uploadFiles" :disabled="selectedFiles.length === 0" class="btn-primary">
+                            Upload
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+        </Teleport>
     </div>
 </template>

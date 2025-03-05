@@ -14,14 +14,6 @@ interface Course {
     showMenu: boolean
 }
 
-// Filtering and Sorting
-const selectedStatus = ref('')
-const statusOptions = [
-    { value: 'Low Priority', label: 'Low Priority' },
-    { value: 'Medium Priority', label: 'Medium Priority' },
-    { value: 'HIgh Priority', label: 'High Priority' }
-]
-
 const showAddModal = ref(false)
 
 const newCourse = ref({
@@ -42,7 +34,19 @@ const courses: Course[] = [
         tags: ["High Priority", "Personal Goal"],
         showMenu: false
     },
+]
 
+const moreButton = [
+    {
+        label: 'Edit Course',
+        action: 'edit',
+        class: 'text-gray-900 hover:bg-gray-100'
+    },
+    {
+        label: 'Delete Course',
+        action: 'delete',
+        class: 'text-red-500 hover:bg-gray-100'
+    }
 ]
 
 const getTagClass = (tag: string): string => {
@@ -63,15 +67,15 @@ const getTagClass = (tag: string): string => {
 }
 
 const tagOptions = [
-    { value: 'Class', label: 'Class', color: 'bg-teal-50 text-teal-700' },
+    { value: 'Low Priority', label: 'Low Priority', color: 'bg-teal-50 text-teal-700' },
+    { value: 'Medium Priority', label: 'Medium Priority', color: 'bg-orange-50 text-orange-700' },
+    { value: 'High Priority', label: 'High Priority', color: 'bg-red-50 text-red-700' },
     { value: 'Assignment', label: 'Assignment', color: 'bg-emerald-50 text-emerald-700' },
-    { value: 'Group Study', label: 'Group Study', color: 'bg-indigo-50 text-indigo-700' },
+    { value: 'Exam', label: 'Exam', color: 'bg-indigo-50 text-indigo-700' },
     { value: 'Lab', label: 'Lab', color: 'bg-purple-50 text-purple-700' },
     { value: 'Meeting', label: 'Meeting', color: 'bg-pink-50 text-pink-700' },
-    { value: 'Optional', label: 'Optional', color: 'bg-orange-50 text-orange-700' },
-    { value: 'Collaborative', label: 'Collaborative', color: 'bg-yellow-50 text-yellow-700' },
+    { value: 'Quiz', label: 'Quiz', color: 'bg-yellow-50 text-yellow-700' },
     { value: 'Group Activity', label: 'Group Activity', color: 'bg-fuchsia-50 text-fuchsia-700' },
-    { value: 'High Priority', label: 'High Priority', color: 'bg-red-50 text-red-700' },
     { value: 'Personal Goal', label: 'Personal Goal', color: 'bg-green-50 text-green-700' }
 ]
 const toggleTag = (tagValue: string) => {
@@ -87,16 +91,35 @@ const isValidForm = computed(() => {
 })
 
 const viewMode = ref('grid')
-const handleAddCourse = () => {
-    // Handle course creation logic here
-    showAddModal.value = false
+
+const filterOptions = [
+    'Name',
+    'Date Motified',
+    'Type',
+]
+const closeAllModals = () => {
+    isFilterModalOpen.value = false
+}
+const toggleFilterModal = () => {
+    closeAllModals()
+    isFilterModalOpen.value = !isFilterModalOpen.value
+}
+const isFilterModalOpen = ref(false)
+
+const handleStatusOption = (status: string) => {
+    console.log('Selected status:', status)
+    isFilterModalOpen.value = false
 }
 
-const toggleMenu = (course: Course, event: Event) => {
-    event.stopPropagation()
-    courses.forEach(c => {
-        c.showMenu = c === course ? !c.showMenu : false
-    })
+const toggleMoreModal = () => {
+    closeAllModals()
+    isMoreModalOpen.value = !isMoreModalOpen.value
+}
+const isMoreModalOpen = ref(false)
+
+const handleMoreOption = (option: string) => {
+    console.log('Selected option:', option)
+    isMoreModalOpen.value = false
 }
 </script>
 
@@ -151,11 +174,22 @@ const toggleMenu = (course: Course, event: Event) => {
                                 </div>
 
                                 <!-- Filter Button -->
-                                <button
-                                    class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
-                                    <Filter class="w-4 h-4" />
-                                    <span class="sr-only">Filter courses</span>
-                                </button>
+                                <div class="relative">
+                                    <button @click="toggleFilterModal"
+                                        class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
+                                        <Filter class="w-4 h-4" />
+                                    </button>
+
+                                    <div v-if="isFilterModalOpen"
+                                        class="absolute top-full right-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[160px]">
+                                        <button v-for="status in filterOptions" :key="status"
+                                            @click="handleStatusOption(status)"
+                                            class="w-full px-4 py-2 text-left hover:bg-gray-100">
+                                            {{ status }}
+                                        </button>
+
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="flex gap-4">
@@ -225,41 +259,24 @@ const toggleMenu = (course: Course, event: Event) => {
                                         <div class="relative">
 
                                             <!-- Menu Button -->
-                                            <button class="inline-flex items-center justify-center rounded-md text-sm
+                                            <button @click="toggleMoreModal" class="inline-flex items-center justify-center rounded-md text-sm
                                                 font-medium ring-offset-background transition-colors h-10 w-10
                                                 hover:bg-muted">
                                                 <MoreVertical class="h-6 w-6" />
-                                                <span class="sr-only">Open menu</span>
                                             </button>
 
                                             <!-- Menu Modal -->
-                                            <!-- <div v-if="course.showMenu"
-                                                class="menu-content absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                <div @click.self="course.showMenu = false" class="fixed inset-0"></div>
-                                                <div
-                                                    class="absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                    <div class="p-2">
-                                                        <div class="px-2 py-1.5 text-sm font-semibold">Actions</div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Resources
-                                                        </button>
-                                                        <div class="h-px my-1 -mx-1 bg-muted"></div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            Edit Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-500 hover:bg-accent">
-                                                            Delete Course
-                                                        </button>
-                                                    </div>
+                                            <div v-if="isMoreModalOpen"
+                                                class="absolute top-full right-10 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
+                                                <div class="p-2">
+                                                    <button v-for="item in moreButton" :key="item.action"
+                                                        @click="handleMoreOption(item.action)"
+                                                        class="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                                        :class="item.class">
+                                                        {{ item.label }}
+                                                    </button>
                                                 </div>
-                                            </div> -->
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -283,35 +300,25 @@ const toggleMenu = (course: Course, event: Event) => {
                                 </div>
                                 <div class="relative">
 
-                                    <!-- Menu Button -->
-                                    <button @click="course.showMenu = !course.showMenu"
-                                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 w-10 hover:bg-muted">
-                                        <MoreVertical class="h-6 w-6" />
-                                        <span class="sr-only">Open menu</span>
-                                    </button>
+                                    <div class="relative">
 
-                                    <!-- Menu Modal -->
-                                    <div v-if="course.showMenu"
-                                        class="absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                        <div class="p-2">
-                                            <div class="px-2 py-1.5 text-sm font-semibold">Actions</div>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                View Course
-                                            </button>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                View Resources
-                                            </button>
-                                            <div class="h-px my-1 -mx-1 bg-muted"></div>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                Edit Course
-                                            </button>
-                                            <button
-                                                class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-500 hover:bg-accent">
-                                                Delete Course
-                                            </button>
+                                        <!-- Menu Button -->
+                                        <button @click="toggleMoreModal"
+                                            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 w-10 hover:bg-muted">
+                                            <MoreVertical class="h-6 w-6" />
+                                        </button>
+
+                                        <!-- Menu Modal -->
+                                        <div v-if="isMoreModalOpen"
+                                            class="absolute top-full left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
+                                            <div class="p-2">
+                                                <button v-for="item in moreButton" :key="item.action"
+                                                    @click="handleMoreOption(item.action)"
+                                                    class="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                                    :class="item.class">
+                                                    {{ item.label }}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

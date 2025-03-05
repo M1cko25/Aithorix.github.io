@@ -162,11 +162,35 @@ const getPriorityClass = (priority) => {
     }
     return classes[priority]
 }
+
+const toggleMoreModal = () => {
+    closeAllModals()
+    isMoreModalOpen.value = !isMoreModalOpen.value
+}
+const isMoreModalOpen = ref(false)
+
+const handleMoreOption = (option) => {
+    console.log('Selected option:', option)
+    isMoreModalOpen.value = false
+}
+const moreButton = [
+    {
+        label: 'Edit Course',
+        action: 'edit',
+        class: 'text-gray-900 hover:bg-gray-100'
+    },
+    {
+        label: 'Delete Course',
+        action: 'delete',
+        class: 'text-red-500 hover:bg-gray-100'
+    }
+]
 </script>
 
 <template>
 
     <Head title=" | Assignment Tracker" />
+
     <div class="p-6 bg-gray-50 min-h-screen">
         <Sidebar />
         <Header />
@@ -256,41 +280,24 @@ const getPriorityClass = (priority) => {
                                         <div class="relative">
 
                                             <!-- Menu Button -->
-                                            <button class="inline-flex items-center justify-center rounded-md text-sm
+                                            <button @click="toggleMoreModal" class="inline-flex items-center justify-center rounded-md text-sm
                                                 font-medium ring-offset-background transition-colors h-10 w-10
                                                 hover:bg-muted">
                                                 <MoreVertical class="h-6 w-6" />
-                                                <span class="sr-only">Open menu</span>
                                             </button>
 
                                             <!-- Menu Modal -->
-                                            <!-- <div v-if="course.showMenu"
-                                                class="menu-content absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                <div @click.self="course.showMenu = false" class="fixed inset-0"></div>
-                                                <div
-                                                    class="absolute right-0 z-10 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md">
-                                                    <div class="p-2">
-                                                        <div class="px-2 py-1.5 text-sm font-semibold">Actions</div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            View Resources
-                                                        </button>
-                                                        <div class="h-px my-1 -mx-1 bg-muted"></div>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">
-                                                            Edit Course
-                                                        </button>
-                                                        <button
-                                                            class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-red-500 hover:bg-accent">
-                                                            Delete Course
-                                                        </button>
-                                                    </div>
+                                            <div v-if="isMoreModalOpen"
+                                                class="absolute top-full right-10 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
+                                                <div class="p-2">
+                                                    <button v-for="item in moreButton" :key="item.action"
+                                                        @click="handleMoreOption(item.action)"
+                                                        class="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                                        :class="item.class">
+                                                        {{ item.label }}
+                                                    </button>
                                                 </div>
-                                            </div> -->
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
