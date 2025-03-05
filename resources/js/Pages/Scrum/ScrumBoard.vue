@@ -11,9 +11,10 @@ import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import TaskModal from './ScrumComponents/TaskModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
+import Lira from '../../Components/Lira.vue'
 
-const page = usePage().props
-
+const page = usePage().props;
+const isLiraOpen = ref(false);
 const toDoTasks = ref([])
 const inProgressTasks = ref([])
 const doneTasks = ref([])
@@ -149,7 +150,6 @@ const createTask = (colId) => {
 const createNewTask = async (taskData, columnId) => {
   const column = columns.value.find(col => col.id === columnId);
   if (!column) return;
-
   try {
     const response = await axios.post('/scrum/backlog-create', {
       title: taskData.title,
@@ -314,7 +314,12 @@ const handleTaskUpdate = (updatedTask) => {
           </Button>
         </div>
       </div>
-
+      <div class="flex items-center gap-4">
+        <button><Share2/></button>
+        <button><Star/></button>
+        <Link :href="route('meeting-home')">
+  <Video />
+</Link>
       <!-- Board Controls -->
       <div class="px-6 pb-6 flex items-center gap-4">
         <div class="relative flex-1 max-w-md">
@@ -410,6 +415,8 @@ const handleTaskUpdate = (updatedTask) => {
       </div>
     </div>
   </div>
+  </div>
+  <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />
 </template>
 
 <style scoped>

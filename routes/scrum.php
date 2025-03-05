@@ -29,3 +29,4 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/delete-column', 'deleteColumn')->name('delete-column');
     });
 });
+Route::inertia('/scrum/meeting', 'Scrum/Meeting')->name('scrum-meeting')->middleware('auth');
