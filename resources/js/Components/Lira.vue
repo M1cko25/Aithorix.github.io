@@ -2,9 +2,10 @@
 import { ref, nextTick } from 'vue';
 import { X, Send } from 'lucide-vue-next';
 import { useAI } from '../api/useAi';
+import { useForm, usePage } from '@inertiajs/vue3';
 
-const { response, sendPrompt } = useAI();
-const userPrompt = ref('');
+const { response, isLoading: aiLoading, error, sendPrompt } = useAI();
+const page = usePage().props;
 
 const isOpen = ref(false);
 const input = ref('');
@@ -20,6 +21,9 @@ const chatWidth = ref(380);
 const isResizing = ref(false);
 const startX = ref(0);
 const startWidth = ref(0);
+
+// Get project ID from the page props if available
+const projectId = ref(page.projectDetails?.id || null);
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -41,7 +45,7 @@ const sendMessage = async () => {
   // Get AI response
   isLoading.value = true;
   try {
-    const aiResponse = await sendPrompt(userMessage);
+    const aiResponse = await sendPrompt(userMessage, projectId.value);
     messages.value.push({
       role: 'assistant',
       content: aiResponse || "I apologize, but I'm having trouble processing your request right now. Please try again later."
@@ -87,6 +91,10 @@ const handleKeyPress = (e) => {
     sendMessage();
   }
 };
+
+const aiForm = useForm({
+  projectId: page.projectDetails.id
+})
 </script>
 
 <template>
@@ -94,7 +102,9 @@ const handleKeyPress = (e) => {
     <!-- Minimized chat button -->
     <button
       v-if="!isOpen"
-      @click="isOpen = true"
+      @click="()=>{
+        isOpen = true;
+      }"
       class="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-white flex items-center justify-center hover:shadow-xl transition-shadow"
     >
       <div class="chat-logo-small">

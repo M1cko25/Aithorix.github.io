@@ -5,6 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Project;
+use App\Models\Backlogs;
+use App\Models\TaskStatusCol;
+use App\Models\TaskComments;
+use App\Models\User;
+use App\Models\TaskAssignees;
+use App\Models\Epics;
+use App\Models\Sprints;
+
 
 class AIController extends Controller
 {
@@ -102,4 +111,59 @@ class AIController extends Controller
         
         return trim($text);
     }
+
+    public function getProjectData(Request $request)
+    {
+        try {
+            $projectId = $request->input('projectId');
+            
+            if (!$projectId) {
+                return response()->json([
+                    'error' => 'Project ID is required'
+                ], 400);
+            }
+
+            $project = Project::where('id', $projectId)->first();
+            
+            if (!$project) {
+                return response()->json([
+                    'error' => 'Project not found'
+                ], 404);
+            }
+            
+            // Get all epics for this project
+            $epics = Epics::where('project_id', $projectId)->get();
+            
+            // Get backlogs and sprints for each epic
+            $backlogs = [];
+            $sprints = [];
+            
+            foreach ($epics as $epic) {
+                // Get backlogs (tasks) for this epic
+                $epicBacklogs = Backlogs::where('epic_id', $epic->id)->get();
+                $backlogs = array_merge($backlogs, $epicBacklogs->toArray());
+                
+                // Get sprints for this epic
+                $epicSprints = Sprints::where('epic_id', $epic->id)->get();
+                $sprints = array_merge($sprints, $epicSprints->toArray());
+            }
+            
+            // Get project columns (task statuses)
+            $columns = TaskStatusCol::where('project_id', $projectId)->get();
+            
+            return response()->json([
+                'project' => $project,
+                'epics' => $epics,
+                'backlogs' => $backlogs,
+                'sprints' => $sprints,
+                'columns' => $columns
+            ]);
+        } catch (\Exception $e) {
+            Log::error('AI project data error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error retrieving project data'
+            ], 500);
+        }
+    }
 }
+
