@@ -39,7 +39,7 @@ COPY package.json package-lock.json vite.config.js /app/
 COPY resources/js/ /app/resources/js/
 
 # Install frontend dependencies
-RUN npm install && npm run build
+RUN npm install && npm run dev
 
 # 3️⃣ Final production image
 FROM php:8.2-fpm
