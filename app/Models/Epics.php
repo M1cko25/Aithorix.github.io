@@ -17,5 +17,27 @@ class Epics extends Model
         'progress_percent',
         'key',
         'order',
+        'start_date',
+        'end_date'
     ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date'
+    ];
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function backlogs()
+    {
+        return $this->hasMany(Backlogs::class, 'epic_id');
+    }
+
+    public function sprints()
+    {
+        return $this->hasMany(Sprints::class, 'epic_id');
+    }
 }

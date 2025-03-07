@@ -52,13 +52,20 @@ export function createNewEpic(epics, epicProcessing, newEpic, projEpics, project
         key: projectDetails.key + '-E' + (projEpics.length + 1),
         order: projEpics.length + 1,
         progress: '0%',
-        tasks: []
+        tasks: [],
+        start_date: response.data.start_date,
+        end_date: response.data.end_date,
+        status: 'Pending'
       };
 
       epics.push(newEpicObj);
-      projEpics.push(response.data);
+      projEpics.push({
+        ...response.data,
+        start_date: response.data.start_date,
+        end_date: response.data.end_date
+      });
       
-      return newEpicObj; // Return the new epic object
+      return newEpicObj;
     });
   }
   return Promise.resolve(null);

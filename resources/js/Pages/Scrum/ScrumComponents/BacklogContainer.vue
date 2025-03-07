@@ -27,7 +27,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask', 'taskUpdated'])
+const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask', 'taskUpdated', 'moveTask'])
 
 const isOpen = ref(false);
 const newTask = ref('');
@@ -87,9 +87,9 @@ const TaskOverlayButtons = ref([
     }
   },
   {
-    text: 'Open Task',
+    text: 'Move Task',
     function: () => {   
-      emit('editTask', props.selectedTaskToUpdate[0])
+      emit('moveTask', props.selectedTaskToUpdate)
       isOverlayOpen.value = false
     }
   }
@@ -257,6 +257,7 @@ const handleTaskStatusChange = async (task) => {
                     createTask(newTask, statusOptions, props.taskCounts,
                     selectedType, props.epics, props.epicSelected, 
                     page.projectDetails)
+                    console.log(props.epicSelected)
                     newTask = '';
                     isCreatingTask = false;
                     isOpen = false;

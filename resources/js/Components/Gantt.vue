@@ -3,92 +3,87 @@ import { GanttComponent as EjsGantt, ColumnsDirective as EColumns,
  ColumnDirective as EColumn, Edit, Selection, Toolbar } from '@syncfusion/ej2-vue-gantt';
  import '@syncfusion/ej2-material-theme/styles/material.css';
  import { ref, provide } from 'vue'
- import { Plus } from 'lucide-vue-next'
+ import { Plus } from 'lucide-vue-next';
+ import { usePage } from '@inertiajs/vue3';
 
-const data = ref([{
-         TaskID: 1,
-         TaskName: 'Planning',
-         StartDate: new Date('02/03/2025'),
-         EndDate: new Date('02/07/2025'),
-         Progress: 20,
-         Duration: 5,
-         subtasks: [
-             { TaskID: 2, TaskName: 'Plan timeline', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100,},
-             { TaskID: 3, TaskName: 'Plan budget', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
-             { TaskID: 4, TaskName: 'Allocate resources', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
-         ]
-     },
-     {
-         TaskID: 6,
-         TaskName: 'Design',
-         StartDate: new Date('02/10/2025'),
-         EndDate: new Date('02/14/2025'),
-         Duration: 3,
-         Progress: 26,
-         subtasks: [
-             { TaskID: 7, TaskName: 'Software Specification', StartDate: new Date('02/10/2025'), EndDate: new Date('02/12/2025'), Duration: 3, Progress: 60, },
-             { TaskID: 8, TaskName: 'Develop prototype', StartDate: new Date('02/10/2025'), EndDate: new Date('02/12/2025'), duration: 3, Progress: 100,},
-             { TaskID: 9, TaskName: 'Get approval from customer', startDate: new Date('02/13/2025'), EndDate: new Date('02/14/2025'), Duration: 2, Progress: 100, },
-             { TaskID: 10, TaskName: 'Design Documentation', startDate: new Date('02/13/2025'), endDate: new Date('02/14/2025'), duration: 2, Progress: 100, },
-         ]
-     }, {
-      TaskID: 11,
-         TaskName: 'Implementation',
-         StartDate: new Date('02/17/2025'),
-         EndDate: new Date('02/27/2025'),
-         Duration: 11,
-         Progress: 50,
-         subtasks: [
-             { TaskID: 12, TaskName: 'Software Development', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-             { TaskID: 13, TaskName: 'Prepare documentation', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-         ]
-     }, {
-      TaskID: 14,
-         TaskName: 'Quality Assurance',
-         StartDate: new Date('02/17/2025'),
-         EndDate: new Date('02/27/2025'),
-         Duration: 11,
-         Progress: 50,
-         subtasks: [
-             { TaskID: 15, TaskName: 'Bug fix', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-             { TaskID: 16, TaskName: 'Follow-up', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-         ]
-     }
-    ])
-     let taskFields = ref({
-             id: 'TaskID',
-             name: 'TaskName',
-             startDate: 'StartDate',
-             endDate: 'EndDate',
-             duration: 'Duration',
-             progress: 'Progress',
-             child: 'subtasks',
-     })
-     const toolbarOptions = ref(['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']);
-     const editSettings = ref({
-         allowEditing: true,
-         allowTaskbarEditing: true,
-         allowDeleting: true,
-         allowDependencyEditing: true,
-         showDeleteConfirmDialog: true,
-         allowAdding: true,
-         mode: 'Normal'
-     })
+const data = ref([])
+const page = usePage().props;
 
-     const labelSettings = {
-        rightLabel: '',
-        taskLabel: '${taskData.TaskName}'
-    };
-//     const addSubTask = (parentTask) => {
-//   const newTaskID = tasks.value.length + 1;
-//   tasks.value.push({
-//     TaskID: newTaskID,
-//     TaskName: `New Task ${newTaskID}`,
-//     StartDate: new Date(),
-//     Duration: 3,
-//     parentID: parentTask.TaskID, // Assign as a subtask
-//   });
-// };
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return `0${d.getMonth() + 1}/0${d.getDate()}/${d.getFullYear()}`
+}
+
+const epicSubtasks = (epicId, startDate, endDate, duration) => {
+  let subtasks = []
+  page.backlogs.forEach(task => {
+    if (task.epic_id == epicId) {
+      subtasks.push({
+        TaskID: task.id, 
+        TaskName: task.title,
+        StartDate: startDate,
+        EndDate: endDate,
+        Duration: duration,
+        Progress: 0,
+      });
+    }
+  })
+  return subtasks;
+}
+page.epics.forEach(epic => {
+  const startDate = new Date(epic.start_date);
+  const endDate = new Date(epic.end_date);
+  const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)); 
+  console.log(epic.progress_percent);
+  data.value.push({
+    TaskID: epic.id,
+    TaskName: epic.name,
+    StartDate: epic.start_date,
+    EndDate: epic.end_date,
+    Duration: duration,
+    Progress: epic.progress_percent,
+    subtasks : epicSubtasks(epic.id, epic.start_date, epic.end_date, duration)
+  })
+})
+// {
+//          TaskID: 1,
+//          TaskName: 'Planning',
+//          StartDate: new Date('02/03/2025'),
+//          EndDate: new Date('02/07/2025'),
+//          Progress: 20,
+//          Duration: 5,
+//          subtasks: [
+//              { TaskID: 2, TaskName: 'Plan timeline', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100,},
+//              { TaskID: 3, TaskName: 'Plan budget', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
+//              { TaskID: 4, TaskName: 'Allocate resources', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
+//          ]
+//      },
+let taskFields = ref({
+        id: 'TaskID',
+        name: 'TaskName',
+        startDate: 'StartDate',
+        endDate: 'EndDate',
+        duration: 'Duration',
+        progress: 'Progress',
+        child: 'subtasks',
+})
+const toolbarOptions = ref(['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']);
+const editSettings = ref({
+    allowEditing: true,
+    allowTaskbarEditing: true,
+    allowDeleting: true,
+    allowDependencyEditing: true,
+    showDeleteConfirmDialog: true,
+    allowAdding: true,
+    mode: 'Normal'
+})
+
+const labelSettings = {
+  rightLabel: '',
+  taskLabel: '${taskData.TaskName}'
+};
+
 
 provide("gantt", [Edit, Selection, Toolbar]);
 </script>
@@ -102,6 +97,7 @@ provide("gantt", [Edit, Selection, Toolbar]);
             <e-column field='TaskID' headerText='Task ID' textAlign='Left' width=70></e-column>
             <e-column field='TaskName' headerText='Task Name' textAlign='Left' width=200></e-column>
             <e-column field='StartDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
+            <e-column field='EndDate' headerText='End Date' textAlign='Right' format='yMd' width=90></e-column>
             <e-column field='Duration' headerText='Duration' textAlign='Right' width=80></e-column>
        </e-columns>
     </ejs-gantt>

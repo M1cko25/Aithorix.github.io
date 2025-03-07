@@ -25,7 +25,7 @@ export function createTask(newTask, statusOptions, taskCounts, selectedType, epi
         priority: 'Low',
         status: 'To Do',
         type: selectedType.name,
-        epicId: activeEpic.epic_id,
+        epicId: activeEpic.id,
         order: activeEpic.order + 1,
         projectId: projectDetails.id
       })

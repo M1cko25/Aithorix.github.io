@@ -233,7 +233,7 @@ const handleTaskClick = (task, event) => {
                         </div>
                         <div class="flex flex-row items-center justify-between">
                             <p class="text-xs px-2 py-1 bg-blue w-fit rounded-full text-light">
-                                {{ page.projectDetails.key + "-" + task.id }}
+                                {{ task.key }}
                             </p>
                             <div v-if="task.assignees && task.assignees.length > 0" class="flex -space-x-2">
                                 <img
