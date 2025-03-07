@@ -9,9 +9,10 @@ import CompletedSprintModal from './ScrumComponents/CompletedSprintModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 import TaskModal from './ScrumComponents/TaskModal.vue'
 import EpicModal from './ScrumComponents/EpicModal.vue'
+import MoveTaskModal from './ScrumComponents/MoveTaskModal.vue'
 import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import { Filter, ArrowUpDown, Trash, MoreHorizontal } from 'lucide-vue-next'
+import { Filter, ArrowUpDown, Trash, Replace } from 'lucide-vue-next'
 import TextField from '../../Components/TextField.vue'
 import graphics from '../../graphics'
 
@@ -49,6 +50,7 @@ const isTaskModalOpen = ref(false)
 const selectedTaskToEdit = ref(null)
 const isEpicModalOpen = ref(false)
 const epicToEdit = ref(null)
+const isMoveModalOpen = ref(false)
 
 const calculateTaskCounts = () => {
   const counts = {};
@@ -63,7 +65,7 @@ const calculateTaskCounts = () => {
   return counts;
 };
 
-const taskCounts = computed(() => calculateTaskCounts());
+const taskCounts = ref(calculateTaskCounts());
 
 const sprint = ref(page.sprint || null)
 
@@ -158,6 +160,47 @@ watch(() => selectedTaskToEdit.value, (newTask) => {
     handleTaskUpdate(newTask)
   }
 }, { deep: true })
+
+const handleMoveTask = (tasks) => {
+  selectedTaskToUpdate.value = tasks
+  isMoveModalOpen.value = true
+}
+
+const handleTasksMoved = ({ tasks, targetEpic }) => {
+  // Remove tasks from current epic's list
+  tasks.forEach(task => {
+    const index = epicSelected.value.tasks.findIndex(t => t.id === task.id)
+    if (index > -1) {
+      epicSelected.value.tasks.splice(index, 1)
+    }
+  })
+  
+  // Find the target epic in epics array and add tasks to it
+  const targetEpicIndex = epics.value.findIndex(e => e.id === targetEpic.id)
+  if (targetEpicIndex !== -1) {
+    // Update each task's epic_id
+    const updatedTasks = tasks.map(task => ({
+      ...task,
+      epic_id: targetEpic.id
+    }))
+    
+    // Add tasks to target epic
+    if (!epics.value[targetEpicIndex].tasks) {
+      epics.value[targetEpicIndex].tasks = []
+    }
+    epics.value[targetEpicIndex].tasks.push(...updatedTasks)
+  }
+  
+  // Update task counts for current epic
+  taskCounts.value = {
+    todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
+    inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
+    completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
+  }
+  
+  // Clear selected tasks
+  selectedTaskToUpdate.value = []
+}
 </script>
 
 <template>
@@ -196,6 +239,14 @@ watch(() => selectedTaskToEdit.value, (newTask) => {
     v-model:isOpen="isEpicModalOpen"
     :epic="epicToEdit"
     @epicDeleted="handleEpicDeleted"
+  />
+
+  <MoveTaskModal
+    v-model:isOpen="isMoveModalOpen"
+    :tasks="selectedTaskToUpdate"
+    :current-epic-id="epicSelected.id"
+    :epics="page.epics"
+    @tasks-moved="handleTasksMoved"
   />
 
   <div class="ml-64 pt-16 p-6 mb-5">
@@ -267,11 +318,17 @@ watch(() => selectedTaskToEdit.value, (newTask) => {
 
         <div v-if="epics.length > 0" class="text-sm text-gray-500 flex w-full justify-between mb-6">
           <p>{{ epicSelected.status === 'On Sprint' ? formatSprintDates : '' }}</p>
-          <button v-if="showTrashButton" @click="isDeleteModalOpen = true" class="btn-cancel text-error">
-            <Trash class="w-5 h-5" />
-            Delete Selected ({{ selectedTaskToUpdate.length }})
-          </button>
-                </div>
+          <div class="flex flex-row gap-2">
+            <button v-if="selectedTaskToUpdate.length > 1" @click="isMoveModalOpen = true" class="btn-cancel">
+              <Replace class="w-5 h-5" />
+              Move to Epic
+            </button>
+            <button v-if="showTrashButton" @click="isDeleteModalOpen = true" class="btn-cancel text-error">
+              <Trash class="w-5 h-5" />
+              Delete Selected ({{ selectedTaskToUpdate.length }})
+            </button>
+          </div>
+        </div>
 
         <BacklogContainer 
           v-if="epics.length > 0"
@@ -281,6 +338,7 @@ watch(() => selectedTaskToEdit.value, (newTask) => {
           :epics="epics"
           @delModalOpen="isDeleteModalOpen = $event"
           @editTask="handleEditTask"
+          @move-task="handleMoveTask"
         />
         
         <div v-else-if="epics.length == 0" class="flex flex-col gap-4 justify-center items-center mt-6">

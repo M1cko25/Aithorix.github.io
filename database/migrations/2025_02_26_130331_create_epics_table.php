@@ -21,6 +21,8 @@ return new class extends Migration
             $table->integer('progress_percent');
             $table->string('key');
             $table->integer('order');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
         });
     }

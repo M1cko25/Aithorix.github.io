@@ -12,6 +12,7 @@ class Backlogs extends Model
 
     protected $fillable = [
         'title',
+        'key',
         'description',
         'type',
         'status',

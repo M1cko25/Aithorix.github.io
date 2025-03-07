@@ -46,7 +46,6 @@ const activities = ref([
                 <div class=" flex items-center gap-4">
                     <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> >
                             Timeline</span></h1>
-
                     <div class="flex items-center -space-x-2">
                     </div>
                     <button class="p-2 text-gray-600 hover:text-gray-800">

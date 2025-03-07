@@ -21,6 +21,7 @@ use App\Models\TaskComments;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\TaskStatusCol;
+use Illuminate\Validation\ValidationException;
 
 
 class ScrumController extends Controller
@@ -127,8 +128,14 @@ class ScrumController extends Controller
 
     public function getTimelineDatas(Request $request) {
         $projectDetails = Project::where('id', $request->query('id'))->first();
+        $epics = Epics::where('project_id', $projectDetails->id)->get();
+        $backlogs = Backlogs::with(['attachments', 'assignees'])
+            ->where('project_id', $projectDetails->id)
+            ->get();
         return  Inertia::render('Scrum/ScrumTimeline', [
             'projectDetails' => $projectDetails,
+            'epics' => $epics,
+            'backlogs' => $backlogs,
         ]);
     }
     public function getBacklogDatas(Request $request) {
@@ -199,17 +206,48 @@ class ScrumController extends Controller
     public function createEpic(Request $request) {
         $projId = $request->projectId;
         $epicNum = Epics::where('project_id', $projId)->count();
-        $epic = Epics::create([
-            'project_id' => $projId,
-            'name' => $request->name,
-            'description' => '',
-            'progress_percent' => 0,
-            'status' => 'Pending',
-            'key' => $request->key,
-            'order' => $epicNum + 1,
-        ]);
-        $this->registerUpdate($projId, Auth::user()->id, ' created an epic named ', $request->name);
-        return response()->json(['success' => true, 'id' => $epic->id]);
+        try {
+            // Get current date for start_date and add 7 days for end_date
+            $startDate = now();
+            $endDate = now()->addDays(7);
+
+            $epicData = [
+                'project_id' => $projId,
+                'name' => $request->name,
+                'description' => '',
+                'progress_percent' => 0,
+                'status' => 'Pending',
+                'key' => $request->key,
+                'order' => $epicNum + 1,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d')
+            ];
+
+            $epic = Epics::create($epicData);
+            
+            $this->registerUpdate($projId, Auth::user()->id, ' created an epic named ', $request->name);
+            
+            // Return all the epic data including dates
+            return response()->json([
+                'success' => true,
+                'id' => $epic->id,
+                'name' => $epic->name,
+                'description' => $epic->description,
+                'status' => $epic->status,
+                'key' => $epic->key,
+                'order' => $epic->order,
+                'start_date' => $epic->start_date,
+                'end_date' => $epic->end_date,
+                'progress_percent' => $epic->progress_percent
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating epic: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false, 
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function createBacklog(Request $request) {
@@ -217,11 +255,13 @@ class ScrumController extends Controller
         $backlogNum = Backlogs::where('project_id', $projId)
         ->where('epic_id', $request->epicId)
         ->count() + 1;
+        $projectKey = Project::where('id', $projId)->value('key');
         $epic = Epics::where('id', $request->epicId)->first();
         $creator = ProjectMembers::where('user_id', Auth::user()->id)->value('id');
         $backlog = Backlogs::create([
             'title' => $request->title,
             'project_id' => $projId,
+            'key' => $projectKey . '-' . $backlogNum,
             'type' => $request->type,
             'description' => '',
             'priority' => $request->priority,
@@ -268,14 +308,41 @@ class ScrumController extends Controller
     }
 
     public function updateBacklogStatus(Request $request) {
-        $backlog = Backlogs::where('id', $request->id)->first();
-        $backlog->status = $request->status;
-        $backlog->save();
-        
-        $epic = Epics::where('id', $backlog->epic_id)->first();
-        $this->registerUpdate($request->projectId, Auth::user()->id, "updated status of " . $backlog->title . " to " . $request->status . " in ", $epic->name);
-        
-        return response()->json(['success' => true]);
+        try {
+            $backlog = Backlogs::where('id', $request->id)->first();
+            $backlog->status = $request->status;
+            $backlog->save();
+            
+            $epic = Epics::where('id', $backlog->epic_id)->first();
+
+            $totalBacklogs = Backlogs::where('epic_id', $backlog->epic_id)->count();
+            $doneBacklogs = Backlogs::where('epic_id', $backlog->epic_id)
+                ->where('status', 'Done')
+                ->count();
+
+            $newProgressPercent = $totalBacklogs > 0 ? round(($doneBacklogs / $totalBacklogs) * 100) : 0;
+
+            $epic->progress_percent = $newProgressPercent;
+            $epic->save();
+
+            $this->registerUpdate(
+                $request->projectId, 
+                Auth::user()->id, 
+                "updated status of " . $backlog->title . " to " . $request->status . " in ", 
+                $epic->name
+            );
+            
+            return response()->json([
+                'success' => true,
+                'progress_percent' => $newProgressPercent
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating backlog status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating backlog status'
+            ], 500);
+        }
     }
 
     public function updateEpicStatus(Request $request) {
@@ -543,38 +610,60 @@ class ScrumController extends Controller
 
     public function updateEpic(Request $request)
     {
-        $request->validate([
-            'epicId' => 'required|exists:epics,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'projectId' => 'required|exists:projects,id'
-        ]);
-
         try {
+            $request->validate([
+                'epicId' => 'required|exists:epics,id',
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'projectId' => 'required|exists:projects,id'
+            ]);
+
             $epic = Epics::findOrFail($request->epicId);
             
+            // Check if the epic belongs to the project
+            if ($epic->project_id != $request->projectId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Epic does not belong to this project'
+                ], 403);
+            }
+
+            // Update the epic with all fields
             $epic->update([
                 'name' => $request->name,
-                'description' => $request->description ?? ''
+                'description' => $request->description ?? '',
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date
             ]);
 
             $this->registerUpdate(
                 $request->projectId,
                 Auth::user()->id,
                 "updated epic ",
-                $request->name
+                $epic->name
             );
 
+            // Return the updated epic
             return response()->json([
                 'success' => true,
                 'message' => 'Epic updated successfully',
-                'epic' => $epic // Return updated epic data
+                'epic' => $epic->fresh(),
+                'start_date' => $epic->start_date,
+                'end_date' => $epic->end_date
             ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Error updating epic: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating epic'
+                'message' => 'An error occurred while updating the epic'
             ], 500);
         }
     }
@@ -705,6 +794,56 @@ class ScrumController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting column'
+            ], 500);
+        }
+    }
+
+    public function moveTasks(Request $request)
+    {
+        $request->validate([
+            'taskIds' => 'required|array',
+            'taskIds.*' => 'exists:backlogs,id',
+            'targetEpicId' => 'required|exists:epics,id',
+            'sourceEpicId' => 'required|exists:epics,id',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Update all tasks with new epic_id
+            Backlogs::whereIn('id', $request->taskIds)
+                ->update(['epic_id' => $request->targetEpicId]);
+
+            // Get epic names for logging
+            $sourceEpic = Epics::find($request->sourceEpicId);
+            $targetEpic = Epics::find($request->targetEpicId);
+            
+            // Log the move action
+            $taskCount = count($request->taskIds);
+            $actionDesc = $taskCount > 1 
+                ? "moved {$taskCount} tasks from {$sourceEpic->name} to "
+                : "moved a task from {$sourceEpic->name} to ";
+            
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                $actionDesc,
+                $targetEpic->name
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tasks moved successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error moving tasks: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error moving tasks: ' . $e->getMessage()
             ], 500);
         }
     }
