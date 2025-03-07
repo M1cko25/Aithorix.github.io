@@ -1,60 +1,57 @@
-# 1️⃣ Base image for PHP
+# 1️⃣ Base PHP image
 FROM php:8.2-fpm AS php
 
-# Install required system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    zip \
-    unzip \
-    git \
-    curl \
-    supervisor \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    zip unzip git curl supervisor nginx \
     && docker-php-ext-install pdo pdo_pgsql gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /var/www
 
-# Copy Laravel project files
+# Copy Laravel files
 COPY . .
 
-# Install Laravel dependencies
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions for Laravel storage/cache
+# Set permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# 2️⃣ Separate Node.js image for building frontend
+# 2️⃣ Node.js stage for building frontend
 FROM node:18 AS node
 
-# Set working directory
 WORKDIR /app
 
-# Copy only frontend-related files
 COPY package.json package-lock.json vite.config.js /app/
 COPY resources/js/ /app/resources/js/
+COPY resources/css/ /app/resources/css/
 
-# Install frontend dependencies
 RUN npm install && npm run build
 
-# 3️⃣ Final production image
+# 3️⃣ Final Production Image with Nginx
 FROM php:8.2-fpm
 
-# Set working directory
 WORKDIR /var/www
 
 # Copy files from previous PHP stage
 COPY --from=php /var/www /var/www
 
 # Copy built frontend from Node.js stage
-COPY --from=node /app/resources/js/dist /var/www/public/build
+COPY --from=node /app/public/build /var/www/public/build
 
-# Expose Laravel's PHP-FPM port
-EXPOSE 9000
+# Install and configure Nginx
+RUN apt-get update && apt-get install -y nginx
 
-# Start Laravel FPM
-CMD ["php-fpm"]
+# Copy Nginx configuration
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+# Expose HTTP port
+EXPOSE 80
+
+# Start Nginx & PHP-FPM
+CMD service nginx start && php-fpm

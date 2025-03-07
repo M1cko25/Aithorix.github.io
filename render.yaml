@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: Aithorix
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: dpg-cv5arai3esus73ar5090-a
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: aithorix_db
+      - key: DB_USERNAME
+        value: aithorix_db_user
+      - key: DB_PASSWORD
+        value: m0mSNVpizU38DCkKKjdZT3O3yZqPKYSe
