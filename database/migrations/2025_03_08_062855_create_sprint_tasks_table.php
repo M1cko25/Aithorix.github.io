@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sprints', function (Blueprint $table) {
+        Schema::create('sprint_tasks', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->unsignedBigInteger('epic_id');
-            $table->foreign('epic_id')->references('id')->on('epics');
+            $table->foreignId('sprint_id')->constrained('sprints');
+            $table->foreignId('backlog_id')->constrained('backlogs');
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('status');
-            $table->string('description')->nullable();
+            $table->integer('duration');
+            $table->integer('progress');
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sprints');
+        Schema::dropIfExists('sprint_tasks');
     }
 };

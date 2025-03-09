@@ -52,7 +52,7 @@ export function deleteTask(epicSelected, taskCounts, selectedTaskToUpdate, proje
     selectedTaskToUpdate.forEach(task => {
       axios.post('/scrum/backlog-delete', {
         id: task.id,
-        epicId: epicSelected.epic_id,
+        epicId: epicSelected.id,
         title: task.title,
         projectId: projectDetails.id
       })

@@ -15,6 +15,7 @@ import { usePage } from '@inertiajs/vue3'
 import { Filter, ArrowUpDown, Trash, Replace } from 'lucide-vue-next'
 import TextField from '../../Components/TextField.vue'
 import graphics from '../../graphics'
+import axios from 'axios'
 
 const page = usePage().props
 const projEpics = ref(page.epics || [])
@@ -140,17 +141,15 @@ const handleEpicDeleted = (deletedEpicId) => {
 }
 
 const handleTaskUpdate = (updatedTask) => {
-  // Find and update the task in epicSelected.tasks
-  const taskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id)
+  // Find and update the task in the backlogs array
+  const taskIndex = page.backlogs.findIndex(t => t.id === updatedTask.id);
   if (taskIndex !== -1) {
-    epicSelected.value.tasks[taskIndex] = { ...epicSelected.value.tasks[taskIndex], ...updatedTask }
-    
-    // Update task counts
-    taskCounts.value = {
-      todo: epicSelected.value.tasks.filter(task => task.status === 'To Do').length,
-      inProgress: epicSelected.value.tasks.filter(task => task.status === 'In Progress').length,
-      completed: epicSelected.value.tasks.filter(task => task.status === 'Done').length
-    }
+    page.backlogs[taskIndex] = {
+      ...page.backlogs[taskIndex],
+      ...updatedTask
+    };
+    // Create a new array reference to trigger reactivity
+    page.backlogs = [...page.backlogs];
   }
 }
 
@@ -201,6 +200,41 @@ const handleTasksMoved = ({ tasks, targetEpic }) => {
   // Clear selected tasks
   selectedTaskToUpdate.value = []
 }
+
+const handleDeleteTask = () => {
+  if (!selectedTaskToUpdate.value.length) return;
+  
+  const tasksToDelete = selectedTaskToUpdate.value;
+  const deletePromises = tasksToDelete.map(task => 
+    axios.post('/scrum/backlog-delete', {
+      id: task.id,
+      epicId: task.epic_id,
+      title: task.title,
+      projectId: page.projectDetails.id
+    })
+  );
+
+  Promise.all(deletePromises)
+    .then(() => {
+      // Remove tasks from epicSelected.tasks
+      tasksToDelete.forEach(task => {
+        const index = epicSelected.value.tasks.findIndex(t => t.id === task.id);
+        if (index !== -1) {
+          epicSelected.value.tasks.splice(index, 1);
+        }
+      });
+
+      // Update task counts
+      taskCounts.value = calculateTaskCounts();
+      
+      // Clear selected tasks
+      selectedTaskToUpdate.value = [];
+      isDeleteModalOpen.value = false;
+    })
+    .catch(error => {
+      console.error('Error deleting tasks:', error);
+    });
+}
 </script>
 
 <template>
@@ -210,9 +244,9 @@ const handleTasksMoved = ({ tasks, targetEpic }) => {
   
   <DeleteTaskModal 
     v-model:isOpen="isDeleteModalOpen"
-    :epicSelected="epicSelected"
-    :selectedTaskToUpdate="selectedTaskToUpdate"
-    :taskCounts="taskCounts"
+    :task="selectedTaskToUpdate.length === 1 ? selectedTaskToUpdate[0] : null"
+    :tasks="selectedTaskToUpdate"
+    @confirm="handleDeleteTask"
   />
   
   <SprintModal 
@@ -232,6 +266,7 @@ const handleTasksMoved = ({ tasks, targetEpic }) => {
     v-model:isOpen="isTaskModalOpen"
     :task="selectedTaskToEdit"
     :epicSelected="epicSelected"
+    context="backlog"
     @update:task="handleTaskUpdate"
   />
 
@@ -323,12 +358,12 @@ const handleTasksMoved = ({ tasks, targetEpic }) => {
               <Replace class="w-5 h-5" />
               Move to Epic
             </button>
-            <button v-if="showTrashButton" @click="isDeleteModalOpen = true" class="btn-cancel text-error">
-              <Trash class="w-5 h-5" />
-              Delete Selected ({{ selectedTaskToUpdate.length }})
-            </button>
+          <button v-if="showTrashButton" @click="isDeleteModalOpen = true" class="btn-cancel text-error">
+            <Trash class="w-5 h-5" />
+            Delete Selected ({{ selectedTaskToUpdate.length }})
+          </button>
           </div>
-        </div>
+                </div>
 
         <BacklogContainer 
           v-if="epics.length > 0"

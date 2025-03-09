@@ -27,6 +27,8 @@ return new class extends Migration
             $table->foreign('epic_id')->references('id')->on('epics')->onDelete('cascade');
             $table->unsignedBigInteger('order')->nullable();
             $table->timestamps();
+
+            $table->unique(['project_id', 'key']);
         });
     }
 
