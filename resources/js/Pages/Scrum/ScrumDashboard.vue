@@ -7,6 +7,7 @@ import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
 import graphics from '../../graphics';
+import Lira from '../../Components/Lira.vue';
 
 const page = usePage().props;
 
@@ -24,20 +25,21 @@ const stats = ref([
     period: 'at the last 7 days'
   },
   {
+    icon: Calendar,
+    label: 'Backlog Created',
+    value: page.backlogCreated,
+    period: 'in the last 7 days'
+  },
+  {
     icon: Video,
     label: 'Meeting Created',
     value: page.meetingCreated,
     period: 'at the last 7 days'
-  },
-  {
-    icon: Calendar,
-    label: 'Sprints',
-    value: page.sprints,
-    period: 'in the last 7 days'
   }
 ])
 
 const activities = page.activities;
+const isLiraOpen = ref(false);
 
 const chartOptions = ref({
   chart: {
@@ -220,4 +222,5 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
       </div>
     </div>
   </div>
+  <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />
 </template>

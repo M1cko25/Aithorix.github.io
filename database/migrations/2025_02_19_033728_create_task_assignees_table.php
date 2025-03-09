@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('task_assignees', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('task_id');
-            $table->foreign('task_id')->references('id')->on('sprint_tasks')->onDelete('cascade');
+            $table->foreign('task_id')->references('id')->on('backlogs')->onDelete('cascade');
             $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('project_members')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

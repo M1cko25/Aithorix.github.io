@@ -31,4 +31,4 @@ createInertiaApp({
     delay: 250,
   }
 })
-registerLicense('ORg4AjUWIQA/Gnt2XVhhQlJHfVxdWnxLflFzVWBTfFh6dVBWESFaRnZdR11hSXtTdUZkWHxYeXdX')
+registerLicense('Ngo9BigBOggjHTQxAR8/V1NMaF1cXmhNYVVpR2Nbek5xdF9HZ1ZQTWYuP1ZhSXxWdkZjXn5ecXNXRWJUWUY=')
