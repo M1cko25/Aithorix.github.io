@@ -7,7 +7,7 @@ import {
     Filter,
     SortAsc,
     MoreVertical,
-    Table
+
 } from 'lucide-vue-next'
 
 // Only one modal can be open at a time
@@ -17,12 +17,16 @@ const closeAllModals = () => {
 }
 
 const toggleFilterModal = () => {
-    closeAllModals()
+    if (!isFilterModalOpen.value) {
+        closeAllModals()
+    }
     isFilterModalOpen.value = !isFilterModalOpen.value
 }
 
 const toggleSortModal = () => {
-    closeAllModals()
+    if (!isSortModalOpen.value) {
+        closeAllModals()
+    }
     isSortModalOpen.value = !isSortModalOpen.value
 }
 
