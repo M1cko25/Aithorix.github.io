@@ -8,9 +8,23 @@ import { formatDistanceToNow } from 'date-fns'
 const page = usePage().props
 
 const props = defineProps({
-  isOpen: Boolean,
-  task: Object,
-  epicSelected: Object
+  isOpen: {
+    type: Boolean,
+    required: true
+  },
+  task: {
+    type: Object,
+    required: true
+  },
+  epicSelected: {
+    type: Object,
+    required: false,
+    default: null
+  },
+  context: {
+    type: String,
+    default: 'backlog' // can be 'backlog' or 'gantt'
+  }
 })
 
 const emit = defineEmits(['update:isOpen', 'update:task'])
@@ -191,7 +205,7 @@ const saveChanges = async () => {
       type: form.value.type,
       priority: form.value.priority,
       status: form.value.status,
-      epicId: props.epicSelected.id,
+      epicId: props.epicSelected?.id || props.task.epic_id,
       projectId: page.projectDetails.id,
       assignees: form.value.assignees ? form.value.assignees.map(a => a.id) : []
     })
@@ -203,7 +217,7 @@ const saveChanges = async () => {
         ...form.value,
         title: form.value.title.trim(),
         description: form.value.description || '',
-        epic_id: props.epicSelected.id
+        epic_id: props.epicSelected?.id || props.task.epic_id
       }
       
       // Emit both the modal close and task update

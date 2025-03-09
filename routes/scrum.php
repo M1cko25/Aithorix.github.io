@@ -28,6 +28,8 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/add-column', 'addColumn')->name('add-column');
         Route::post('/scrum/delete-column', 'deleteColumn')->name('delete-column');
         Route::post('/scrum/move-tasks', 'moveTasks')->name('move-tasks');
+        Route::post('/scrum/sprint-task-update', 'updateSprintTask')->name('sprint-task-update');
+        Route::post('/scrum/add-sprint-task', 'addSprintTask')->name('add-sprint-task');
     });
 });
 // Route::inertia('/scrum/meeting', 'Scrum/Meeting')->name('scrum-meeting')->middleware('auth');

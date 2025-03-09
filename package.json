@@ -21,6 +21,7 @@
         "@syncfusion/ej2-vue-calendars": "^28.2.7",
         "@syncfusion/ej2-vue-gantt": "^28.2.6",
         "@vitejs/plugin-vue": "^5.2.1",
+        "@vueuse/core": "^12.8.2",
         "@vueuse/motion": "^2.2.6",
         "apexcharts": "^4.4.0",
         "date-fns": "^4.1.0",
@@ -28,6 +29,7 @@
         "vue-cal": "^4.10.2",
         "vue3-apexcharts": "^1.8.0",
         "vuedraggable": "^4.1.0",
+        "zego-express-engine-webrtc": "^3.8.0",
         "ziggy": "^2.4.0",
         "ziggy-js": "^2.5.2"
     }
