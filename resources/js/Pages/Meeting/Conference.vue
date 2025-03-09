@@ -19,6 +19,7 @@ import {
   Maximize2,
   Minimize2
 } from 'lucide-vue-next'
+import AgoraRTC from 'agora-rtc-sdk-ng';
 
 // ===== CONTROL BAR STATE =====
 const isSidebarOpen = ref(false)
@@ -29,6 +30,132 @@ const isVideoOff = ref(false)
 const isScreenSharing = ref(false)
 const isPinned = ref(false)
 const isFullscreen = ref(false)
+const agoraClient = ref(null);
+const localTracks = ref(null);
+const remoteUsers = ref(new Map());
+const appId = "7b621d5bd0454d72920fddfecd72a7eb"
+const token = "007eJxTYHDNftUy+8A5+6YOoymni74GG0po3yw80lEh5FHXI2lWf1WBwTzJzMgwxTQpxcDE1CTF3MjSyCAtJSUtNRnITjRPTToefza9IZCRodiHj5mRAQJBfF4Gx8ySjPyizArdkNTiEgYGAIoaIuc="
+
+const client = AgoraRTC.createClient({
+  mode: 'rtc',
+  codec: 'vp8'
+});
+
+// Add these new refs for managing streams
+const localAudioTrack = ref(null);
+const localVideoTrack = ref(null);
+
+// Initialize Agora client
+const initializeAgora = async () => {
+  try {
+    // Create and join channel
+    await client.join(appId, 'Aithorix-Test', token, null);
+    console.log('Successfully joined channel');
+
+    // Create local tracks
+    const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+      {
+        encoderConfig: {
+          width: { min: 640, ideal: 1920, max: 1920 },
+          height: { min: 480, ideal: 1080, max: 1080 }
+        }
+      }
+    );
+    
+    localAudioTrack.value = audioTrack;
+    localVideoTrack.value = videoTrack;
+    
+    // Publish tracks
+    await client.publish([audioTrack, videoTrack]);
+    console.log('Successfully published tracks');
+
+    // Play local video
+    videoTrack.play('local-player');
+    
+    // Update UI state
+    isVideoOff.value = false;
+    isMuted.value = false;
+  } catch (error) {
+    console.error('Error in initializeAgora:', error);
+    if (error.code === 'PERMISSION_DENIED') {
+      alert('Please allow camera and microphone permissions to join the meeting.');
+    }
+  }
+};
+
+// Handle remote user events
+client.on('user-published', async (user, mediaType) => {
+  try {
+    await client.subscribe(user, mediaType);
+    console.log('Successfully subscribed to', mediaType, 'from user', user.uid);
+
+    if (mediaType === 'video') {
+      remoteUsers.value.set(user.uid, user);
+      nextTick(() => {
+        user.videoTrack.play(`player-${user.uid}`);
+      });
+    }
+    if (mediaType === 'audio') {
+      user.audioTrack.play();
+    }
+  } catch (error) {
+    console.error('Error handling user-published event:', error);
+  }
+});
+
+client.on('user-unpublished', (user, mediaType) => {
+  if (mediaType === 'video') {
+    remoteUsers.value.delete(user.uid);
+  }
+});
+
+client.on('user-left', (user) => {
+  remoteUsers.value.delete(user.uid);
+});
+
+// Update video controls
+const toggleVideo = async () => {
+  if (!localVideoTrack.value) return;
+  
+  try {
+    await localVideoTrack.value.setEnabled(!isVideoOff.value);
+    isVideoOff.value = !isVideoOff.value;
+  } catch (error) {
+    console.error('Error toggling video:', error);
+  }
+};
+
+const toggleMute = async () => {
+  if (!localAudioTrack.value) return;
+  
+  try {
+    await localAudioTrack.value.setEnabled(!isMuted.value);
+    isMuted.value = !isMuted.value;
+  } catch (error) {
+    console.error('Error toggling audio:', error);
+  }
+};
+
+const endMeeting = async () => {
+  try {
+    // Clean up tracks
+    if (localAudioTrack.value) {
+      localAudioTrack.value.close();
+    }
+    if (localVideoTrack.value) {
+      localVideoTrack.value.close();
+    }
+    
+    // Leave the channel
+    await client.leave();
+    remoteUsers.value.clear();
+    
+    // Redirect to home
+    window.location.href = '/';
+  } catch (error) {
+    console.error('Error ending meeting:', error);
+  }
+};
 
 // Computed property to determine if any sidebar is visible
 const isSidebarVisible = computed(() => 
@@ -36,28 +163,6 @@ const isSidebarVisible = computed(() =>
 )
 
 // Control bar methods
-const toggleMute = () => {
-  isMuted.value = !isMuted.value
-  // Update the main user's muted status in the participants list
-  const mainUser = allParticipants.value.find(p => p.isMainUser)
-  if (mainUser) {
-    mainUser.isMuted = isMuted.value
-  }
-}
-
-const toggleVideo = async () => {
-  if (isVideoOff.value) {
-    await startCamera()
-  } else {
-    stopCamera()
-  }
-  // Update the main user's video status in the participants list
-  const mainUser = allParticipants.value.find(p => p.isMainUser)
-  if (mainUser) {
-    mainUser.isVideoOff = isVideoOff.value
-  }
-}
-
 const toggleScreenShare = () => {
   isScreenSharing.value = !isScreenSharing.value
 }
@@ -120,10 +225,6 @@ const toggleFullscreen = async () => {
       console.error('Error attempting to exit fullscreen:', err)
     }
   }
-}
-
-const endMeeting = () => {
-  alert('Meeting ended')
 }
 
 // ===== VIDEO GRID STATE =====
@@ -263,7 +364,7 @@ onMounted(() => {
   document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
   document.addEventListener('mozfullscreenchange', handleFullscreenChange)
   document.addEventListener('MSFullscreenChange', handleFullscreenChange)
-  startCamera() // Start camera when component mounts
+  initializeAgora() // Start video conference when component mounts
 })
 
 onUnmounted(() => {
@@ -272,7 +373,15 @@ onUnmounted(() => {
   document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
   document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
   document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
-  stopCamera() // Clean up camera when component unmounts
+  if (localAudioTrack.value) {
+    localAudioTrack.value.close();
+  }
+  if (localVideoTrack.value) {
+    localVideoTrack.value.close();
+  }
+  client.removeAllListeners();
+  // Leave the channel
+  client.leave().catch(console.error);
   localStorage.removeItem('cameraPermissionShown') // Clean up permission flag
 })
 
@@ -379,470 +488,384 @@ watch(videoElement, (el) => {
 })
 </script>
 <template>
-  <div class="flex flex-col h-screen bg-gray-100">
+  <div class="h-screen bg-gray-900">
     <!-- Main Content Area -->
-    <div class="flex flex-1 overflow-hidden">
+    <div class="flex flex-col h-full">
       <!-- Video Grid -->
-      <div
-        class="flex-1 transition-all"
-        :class="{ 'mr-80': isSidebarVisible }"
-      >
-        <div class="grid h-full bg-gray-900 p-2 md:p-4">
-          <div class="grid grid-cols-4 gap-2 h-full">
+      <div class="flex-1 relative" :class="{ 'mr-80': isSidebarVisible }">
+        <div class="absolute inset-0 p-4">
+          <div class="grid grid-cols-4 gap-4 h-full">
             <!-- Left side (Main presenter) -->
-            <div class="col-span-3 grid grid-rows-3 gap-2">
-              <!-- Main presenter (You) -->
-              <div class="row-span-3 relative rounded-lg overflow-hidden bg-gray-800">
-                <!-- Video element -->
-                <video
-                  v-if="!isVideoOff && videoStream"
-                  ref="videoElement"
-                  class="w-full h-full object-cover"
-                  autoplay
-                  playsInline
-                  muted
-                ></video>
-                
-                <!-- Fallback content when video is off -->
-                <div v-else class="absolute inset-0 flex items-center justify-center">
-                  <div class="text-center">
-                    <div class="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-medium text-white mb-3">
-                      Y
-                    </div>
-                    <span class="text-xl text-white">You</span>
-                    <div class="flex items-center justify-center gap-2 mt-1">
-                      <span class="text-sm text-gray-400">(Host)</span>
-                      <span class="px-2 py-0.5 bg-gray-700 text-white text-xs rounded-full">Host</span>
-                    </div>
+            <div class="col-span-3 relative rounded-lg overflow-hidden bg-gray-800">
+              <!-- Local Video Container -->
+              <div id="local-player" class="w-full h-full"></div>
+              
+              <!-- Fallback content when video is off -->
+              <div v-if="isVideoOff" class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-medium text-white mb-3">
+                    Y
+                  </div>
+                  <span class="text-xl text-white">You</span>
+                  <div class="flex items-center justify-center gap-2 mt-1">
+                    <span class="text-sm text-gray-400">(Host)</span>
+                    <span class="px-2 py-0.5 bg-gray-700 text-white text-xs rounded-full">Host</span>
                   </div>
                 </div>
-                
-                <!-- Controls overlay -->
-                <div class="absolute top-2 right-2 flex items-center gap-2">
-                  <button 
-                    @click="togglePin"
-                    class="p-1.5 rounded-lg bg-gray-900/80 hover:bg-gray-900 text-white transition-colors"
-                    :class="{ 'text-blue': isPinned }"
-                    title="Pin video"
-                  >
-                    <Pin class="h-4 w-4" :class="{ 'text-blue': isPinned }" />
-                  </button>
-                  <button 
-                    @click="toggleFullscreen"
-                    class="p-1.5 rounded-lg bg-gray-900/80 hover:bg-gray-900 text-white transition-colors"
-                    title="Full screen"
-                  >
-                    <Maximize2 v-if="!isFullscreen" class="h-4 w-4" />
-                    <Minimize2 v-else class="h-4 w-4" />
-                  </button>
-                </div>
+              </div>
+              
+              <!-- Controls overlay -->
+              <div class="absolute top-2 right-2 flex items-center gap-2">
+                <button 
+                  @click="togglePin"
+                  class="p-1.5 rounded-lg bg-gray-900/80 hover:bg-gray-900 text-white transition-colors"
+                  :class="{ 'text-blue-500': isPinned }"
+                  title="Pin video"
+                >
+                  <Pin class="h-4 w-4" :class="{ 'text-blue-500': isPinned }" />
+                </button>
+                <button 
+                  @click="toggleFullscreen"
+                  class="p-1.5 rounded-lg bg-gray-900/80 hover:bg-gray-900 text-white transition-colors"
+                  title="Full screen"
+                >
+                  <Maximize2 v-if="!isFullscreen" class="h-4 w-4" />
+                  <Minimize2 v-else class="h-4 w-4" />
+                </button>
+              </div>
 
-                <!-- Status indicators -->
+              <!-- Status indicators -->
+              <div class="absolute bottom-2 left-2 flex items-center gap-2">
+                <div v-if="isMuted" class="p-1.5 rounded-lg bg-red-500/80 text-white">
+                  <MicOff class="h-4 w-4" />
+                </div>
+                <div v-if="isVideoOff" class="p-1.5 rounded-lg bg-red-500/80 text-white">
+                  <VideoOff class="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Right side (Remote participants) -->
+            <div class="col-span-1 grid grid-rows-3 gap-4">
+              <div v-for="user in Array.from(remoteUsers.values())" 
+                   :key="user.uid"
+                   class="relative rounded-lg overflow-hidden bg-gray-800">
+                <!-- Remote Video Container -->
+                <div :id="'player-' + user.uid" class="w-full h-full"></div>
+                
+                <!-- Overlay content -->
                 <div class="absolute bottom-2 left-2 flex items-center gap-2">
-                  <div v-if="isMuted" class="p-1.5 rounded-lg bg-red-500/80 text-white">
+                  <div v-if="user.hasAudio === false" class="p-1.5 rounded-lg bg-red-500/80 text-white">
                     <MicOff class="h-4 w-4" />
                   </div>
-                  <div v-if="isVideoOff" class="p-1.5 rounded-lg bg-red-500/80 text-white">
+                  <div v-if="user.hasVideo === false" class="p-1.5 rounded-lg bg-red-500/80 text-white">
                     <VideoOff class="h-4 w-4" />
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- Right side (Other participants) -->
-            <div class="col-span-1 grid grid-rows-3 gap-2">
-              <!-- First participant -->
-              <div class="bg-gray-800 rounded-lg overflow-hidden">
-                <div class="relative h-full">
-                  <!-- Video container -->
-                  <div class="absolute inset-0">
-                    <div class="w-full h-full bg-gradient-to-b from-black/30 to-black/60"></div>
-                    <!-- Simulated video background -->
-                    <img 
-                      src="https://i.pravatar.cc/300?img=1" 
-                      class="w-full h-full object-cover"
-                      alt=""
-                    />
-                  </div>
-                  <!-- Overlay content -->
-                  <div class="relative h-full flex flex-col justify-between p-2">
-                    <div class="flex items-center justify-end gap-1">
-                      <div class="p-1 rounded-lg bg-black/50">
-                        <Mic class="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm text-white">
-                        {{ firstRowParticipants[0]?.name.charAt(0) }}
-                      </div>
-                      <span class="text-sm text-white font-medium">{{ firstRowParticipants[0]?.name }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Second participant -->
-              <div class="bg-gray-800 rounded-lg overflow-hidden">
-                <div class="relative h-full flex items-center justify-center">
-                  <!-- Centered content for video off state -->
-                  <div class="flex flex-col items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-700 flex items-center justify-center text-xl text-white">
-                      {{ middleRowParticipants[0]?.name.charAt(0) }}
-                    </div>
-                    <span class="text-sm text-white font-medium mt-2">{{ middleRowParticipants[0]?.name }}</span>
-                  </div>
-                  <!-- Status indicator -->
-                  <div class="absolute top-2 right-2 flex items-center gap-1">
-                    <div class="p-1 rounded-lg bg-black/50">
-                      <VideoOff class="h-4 w-4 text-white" />
-                    </div>
-                    <div class="p-1 rounded-lg bg-black/50">
-                      <MicOff class="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Others count -->
-              <div class="bg-gray-800 rounded-lg overflow-hidden">
-                <div class="flex items-center justify-center h-full">
-                  <div class="flex flex-col items-center">
-                    <!-- Stacked avatars with improved layout -->
-                    <div class="flex items-center mb-2">
-                      <div v-if="bottomRowParticipants[0]" class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm text-white border-2 border-gray-800 relative z-30">
-                        {{ bottomRowParticipants[0].name.charAt(0) }}
-                      </div>
-                      <div v-if="bottomRowParticipants[1]" class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm text-white border-2 border-gray-800 -ml-3 relative z-20">
-                        {{ bottomRowParticipants[1].name.charAt(0) }}
-                      </div>
-                      <div v-if="remainingParticipants > 0" class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-sm text-white border-2 border-gray-800 -ml-3 relative z-10">
-                        +{{ remainingParticipants }}
-                      </div>
-                    </div>
-                    <!-- Count text with names -->
-                    <div class="text-center">
-                      <span class="text-sm text-white font-medium">
-                        {{ formatRemainingNames }}
-                      </span>
-                      <div class="text-xs text-gray-400">in this meeting</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- Task Sidebar -->
-      <div
-        class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
-        :class="isSidebarOpen ? 'translate-x-0' : 'translate-x-full'"
-        style="z-index: 10;"
-      >
-        <div class="p-4 border-b">
-          <h2 class="text-xl font-semibold">Meeting Tasks</h2>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto p-4">
-          <p v-if="tasks.length === 0" class="text-gray-500 text-center py-4">
-            No tasks yet. Add one below!
-          </p>
-          <ul v-else class="space-y-2">
-            <li
-              v-for="task in tasks"
-              :key="task.id"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
-            >
-              <div class="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  :id="`task-${task.id}`"
-                  v-model="task.completed"
-                  class="rounded border-gray-300 text-blue focus:ring-blue"
-                />
-                <label
-                  :for="`task-${task.id}`"
-                  class="cursor-pointer"
-                  :class="{ 'line-through text-gray-500': task.completed }"
-                >
-                  {{ task.text }}
-                </label>
-              </div>
-              <button
-                @click="deleteTask(task.id)"
-                class="text-gray-500 hover:text-red-500"
-              >
-                <Trash class="h-4 w-4" />
-              </button>
-            </li>
-          </ul>
-        </div>
-        
-        <div class="p-4 border-t">
-          <div class="flex space-x-2">
-            <input
-              v-model="newTaskText"
-              type="text"
-              placeholder="Add a new task..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
-              @keydown.enter="addTask"
-            />
-            <button
-              @click="addTask"
-              class="p-2 bg-blue text-white rounded-md hover:bg-blue focus:outline-none focus:ring-2 focus:ring-blue"
-            >
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <!-- Control Bar -->
+      <div class="bg-gray-800 border-t border-gray-700 p-4">
+        <div class="flex items-center justify-center gap-4">
+          <button
+            @click="toggleMute"
+            :class="[
+              'rounded-full p-3 focus:outline-none',
+              isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+            ]"
+            :title="isMuted ? 'Unmute' : 'Mute'"
+          >
+            <MicOff v-if="isMuted" class="h-5 w-5 text-white" />
+            <Mic v-else class="h-5 w-5 text-white" />
+          </button>
 
-      <!-- Chat Sidebar -->
-      <div
-        class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
-        :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'"
-        style="z-index: 10;"
-      >
-        <div class="p-4 border-b">
-          <h2 class="text-xl font-semibold">Meeting Chat</h2>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto p-4" ref="messagesContainer">
-          <p v-if="messages.length === 0" class="text-gray-500 text-center py-4">
-            No messages yet. Start the conversation!
-          </p>
-          <div v-else class="space-y-4">
-            <div
-              v-for="message in messages"
-              :key="message.id"
-              :class="[
-                'flex',
-                message.isFromUser ? 'justify-end' : 'justify-start'
-              ]"
-            >
-              <div
-                :class="[
-                  'max-w-[80%] rounded-lg p-3',
-                  message.isFromUser ? 'bg-blue text-white' : 'bg-gray-100'
-                ]"
-              >
-                <div v-if="!message.isFromUser" class="flex items-center space-x-2 mb-1">
-                  <div class="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium">
-                    {{ message.sender.charAt(0) }}
-                  </div>
-                  <span class="font-medium text-sm">{{ message.sender }}</span>
-                </div>
-                <p>{{ message.text }}</p>
-                <p
-                  :class="[
-                    'text-xs mt-1',
-                    message.isFromUser ? 'text-blue' : 'text-gray-500'
-                  ]"
-                >
-                  {{ formatTime(message.timestamp) }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="p-4 border-t">
-          <div class="flex space-x-2">
-            <input
-              v-model="newMessage"
-              type="text"
-              placeholder="Type a message..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
-              @keydown.enter="sendMessage"
-            />
-            <button
-              @click="sendMessage"
-              class="p-2 bg-blue text-white rounded-md hover:bg-blue focus:outline-none focus:ring-2 focus:ring-blue"
-            >
-              <Send class="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+          <button
+            @click="toggleVideo"
+            :class="[
+              'rounded-full p-3 focus:outline-none',
+              isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+            ]"
+            :title="isVideoOff ? 'Turn on camera' : 'Turn off camera'"
+          >
+            <VideoOff v-if="isVideoOff" class="h-5 w-5 text-white" />
+            <Video v-else class="h-5 w-5 text-white" />
+          </button>
 
-      <!-- Participants Sidebar -->
-      <div
-        class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
-        :class="isParticipantsOpen ? 'translate-x-0' : 'translate-x-full'"
-        style="z-index: 10;"
-      >
-        <div class="p-4 border-b">
-          <h2 class="text-xl font-semibold">Participants ({{ allParticipants.length }})</h2>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto">
-          <div class="p-2">
-            <h3 class="text-sm font-medium text-gray-500 mb-2">Host</h3>
-            <div
-              v-for="participant in hostParticipants"
-              :key="participant.id"
-              class="flex items-center justify-between p-2 hover:bg-gray-100 rounded-md"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-medium">
-                  {{ participant.name.charAt(0) }}
-                </div>
-                <div>
-                  <p class="font-medium">
-                    {{ participant.name }} {{ participant.isMainUser ? "(You)" : "" }}
-                    <span v-if="participant.isHost" class="ml-2 text-xs bg-blue text-white px-2 py-0.5 rounded">
-                      Host
-                    </span>
-                  </p>
-                </div>
-              </div>
-              
-              <div class="flex items-center space-x-1">
-                <MicOff v-if="participant.isMuted" class="h-4 w-4 text-gray-400" />
-                <Mic v-else class="h-4 w-4 text-gray-600" />
-                
-                <VideoOff v-if="participant.isVideoOff" class="h-4 w-4 text-gray-400" />
-                <Video v-else class="h-4 w-4 text-gray-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div class="p-2">
-            <h3 class="text-sm font-medium text-gray-500 mb-2">In this meeting</h3>
-            <div
-              v-for="participant in regularParticipants"
-              :key="participant.id"
-              class="flex items-center justify-between p-2 hover:bg-gray-100 rounded-md"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-medium">
-                  {{ participant.name.charAt(0) }}
-                </div>
-                <div>
-                  <p class="font-medium">
-                    {{ participant.name }} {{ participant.isMainUser ? "(You)" : "" }}
-                  </p>
-                </div>
-              </div>
-              
-              <div class="flex items-center space-x-1">
-                <MicOff v-if="participant.isMuted" class="h-4 w-4 text-gray-400" />
-                <Mic v-else class="h-4 w-4 text-gray-600" />
-                
-                <VideoOff v-if="participant.isVideoOff" class="h-4 w-4 text-gray-400" />
-                <Video v-else class="h-4 w-4 text-gray-600" />
-                
-                <div v-if="!participant.isMainUser" class="relative">
-                  <button 
-                    @click.stop="toggleDropdown(participant.id)"
-                    class="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none"
-                  >
-                    <MoreVertical class="h-4 w-4" />
-                  </button>
-                  
-                  <div 
-                    v-if="activeDropdown === participant.id"
-                    class="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10"
-                  >
-                    <div class="py-1">
-                      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Pin
-                      </button>
-                      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Mute
-                      </button>
-                      <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <button
+            @click="toggleScreenShare"
+            :class="[
+              'rounded-full p-3 focus:outline-none',
+              isScreenSharing ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
+            ]"
+            title="Share screen"
+          >
+            <MonitorUp class="h-5 w-5 text-white" />
+          </button>
+
+          <button
+            @click="toggleChat"
+            :class="[
+              'rounded-full p-3 focus:outline-none',
+              isChatOpen ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
+            ]"
+            :title="isChatOpen ? 'Hide chat' : 'Show chat'"
+          >
+            <MessageSquare class="h-5 w-5 text-white" />
+          </button>
+
+          <button
+            @click="toggleParticipants"
+            :class="[
+              'rounded-full p-3 focus:outline-none',
+              isParticipantsOpen ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
+            ]"
+            :title="isParticipantsOpen ? 'Hide participants' : 'Show participants'"
+          >
+            <Users class="h-5 w-5 text-white" />
+          </button>
+
+          <button
+            @click="endMeeting"
+            class="rounded-full p-3 bg-red-500 hover:bg-red-600 focus:outline-none"
+            title="End meeting"
+          >
+            <PhoneOff class="h-5 w-5 text-white" />
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Control Bar -->
-    <div class="flex items-center justify-center p-4 bg-gray-800 border-t border-gray-700">
-      <div class="flex space-x-2">
-        <button
-          @click="toggleMute"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          :title="isMuted ? 'Unmute' : 'Mute'"
-        >
-          <MicOff v-if="isMuted" class="h-5 w-5 text-white" />
-          <Mic v-else class="h-5 w-5 text-white" />
-        </button>
+    <!-- Task Sidebar -->
+    <div
+      class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
+      :class="isSidebarOpen ? 'translate-x-0' : 'translate-x-full'"
+      style="z-index: 10;"
+    >
+      <div class="p-4 border-b">
+        <h2 class="text-xl font-semibold">Meeting Tasks</h2>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-4">
+        <p v-if="tasks.length === 0" class="text-gray-500 text-center py-4">
+          No tasks yet. Add one below!
+        </p>
+        <ul v-else class="space-y-2">
+          <li
+            v-for="task in tasks"
+            :key="task.id"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
+          >
+            <div class="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                :id="`task-${task.id}`"
+                v-model="task.completed"
+                class="rounded border-gray-300 text-blue focus:ring-blue"
+              />
+              <label
+                :for="`task-${task.id}`"
+                class="cursor-pointer"
+                :class="{ 'line-through text-gray-500': task.completed }"
+              >
+                {{ task.text }}
+              </label>
+            </div>
+            <button
+              @click="deleteTask(task.id)"
+              class="text-gray-500 hover:text-red-500"
+            >
+              <Trash class="h-4 w-4" />
+            </button>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="p-4 border-t">
+        <div class="flex space-x-2">
+          <input
+            v-model="newTaskText"
+            type="text"
+            placeholder="Add a new task..."
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
+            @keydown.enter="addTask"
+          />
+          <button
+            @click="addTask"
+            class="p-2 bg-blue text-white rounded-md hover:bg-blue focus:outline-none focus:ring-2 focus:ring-blue"
+          >
+            <Plus class="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
 
-        <button
-          @click="toggleVideo"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          :title="isVideoOff ? 'Turn on camera' : 'Turn off camera'"
-        >
-          <VideoOff v-if="isVideoOff" class="h-5 w-5 text-white" />
-          <Video v-else class="h-5 w-5 text-white" />
-        </button>
+    <!-- Chat Sidebar -->
+    <div
+      class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
+      :class="isChatOpen ? 'translate-x-0' : 'translate-x-full'"
+      style="z-index: 10;"
+    >
+      <div class="p-4 border-b">
+        <h2 class="text-xl font-semibold">Meeting Chat</h2>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-4" ref="messagesContainer">
+        <p v-if="messages.length === 0" class="text-gray-500 text-center py-4">
+          No messages yet. Start the conversation!
+        </p>
+        <div v-else class="space-y-4">
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            :class="[
+              'flex',
+              message.isFromUser ? 'justify-end' : 'justify-start'
+            ]"
+          >
+            <div
+              :class="[
+                'max-w-[80%] rounded-lg p-3',
+                message.isFromUser ? 'bg-blue text-white' : 'bg-gray-100'
+              ]"
+            >
+              <div v-if="!message.isFromUser" class="flex items-center space-x-2 mb-1">
+                <div class="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium">
+                  {{ message.sender.charAt(0) }}
+                </div>
+                <span class="font-medium text-sm">{{ message.sender }}</span>
+              </div>
+              <p>{{ message.text }}</p>
+              <p
+                :class="[
+                  'text-xs mt-1',
+                  message.isFromUser ? 'text-blue' : 'text-gray-500'
+                ]"
+              >
+                {{ formatTime(message.timestamp) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="p-4 border-t">
+        <div class="flex space-x-2">
+          <input
+            v-model="newMessage"
+            type="text"
+            placeholder="Type a message..."
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue"
+            @keydown.enter="sendMessage"
+          />
+          <button
+            @click="sendMessage"
+            class="p-2 bg-blue text-white rounded-md hover:bg-blue focus:outline-none focus:ring-2 focus:ring-blue"
+          >
+            <Send class="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
 
-        <button
-          @click="toggleScreenShare"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isScreenSharing ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          title="Share screen"
-        >
-          <MonitorUp class="h-5 w-5 text-white" />
-        </button>
-
-        <button
-          @click="toggleSidebar"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isSidebarOpen ? 'bg-blue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          :title="isSidebarOpen ? 'Hide tasks' : 'Show tasks'"
-        >
-          <ListTodo class="h-5 w-5 text-white" />
-        </button>
-
-        <button
-          @click="toggleChat"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isChatOpen ? 'bg-blue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          :title="isChatOpen ? 'Hide chat' : 'Show chat'"
-        >
-          <MessageSquare class="h-5 w-5 text-white" />
-        </button>
-
-        <button
-          @click="toggleParticipants"
-          :class="[
-            'rounded-full p-3 focus:outline-none',
-            isParticipantsOpen ? 'bg-blue hover:bg-blue' : 'bg-gray-700 hover:bg-gray-600'
-          ]"
-          :title="isParticipantsOpen ? 'Hide participants' : 'Show participants'"
-        >
-          <Users class="h-5 w-5 text-white" />
-        </button>
-
-        <button
-          @click="endMeeting"
-          class="rounded-full p-3 bg-red-500 hover:bg-red-600 focus:outline-none"
-          title="End meeting"
-        >
-          <PhoneOff class="h-5 w-5 text-white" />
-        </button>
+    <!-- Participants Sidebar -->
+    <div
+      class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-lg transition-transform duration-300 transform h-full flex flex-col"
+      :class="isParticipantsOpen ? 'translate-x-0' : 'translate-x-full'"
+      style="z-index: 10;"
+    >
+      <div class="p-4 border-b">
+        <h2 class="text-xl font-semibold">Participants ({{ allParticipants.length }})</h2>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto">
+        <div class="p-2">
+          <h3 class="text-sm font-medium text-gray-500 mb-2">Host</h3>
+          <div
+            v-for="participant in hostParticipants"
+            :key="participant.id"
+            class="flex items-center justify-between p-2 hover:bg-gray-100 rounded-md"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-medium">
+                {{ participant.name.charAt(0) }}
+              </div>
+              <div>
+                <p class="font-medium">
+                  {{ participant.name }} {{ participant.isMainUser ? "(You)" : "" }}
+                  <span v-if="participant.isHost" class="ml-2 text-xs bg-blue text-white px-2 py-0.5 rounded">
+                    Host
+                  </span>
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-1">
+              <MicOff v-if="participant.isMuted" class="h-4 w-4 text-gray-400" />
+              <Mic v-else class="h-4 w-4 text-gray-600" />
+              
+              <VideoOff v-if="participant.isVideoOff" class="h-4 w-4 text-gray-400" />
+              <Video v-else class="h-4 w-4 text-gray-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-2">
+          <h3 class="text-sm font-medium text-gray-500 mb-2">In this meeting</h3>
+          <div
+            v-for="participant in regularParticipants"
+            :key="participant.id"
+            class="flex items-center justify-between p-2 hover:bg-gray-100 rounded-md"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-medium">
+                {{ participant.name.charAt(0) }}
+              </div>
+              <div>
+                <p class="font-medium">
+                  {{ participant.name }} {{ participant.isMainUser ? "(You)" : "" }}
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-1">
+              <MicOff v-if="participant.isMuted" class="h-4 w-4 text-gray-400" />
+              <Mic v-else class="h-4 w-4 text-gray-600" />
+              
+              <VideoOff v-if="participant.isVideoOff" class="h-4 w-4 text-gray-400" />
+              <Video v-else class="h-4 w-4 text-gray-600" />
+              
+              <div v-if="!participant.isMainUser" class="relative">
+                <button 
+                  @click.stop="toggleDropdown(participant.id)"
+                  class="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  <MoreVertical class="h-4 w-4" />
+                </button>
+                
+                <div 
+                  v-if="activeDropdown === participant.id"
+                  class="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10"
+                >
+                  <div class="py-1">
+                    <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      Pin
+                    </button>
+                    <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                      Mute
+                    </button>
+                    <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -896,7 +919,7 @@ watch(videoElement, (el) => {
 /* Video grid */
 .video-grid {
   display: flex;
-  flex-direction: column;
+  flex-direction: collumn;
   gap: 1rem;
   padding: 1rem;
   height: calc(100vh - 120px); /* Adjust for header and controls */
