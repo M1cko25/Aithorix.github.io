@@ -1,55 +1,47 @@
 <script setup>
+import { ref } from 'vue'
 import Modal from '../../../Components/Modal.vue'
 import { usePage } from '@inertiajs/vue3'
-import { updateEpicStatus } from '../ScrumServices/epicApi'
 import axios from 'axios'
 
 const page = usePage().props
-
 const props = defineProps({
   isOpen: Boolean,
   epicSelected: Object,
-  epics: Object
+  epics: Array
 })
 
 const emit = defineEmits(['update:isOpen'])
+const isCompleting = ref(false)
 
-const handleComplete = async () => {
+const completeSprint = async () => {
+  if (isCompleting.value) return
+  
+  isCompleting.value = true
   try {
-    // First update the epic status to Completed
-    await axios.post('/scrum/epic-status-update', {
-      epicId: props.epicSelected.epic_id,
-      status: 'Completed',
+    const response = await axios.post('/scrum/complete-sprint', {
+      epicId: props.epicSelected.id,
       projectId: page.projectDetails.id
     })
 
-    // Update sprint status to Completed
-    if (page.sprint?.epic_id === props.epicSelected.epic_id) {
-      await axios.post('/scrum/complete-sprint', {
-        epicId: props.epicSelected.epic_id,
-        projectId: page.projectDetails.id
-      })
-    }
-
-    // Update the local epic status
-    if (props.epicSelected) {
-      props.epicSelected.status = 'Completed'
-    }
-
-    // Find and update the epic in the epics array
-    if (props.epics.value) {
-      const epicIndex = props.epics.value.findIndex(e => e.epic_id === props.epicSelected.epic_id)
+    if (response.data.success) {
+      // Update epic status and progress in the local state
+      const epicIndex = props.epics.findIndex(e => e.id === props.epicSelected.id)
       if (epicIndex !== -1) {
-        props.epics.value[epicIndex].status = 'Completed'
+        props.epics[epicIndex].status = 'Completed'
+        props.epics[epicIndex].progress_percent = response.data.epic.progress_percent
+        Object.assign(props.epicSelected, {
+          status: 'Completed',
+          progress_percent: response.data.epic.progress_percent
+        })
       }
+      
+      emit('update:isOpen', false)
     }
-
-    emit('update:isOpen', false)
-    
-    // Refresh the page to get updated sprint data
-    window.location.reload()
   } catch (error) {
     console.error('Error completing sprint:', error)
+  } finally {
+    isCompleting.value = false
   }
 }
 
@@ -70,8 +62,21 @@ const updateModalState = (value) => {
       <p class="text-gray-600">You've successfully completed the sprint for</p>
       <p class="text-lg font-medium">{{ epicSelected.name }}</p>
       <div class="flex flex-row justify-center w-full gap-4 mt-4">
-        <button class="btn-primary w-full" @click="handleComplete">Complete Sprint</button>
+        <button 
+          class="btn-primary w-full" 
+          @click="completeSprint"
+          :disabled="isCompleting"
+        >
+          {{ isCompleting ? 'Completing Sprint...' : 'Complete Sprint' }}
+        </button>
       </div>
     </div>
   </Modal>
-</template> 
+</template>
+
+<style scoped>
+.text-6xl {
+  font-size: 4rem;
+  line-height: 1;
+}
+</style> 

@@ -3,7 +3,6 @@ import { ref, watch } from 'vue'
 import draggable from "vuedraggable";
 import { ChevronRight, Edit2 } from 'lucide-vue-next'
 import { createNewEpic } from '../ScrumServices/epicApi';
-import { selectEpic } from '../ScrumComposables/UseEpics';
 import Overlay from '../../../Components/Overlay.vue';
 import {usePage} from '@inertiajs/vue3';
 import axios from 'axios';
@@ -82,13 +81,13 @@ const epicKeyPress = (event) => {
 }
 
 const handleEpicSelect = (epic) => {
-  epics.value.forEach(e => e.isActive = e.epic_id === epic.epic_id)
+  epics.value.forEach(e => e.isActive = e.id === epic.id)
   emits('updateEpicSelected', epic)
 }
 
 const handleDragEnd = () => {
   const updatedEpics = epics.value.map((epic, index) => ({
-    epic_id: epic.epic_id,
+    epic_id: epic.id,
     order: index + 1
   }));
 
@@ -117,6 +116,7 @@ const handleCreateEpic = async () => {
   if (epicProcessing.value || !newEpic.value.trim()) return;
   
   try {
+    epicProcessing.value = true;
     const createdEpic = await createNewEpic(
       epics.value,
       epicProcessing.value,
@@ -158,7 +158,7 @@ const handleCreateEpic = async () => {
           <draggable 
             v-model="epics" 
             class="space-y-2"
-            item-key="epic_id"
+            item-key="id"
             :group="{ name: 'epics' }"
             @start="drag=true"
             @end="handleDragEnd"

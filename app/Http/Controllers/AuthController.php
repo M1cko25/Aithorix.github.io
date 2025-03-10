@@ -77,25 +77,43 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
-                'password' => 'required|min:8|max:255|confirmed',
-            ]);
-            if ($validator->fails()) {
-                return redirect()->back()->with('email', $request->email)->withErrors($validator->errors())->withInput();
-            }
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'avatar' => $request->avatar,
-                'google_id' => $request->google_id,
-                'password' => bcrypt($request->password),
-                'email_verified_at' => now()
-            ]);
-            Auth::login($user);
-            session()->put('user', $user);
-            Mail::to($request->email)->send(new WelcomeMail($request->name));
-            return redirect()->route('template')->with('success', 'Registration successful.');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
+            'password' => 'required|min:8|max:255|confirmed',
+        ]);
+        if ($validator->fails()) {
+            return redirect()->back()->with('email', $request->email)->withErrors($validator->errors())->withInput();
+        }
+
+        $colors = ['#3A5573', '#032F61', '#0F7E78', '#AE4432', '#B9850D'];
+        $randomColor = $colors[array_rand($colors)];
+        $avatar = $request->avatar;
+        
+        if ($avatar == null) {
+            $initials = strtoupper(substr($request->name, 0, 2));
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
+                 . '<circle cx="50" cy="50" r="50" fill="' . $randomColor . '"/>'
+                 . '<text x="50%" y="50%" fill="white" text-anchor="middle" alignment-baseline="central" '
+                 . 'font-family="Arial, sans-serif" font-size="40" font-weight="bold" style="dominant-baseline: central;">'
+                 . $initials
+                 . '</text>'
+                 . '</svg>';
+            $avatar = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'avatar' => $avatar,
+            'google_id' => $request->google_id,
+            'password' => bcrypt($request->password),
+            'email_verified_at' => now()
+        ]);
+        
+        Auth::login($user);
+        session()->put('user', $user);
+        Mail::to($request->email)->send(new WelcomeMail($request->name));
+        return redirect()->route('template')->with('success', 'Registration successful.');
     }
 
     public function logout(Request $request) {

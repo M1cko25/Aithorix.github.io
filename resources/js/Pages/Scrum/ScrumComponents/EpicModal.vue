@@ -16,22 +16,34 @@ const emit = defineEmits(['update:isOpen', 'epicDeleted'])
 
 const form = ref({
   name: '',
-  description: ''
+  description: '',
+  start_date: '',
+  end_date: ''
 })
 
 const errors = ref({
   name: '',
-  description: ''
+  description: '',
+  start_date: '',
+  end_date: ''
 })
 
 const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
 const isSaving = ref(false)
 
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return d.toISOString().split('T')[0]
+}
+
 const validateForm = () => {
   errors.value = {
     name: '',
-    description: ''
+    description: '',
+    start_date: '',
+    end_date: ''
   }
   
   if (!form.value.name.trim()) {
@@ -46,7 +58,9 @@ watch(() => props.epic, (newEpic) => {
   if (newEpic) {
     form.value = {
       name: newEpic.name,
-      description: newEpic.description || ''
+      description: newEpic.description || '',
+      start_date: formatDate(newEpic.start_date) || formatDate(new Date()),
+      end_date: formatDate(newEpic.end_date) || formatDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
     }
   }
 }, { immediate: true })
@@ -57,15 +71,23 @@ const updateEpic = async () => {
   isSaving.value = true
   try {
     const response = await axios.post('/scrum/epic-update', {
-      epicId: props.epic.epic_id,
+      epicId: props.epic.id,
       name: form.value.name.trim(),
       description: form.value.description.trim(),
+      start_date: form.value.start_date,
+      end_date: form.value.end_date,
       projectId: page.projectDetails.id
     })
 
     if (response.data.success) {
-      props.epic.name = form.value.name.trim()
-      props.epic.description = form.value.description.trim()
+      console.log(response.data)
+      const updatedEpic = response.data.epic
+      Object.assign(props.epic, {
+        name: updatedEpic.name,
+        description: updatedEpic.description,
+        start_date: updatedEpic.start_date,
+        end_date: updatedEpic.end_date
+      })
       emit('update:isOpen', false)
     }
   } catch (error) {
@@ -85,12 +107,12 @@ const deleteEpic = async () => {
   isDeleting.value = true
   try {
     const response = await axios.post('/scrum/epic-delete', {
-      epicId: props.epic.epic_id,
+      epicId: props.epic.id,
       projectId: page.projectDetails.id
     })
 
     if (response.data.success) {
-      emit('epicDeleted', props.epic.epic_id)
+      emit('epicDeleted', props.epic.id)
       emit('update:isOpen', false)
     }
   } catch (error) {
@@ -103,7 +125,7 @@ const deleteEpic = async () => {
 
 const updateModalState = (value) => {
   showDeleteConfirm.value = false
-  errors.value = { name: '', description: '' }
+  errors.value = { name: '', description: '', start_date: '', end_date: '' }
   emit('update:isOpen', value)
 }
 </script>
@@ -150,6 +172,39 @@ const updateModalState = (value) => {
         <div v-if="errors.description" class="mt-1 text-sm text-red-500 flex items-center gap-1">
           <AlertCircle class="w-4 h-4" />
           {{ errors.description }}
+        </div>
+      </div>
+
+      <!-- Date Inputs -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+          <input 
+            v-model="form.start_date"
+            type="date"
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            :class="{ 'border-red-500': errors.start_date }"
+            :max="form.end_date"
+          />
+          <div v-if="errors.start_date" class="mt-1 text-sm text-red-500 flex items-center gap-1">
+            <AlertCircle class="w-4 h-4" />
+            {{ errors.start_date }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+          <input 
+            v-model="form.end_date"
+            type="date"
+            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            :class="{ 'border-red-500': errors.end_date }"
+            :min="form.start_date"
+          />
+          <div v-if="errors.end_date" class="mt-1 text-sm text-red-500 flex items-center gap-1">
+            <AlertCircle class="w-4 h-4" />
+            {{ errors.end_date }}
+          </div>
         </div>
       </div>
 

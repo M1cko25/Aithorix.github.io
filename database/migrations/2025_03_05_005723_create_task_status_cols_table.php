@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subtasks', function (Blueprint $table) {
+        Schema::create('task_status_cols', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->unsignedBigInteger('project_id');
+            $table->foreign('project_id')->references('id')->on('projects');
+            $table->unique(['project_id', 'title']);
             $table->timestamps();
         });
     }
@@ -22,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subtasks');
+        Schema::dropIfExists('task_status_cols');
     }
 };

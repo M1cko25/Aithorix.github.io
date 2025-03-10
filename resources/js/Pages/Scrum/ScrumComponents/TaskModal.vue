@@ -8,12 +8,26 @@ import { formatDistanceToNow } from 'date-fns'
 const page = usePage().props
 
 const props = defineProps({
-  isOpen: Boolean,
-  task: Object,
-  epicSelected: Object
+  isOpen: {
+    type: Boolean,
+    required: true
+  },
+  task: {
+    type: Object,
+    required: true
+  },
+  epicSelected: {
+    type: Object,
+    required: false,
+    default: null
+  },
+  context: {
+    type: String,
+    default: 'backlog' // can be 'backlog' or 'gantt'
+  }
 })
 
-const emit = defineEmits(['update:isOpen'])
+const emit = defineEmits(['update:isOpen', 'update:task'])
 
 const taskTypes = [
   { name: 'Task', icon: ClipboardList },
@@ -69,11 +83,11 @@ watch(() => props.task, (newTask) => {
       attachments: newTask.attachments || []
     }
     attachments.value = newTask.attachments || []
-  }
-  if (newTask && page.comments && page.comments[newTask.id]) {
-    comments.value = page.comments[newTask.id];
-  } else {
-    comments.value = [];
+    if (page.comments && page.comments[newTask.id]) {
+      comments.value = page.comments[newTask.id]
+    } else {
+      comments.value = []
+    }
   }
 }, { immediate: true })
 
@@ -124,8 +138,7 @@ const uploadFile = async () => {
   try {
     const response = await axios.post('/scrum/upload-attachment', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept': 'application/json'
+        'Content-Type': 'multipart/form-data'
       },
       onUploadProgress: (progressEvent) => {
         uploadProgress.value = Math.round(
@@ -135,19 +148,17 @@ const uploadFile = async () => {
     })
 
     if (response.data.success) {
-      console.log('File upload response:', response.data) // Debug log
-      
       const newAttachment = {
         id: response.data.id,
-        name: response.data.name,
-        size: response.data.size,
-        type: response.data.type,
+        file_name: response.data.name,
+        file_size: response.data.size,
+        file_type: response.data.type,
         file_path: response.data.file_path
       }
       
-      // Update both local attachments and form attachments
-      attachments.value = [...attachments.value, newAttachment]
-      form.value.attachments = [...form.value.attachments, newAttachment]
+      attachments.value.push(newAttachment)
+      if (!form.value.attachments) form.value.attachments = []
+      form.value.attachments.push(newAttachment)
       
       // Clear the file input
       if (fileInputRef.value) {
@@ -157,9 +168,6 @@ const uploadFile = async () => {
     }
   } catch (error) {
     console.error('Error uploading file:', error)
-    if (error.response) {
-      console.error('Error response:', error.response.data) // Debug log
-    }
   } finally {
     isUploading.value = false
     uploadProgress.value = 0
@@ -175,7 +183,6 @@ const formatFileSize = (bytes) => {
 }
 
 const saveChanges = async () => {
-  // Reset errors
   errors.value = {
     title: '',
     description: '',
@@ -184,7 +191,6 @@ const saveChanges = async () => {
     status: ''
   }
 
-  // Validate title only (description can be empty)
   if (!form.value.title || !form.value.title.trim()) {
     errors.value.title = 'Task title is required'
     return
@@ -195,21 +201,29 @@ const saveChanges = async () => {
     const response = await axios.post('/scrum/backlog-update', {
       id: props.task.id,
       title: form.value.title.trim(),
-      description: form.value.description || '', // Handle empty description
+      description: form.value.description || '',
       type: form.value.type,
       priority: form.value.priority,
       status: form.value.status,
-      epicId: props.epicSelected.epic_id,
-      projectId: page.projectDetails.id
+      epicId: props.epicSelected?.id || props.task.epic_id,
+      projectId: page.projectDetails.id,
+      assignees: form.value.assignees ? form.value.assignees.map(a => a.id) : []
     })
 
     if (response.data.success) {
-      // Update the original task with new data
-      Object.assign(props.task, {
-        ...form.value,
+      const updatedTask = {
+        ...props.task,
         title: form.value.title.trim(),
-        description: form.value.description || ''
-      })
+        description: form.value.description || '',
+        type: form.value.type,
+        priority: form.value.priority,
+        status: form.value.status,
+        epic_id: props.epicSelected?.id || props.task.epic_id,
+        assignees: form.value.assignees || []
+      }
+      
+      // Emit both the modal close and task update
+      emit('update:task', updatedTask)
       emit('update:isOpen', false)
     }
   } catch (error) {
@@ -242,27 +256,25 @@ onBeforeUnmount(() => {
 })
 
 const addComment = async () => {
-  if (!newComment.value.trim()) return;
+  if (!newComment.value.trim()) return
 
   try {
     const response = await axios.post('/scrum/add-comment', {
       taskId: props.task.id,
-      comment: newComment.value,
+      comment: newComment.value.trim(),
       projectId: page.projectDetails.id
-    });
+    })
 
     if (response.data.success) {
-      // Initialize the comments array for this task if it doesn't exist
+      comments.value.push(response.data.comment)
       if (!page.comments[props.task.id]) {
-        page.comments[props.task.id] = [];
+        page.comments[props.task.id] = []
       }
-      // Add the new comment to both the local state and the page comments
-      comments.value.push(response.data.comment);
-      page.comments[props.task.id].push(response.data.comment);
-      newComment.value = '';
+      page.comments[props.task.id].push(response.data.comment)
+      newComment.value = ''
     }
   } catch (error) {
-    console.error('Error adding comment:', error);
+    console.error('Error adding comment:', error)
   }
 }
 

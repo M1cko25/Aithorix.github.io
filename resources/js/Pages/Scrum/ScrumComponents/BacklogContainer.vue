@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { updateTaskStatus, createTask, deleteTask } from '../ScrumServices/taskApi';
 import { Edit2, MoreHorizontal, ClipboardList, Bookmark, Bug } from 'lucide-vue-next'
 import draggable from "vuedraggable";
@@ -27,12 +27,12 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask'])
+const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 'editTask', 'taskUpdated', 'moveTask'])
 
 const isOpen = ref(false);
 const newTask = ref('');
 const isCreatingTask = ref(false);
-const statusOptions = ['To Do', 'In Progress', 'Done']
+const taskProcessing = ref(false);
 const taskTypes = ref([{
   name: 'Task',
   icon: ClipboardList
@@ -88,9 +88,9 @@ const TaskOverlayButtons = ref([
     }
   },
   {
-    text: 'Open Task',
+    text: 'Move Task',
     function: () => {   
-      emit('editTask', props.selectedTaskToUpdate[0])
+      emit('moveTask', props.selectedTaskToUpdate)
       isOverlayOpen.value = false
     }
   }
@@ -106,6 +106,41 @@ const handleTaskClick = (task, event) => {
     return
   }
   emit('editTask', task)
+}
+
+// Add click outside handler
+const handleClickOutside = (event) => {
+  const taskCreationArea = document.querySelector('.task-creation-area')
+  if (taskCreationArea && !taskCreationArea.contains(event.target)) {
+    isCreatingTask.value = false
+    newTask.value = ''
+    isOpen.value = false
+  }
+}
+
+// Add mounted and unmounted hooks
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// Add watch for task updates
+watch(() => props.epicSelected.tasks, (newTasks) => {
+    if (newTasks) {
+        emit('updateCounts')
+    }
+}, { deep: true })
+
+const handleTaskStatusChange = async (task) => {
+    try {
+        await updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)
+        emit('taskUpdated', task)
+    } catch (error) {
+        console.error('Error updating task status:', error)
+    }
 }
 </script>
 <template>
@@ -147,15 +182,15 @@ const handleTaskClick = (task, event) => {
 
             <select 
                 v-model="task.status"
-                class="px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 text-blue-600 bg-blue-50"
                 :class="{
                 'text-gray-700 bg-gray-50': task.status === 'To Do',
                 'text-orange-600 bg-orange-50': task.status === 'In Progress',
-                'text-green-600 bg-green-50': task.status === 'Done'
+                'text-green-600 bg-green-50': task.status === 'Done',
                 }"
-                @change="updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)">
-                <option v-for="status in statusOptions" :key="status" :value="status">
-                {{ status }}
+                @change="handleTaskStatusChange(task)">
+                <option v-for="status in page.columns" :key="status.id" :value="status.title">
+                {{ status.title }}
                 </option>
             </select>
 
@@ -186,9 +221,9 @@ const handleTaskClick = (task, event) => {
             </div>
         </template>
         </draggable>
-        <div v-if="isCreatingTask" class="flex flex-row gap-4 mt-4 relative">
+        <div v-if="isCreatingTask" class="task-creation-area flex flex-row gap-4 mt-4 relative" @click.stop>
         <div class="relative z-20">
-            <button @click="isOpen = !isOpen" class=" flex items-center gap-2 px-4 py-2 border rounded-lg">
+            <button @click.stop="isOpen = !isOpen" class="flex items-center gap-2 px-4 py-2 border rounded-lg">
             <component :is="selectedType.icon" class="w-5 h-5" />
             <span>{{ selectedType.name }}</span>
             </button>
@@ -197,7 +232,7 @@ const handleTaskClick = (task, event) => {
             <button 
                 v-for="type in taskTypes" 
                 :key="type.name"
-                @click="selectType(type)"
+                @click.stop="selectType(type)"
                 class="flex flex-row w-fit items-center gap-2 px-4 py-2 hover:bg-gray-50"
             >
                 <component :is="type.icon" class="w-5 h-5" />
@@ -206,17 +241,31 @@ const handleTaskClick = (task, event) => {
             </div>
         </div>
         <div class="relative z-20 flex w-full flex-row">
-            <input type="text" v-model="newTask" placeholder="Add new task" class="w-full px-4 py-2 outline-none" />
-            <button @click="()=> {
-                createTask(newTask, statusOptions, props.taskCounts,
-                selectedType, props.epics, props.epicSelected, 
-                page.projectDetails)
-                newTask = '';
-                isCreatingTask = false;
+            <input type="text" v-model="newTask" placeholder="Add new task" class="w-full px-4 py-2 outline-none" 
+                @keyup.enter="()=> {
+                    if (newTask.trim()) {
+                        createTask(newTask, props.taskCounts,
+                        selectedType, props.epics, props.epicSelected, 
+                        page.projectDetails)
+                        newTask = '';
+                        isCreatingTask = false;
+                        isOpen = false;
+                    }
+                }"
+            />
+            <button @click.stop="()=> {
+                if (newTask.trim()) {
+                    createTask(newTask, props.taskCounts,
+                    selectedType, props.epics, props.epicSelected, 
+                    page.projectDetails)
+                    console.log(props.epicSelected)
+                    newTask = '';
+                    isCreatingTask = false;
+                    isOpen = false;
+                }
             }" class="btn-primary">Create</button>
         </div>
-        <div class="fixed inset-0 z-10" @click="isCreatingTask = false"></div>
         </div>
-        <button v-if="!isCreatingTask && props.epics.length > 0" @click="isCreatingTask = true" class="btn-cancel w-full mt-6 ">Create backlog</button>
+        <button v-if="!isCreatingTask && props.epics.length > 0" @click.stop="isCreatingTask = true" class="btn-cancel w-full mt-6">Create backlog</button>
     </div>
 </template>
