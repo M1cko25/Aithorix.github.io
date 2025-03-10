@@ -13,6 +13,16 @@ class BacklogsSeeder extends Seeder
      */
     public function run(): void
     {
-        Backlogs::factory(10)->create();
+        // Backlogs::factory(10)->create();
+        Backlogs::create([
+            'title' => 'Backlog 1',
+            'description' => 'This is the first backlog',
+            'project_id' => 1,
+            'creator_id' => 3,
+            'type' => 'Task',
+            'epic_id' => 1,
+            'status' => 'to do',
+            'order' => 1,
+        ]);
     }
 }

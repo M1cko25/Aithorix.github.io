@@ -5,9 +5,9 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SprintSubtask>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Epics>
  */
-class SprintSubtaskFactory extends Factory
+class EpicsFactory extends Factory
 {
     /**
      * Define the model's default state.

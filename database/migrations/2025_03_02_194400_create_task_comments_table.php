@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sprint_tasks', function (Blueprint $table) {
+        Schema::create('task_comments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sprint_id');
-            $table->foreign('sprint_id')->references('id')->on('sprints')->onDelete('cascade');
-            $table->unsignedBigInteger('backlog_id');
-            $table->foreign('backlog_id')->references('id')->on('backlogs')->onDelete('cascade');
+            $table->foreignId('task_id')->constrained('backlogs')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users');
+            $table->text('comment');
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sprint_tasks');
+        Schema::dropIfExists('task_comments');
     }
 };

@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sprint_subtasks', function (Blueprint $table) {
+        Schema::create('task_attachments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('task_id');
-            $table->foreign('task_id')->references('id')->on('sprint_tasks')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('status')->default('to do');
-            $table->string('priority')->default('low');
+            $table->foreign('task_id')->references('id')->on('backlogs')->onDelete('cascade');
+            $table->string('file_path');
+            $table->string('file_name');
+            $table->string('file_type');
+            $table->string('file_size');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sprint_subtasks');
+        Schema::dropIfExists('task_attachments');
     }
 };

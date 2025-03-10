@@ -5,18 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Epic extends Model
+class Timelines extends Model
 {
-    /** @use HasFactory<\Database\Factories\EpicFactory> */
+    /** @use HasFactory<\Database\Factories\TimelinesFactory> */
     use HasFactory;
     protected $fillable = [
         'project_id',
-        'name',
+        'user_id',
         'description',
-        'start_date',
-        'end_date',
-        'progress_precent',
-        'key',
-        'order',
+        'subject',
+        'status',
+        'priority',
+        'type',
     ];
-}
+};
