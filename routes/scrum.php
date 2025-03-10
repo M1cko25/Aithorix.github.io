@@ -27,3 +27,9 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/update-assignees', 'updateTaskAssignees')->name('update-assignees');
     });
 });
+
+Route::get('/scrum/upgrade-plan', function () {
+    return inertia('Scrum/UpgradePlan', [
+        'title' => 'Upgrade Plan',
+    ]);
+})->name('upgrade-plan');
