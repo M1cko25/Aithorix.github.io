@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('a_i_prompts', function (Blueprint $table) {
             $table->id();
-            $table->string('project_id');
-            $table->foreign('project_id')->references('project_id')->on('projects')->onDelete('cascade');
-            $table->string('user_id');
-            $table->foreign('user_id')->references('user_id')->on('project_members')->onDelete('cascade');
-            $table->string('history_id');
+            $table->unsignedBigInteger('project_id');
+            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('project_members')->onDelete('cascade');
+            $table->unsignedBigInteger('history_id');
             $table->foreign('history_id')->references('id')->on('a_i_prompts_histories')->onDelete('cascade');
             $table->string('prompt');
             $table->string('response');

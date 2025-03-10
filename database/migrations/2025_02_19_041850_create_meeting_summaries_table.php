@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('meeting_summaries', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('meeting_id');
+            $table->unsignedBigInteger('user_id');
             $table->foreign('meeting_id')->references('id')->on('meetings')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('summary');
             $table->date('date');
             $table->timestamps();

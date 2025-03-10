@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import Daily from "@daily-co/daily-js";
 import axios from "axios";
 import { usePage } from '@inertiajs/vue3';
@@ -139,6 +139,41 @@ const handleError = (error) => {
   }
 };
 
+const handleTaskUpdate = (updatedTask) => {
+  // Find and update the task in the backlogs array
+  const taskIndex = page.backlogs.findIndex(t => t.id === updatedTask.id);
+  if (taskIndex !== -1) {
+    // Create a new object with all the updated properties
+    page.backlogs[taskIndex] = {
+      ...page.backlogs[taskIndex],
+      ...updatedTask
+    };
+    
+    // Create a new array reference to trigger reactivity
+    page.backlogs = [...page.backlogs];
+  }
+  
+  // Update the task in the sprint tasks if it exists
+  if (sprintTasks.value) {
+    const sprintTaskIndex = sprintTasks.value.findIndex(t => t.backlog_id === updatedTask.id);
+    if (sprintTaskIndex !== -1) {
+      sprintTasks.value[sprintTaskIndex].backlog = {
+        ...sprintTasks.value[sprintTaskIndex].backlog,
+        ...updatedTask
+      };
+      // Create a new array reference to trigger reactivity
+      sprintTasks.value = [...sprintTasks.value];
+    }
+  }
+};
+
+// Add watch for task updates
+watch(() => props.task, (newTask) => {
+  if (newTask) {
+    handleTaskUpdate(newTask);
+  }
+}, { deep: true });
+
 // Clean up on component unmount
 onUnmounted(() => {
   try {
@@ -151,7 +186,6 @@ onUnmounted(() => {
   }
 });
 
-// Initialize on mount
 onMounted(() => {
   if (!meetingName.value) {
     console.error('No meeting name provided');
@@ -174,13 +208,9 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-900">
     <div class="p-0">
-      <!-- Meeting Controls -->
       <div v-if="!meetingJoined" class="absolute w-full top-0 mb-4 z-10 flex justify-between items-center">
         <h1 class="text-xl font-semibold text-white px-4 py-2">{{ meetingName }}</h1>
       </div>
-      <!-- <div class="absolute w-full h-8"
-        :class="meetingJoined ? 'bg-[#121a24]' : 'bg-[#1f2d3d]'">
-      </div> -->
       <div 
         ref="videoContainer"
         class="w-full bg-gray-800 h-screen"

@@ -32,6 +32,7 @@ const emit = defineEmits(['updateCounts', 'delModalOpen', 'updateTaskToUpdate', 
 const isOpen = ref(false);
 const newTask = ref('');
 const isCreatingTask = ref(false);
+const taskProcessing = ref(false);
 const taskTypes = ref([{
   name: 'Task',
   icon: ClipboardList
@@ -243,7 +244,7 @@ const handleTaskStatusChange = async (task) => {
             <input type="text" v-model="newTask" placeholder="Add new task" class="w-full px-4 py-2 outline-none" 
                 @keyup.enter="()=> {
                     if (newTask.trim()) {
-                        createTask(newTask, statusOptions, props.taskCounts,
+                        createTask(newTask, props.taskCounts,
                         selectedType, props.epics, props.epicSelected, 
                         page.projectDetails)
                         newTask = '';
@@ -254,7 +255,7 @@ const handleTaskStatusChange = async (task) => {
             />
             <button @click.stop="()=> {
                 if (newTask.trim()) {
-                    createTask(newTask, statusOptions, props.taskCounts,
+                    createTask(newTask, props.taskCounts,
                     selectedType, props.epics, props.epicSelected, 
                     page.projectDetails)
                     console.log(props.epicSelected)

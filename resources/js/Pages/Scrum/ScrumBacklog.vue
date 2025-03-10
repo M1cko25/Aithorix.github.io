@@ -123,9 +123,9 @@ const handleEditEpic = (epic) => {
 }
 
 const handleEpicDeleted = (deletedEpicId) => {
-  epics.value = epics.value.filter(epic => epic.epic_id !== deletedEpicId)
+  epics.value = epics.value.filter(epic => epic.id !== deletedEpicId)
   
-  if (epicSelected.value.epic_id === deletedEpicId && epics.value.length > 0) {
+  if (epicSelected.value.id === deletedEpicId && epics.value.length > 0) {
     const newSelectedEpic = epics.value[0]
     newSelectedEpic.isActive = true
     epicSelected.value = newSelectedEpic
@@ -144,10 +144,24 @@ const handleTaskUpdate = (updatedTask) => {
   // Find and update the task in the backlogs array
   const taskIndex = page.backlogs.findIndex(t => t.id === updatedTask.id);
   if (taskIndex !== -1) {
+    // Create a new object with all the updated properties
     page.backlogs[taskIndex] = {
       ...page.backlogs[taskIndex],
       ...updatedTask
     };
+    
+    // Update the task in the epic's tasks array
+    const epicTaskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id);
+    if (epicTaskIndex !== -1) {
+      epicSelected.value.tasks[epicTaskIndex] = {
+        ...epicSelected.value.tasks[epicTaskIndex],
+        ...updatedTask
+      };
+      
+      // Create new array references to trigger reactivity
+      epicSelected.value.tasks = [...epicSelected.value.tasks];
+    }
+    
     // Create a new array reference to trigger reactivity
     page.backlogs = [...page.backlogs];
   }
@@ -156,9 +170,9 @@ const handleTaskUpdate = (updatedTask) => {
 // Add watch for task updates from TaskModal
 watch(() => selectedTaskToEdit.value, (newTask) => {
   if (newTask) {
-    handleTaskUpdate(newTask)
+    handleTaskUpdate(newTask);
   }
-}, { deep: true })
+}, { deep: true });
 
 const handleMoveTask = (tasks) => {
   selectedTaskToUpdate.value = tasks
@@ -211,6 +225,11 @@ const handleDeleteTask = () => {
       epicId: task.epic_id,
       title: task.title,
       projectId: page.projectDetails.id
+    }).then(() => {
+      const index = epicSelected.value.tasks.findIndex(t => t.id === task.id);
+      if (index !== -1) {
+        epicSelected.value.tasks.splice(index, 1);
+      }
     })
   );
 
@@ -269,7 +288,6 @@ const handleDeleteTask = () => {
     context="backlog"
     @update:task="handleTaskUpdate"
   />
-
   <EpicModal
     v-model:isOpen="isEpicModalOpen"
     :epic="epicToEdit"
