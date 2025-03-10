@@ -36,10 +36,7 @@ const showLogin = () => {
       
       <div>
         <button @click="showLogin" class="flex w-fit items-center gap-2 ml-4">
-            <img v-if="props.auth.user.avatar" :src="props.auth.user.avatar" alt="User" class="w-8 h-8 rounded-full" />
-            <div v-else class="w-8 h-8 rounded-full bg-blue flex items-center justify-center text-sm text-light">
-              <p>{{ userInitials }}</p>
-            </div>
+            <img :src="props.auth.user.avatar" alt="User" class="w-8 h-8 rounded-full" />
             <ChevronDown class="w-4 h-4 text-gray-600" />
         </button>
         <div v-if="isShowLogin" class="absolute bg-light shadow-lg p-2 z-10 rounded-md bottom-0 translate-y-8" >

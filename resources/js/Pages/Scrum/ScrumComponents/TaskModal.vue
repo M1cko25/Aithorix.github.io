@@ -211,13 +211,15 @@ const saveChanges = async () => {
     })
 
     if (response.data.success) {
-      // Create a complete updated task object
       const updatedTask = {
         ...props.task,
-        ...form.value,
         title: form.value.title.trim(),
         description: form.value.description || '',
-        epic_id: props.epicSelected?.id || props.task.epic_id
+        type: form.value.type,
+        priority: form.value.priority,
+        status: form.value.status,
+        epic_id: props.epicSelected?.id || props.task.epic_id,
+        assignees: form.value.assignees || []
       }
       
       // Emit both the modal close and task update

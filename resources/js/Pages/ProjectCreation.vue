@@ -245,11 +245,8 @@ const createProject = () => {
                             :key="user.id"
                             @click="addMember(user)"
                             class="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2">
-                          <div v-if="user.avatar" class="w-8 h-8 rounded-full">
+                          <div class="w-8 h-8 rounded-full">
                             <img :src="user.avatar" class="w-full h-full rounded-full" :alt="user.name">
-                          </div>
-                          <div v-else class="w-8 h-8 rounded-full bg-cyan flex items-center justify-center">
-                            {{ user.name.slice(0, 2).toUpperCase() }}
                           </div>
                           <div>
                             <div class="font-medium">{{ user.name }}</div>
@@ -266,13 +263,8 @@ const createProject = () => {
                       <div class="flex flex-row gap-2 items-center">
                         <div class="flex flex-row -space-x-2">
                           <div v-for="(mber, index) in members.slice(0, 3)" :key="mber.id">
-                            <img v-if="mber.avatar" :src="mber.avatar" alt="" class="w-10 
+                            <img :src="mber.avatar" alt="" class="w-10 
                             h-10 rounded-full">
-                            <div v-else :class="`w-10 h-10 rounded-full bg-gray-300 flex
-                            items-center justify-center
-                            ${(index < 2) ? 'bg-cyan border' : 'bg-light text-2xl'}`">
-                              {{ (index < 2) ? mber.name.slice(0, 2).toUpperCase() : "+" }}
-                            </div>
                           </div>
                         </div>
                         <p class="text-sm prevent-select">{{ membersName }}</p>
