@@ -32,4 +32,9 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/add-sprint-task', 'addSprintTask')->name('add-sprint-task');
     });
 });
-// Route::inertia('/scrum/meeting', 'Scrum/Meeting')->name('scrum-meeting')->middleware('auth');
+
+Route::get('/scrum/upgrade-plan', function () {
+    return inertia('Scrum/UpgradePlan', [
+        'title' => 'Upgrade Plan',
+    ]);
+})->name('upgrade-plan');

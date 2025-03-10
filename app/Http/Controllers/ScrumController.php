@@ -260,7 +260,6 @@ class ScrumController extends Controller
             
         $this->registerUpdate($projId, Auth::user()->id, ' created an epic named ', $request->name);
             
-            // Return all the epic data including dates
             return response()->json([
                 'success' => true,
                 'id' => $epic->id,
