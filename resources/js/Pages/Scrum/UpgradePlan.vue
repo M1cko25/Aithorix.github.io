@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { CheckCircle } from 'lucide-vue-next'
 import Header from '../../components/Header.vue'
 import Sidebar from '../../components/Sidebar.vue'
 
 const billingCycle = ref('monthly')
+
+const price = computed(() => {
+    return billingCycle.value === 'monthly' ? 8 : 80
+})
+
+const billingText = computed(() => {
+    return billingCycle.value === 'monthly' ? 'billed monthly' : 'billed annually'
+})
 
 const handleUpgrade = () => {
     // Handle upgrade logic here
@@ -65,12 +73,14 @@ const handleUpgrade = () => {
             </div>
 
             <!-- Pricing and CTA -->
-            <div class="flex items-center justify-between border-t pt-6">
-                <div>
-                    <span class="text-3xl font-bold">$8</span>
-                    <span class="text-gray-600">(billed monthly)</span>
+            <div class="flex items-center justify-between border-t pt-8">
+                <div class="space-y-1">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-bold">${{ price }}</span>
+                        <span class="text-gray-600 space-x-1 ">({{ billingText }})</span>
+                    </div>
                 </div>
-                <button @click="handleUpgrade" class="btn-primary">
+                <button @click="handleUpgrade" class="btn-primary px-8 py-3 text-lg">
                     Upgrade To Plus
                 </button>
             </div>
