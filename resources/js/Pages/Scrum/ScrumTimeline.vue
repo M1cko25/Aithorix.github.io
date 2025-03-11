@@ -15,6 +15,7 @@ const taskNum = ref(0);
 const sprint_tasks = ref(page.sprintTasks);
 const sprints = ref(page.sprints);
 const data = ref([])
+const isSidebarOpen = ref(true);
 
 const activities = ref([
     {
@@ -174,10 +175,11 @@ const handleDeleteTask = () => {
     console.error('Error deleting task:', error);
   });
 }
+const logoDisplayed = ref(true);
 </script>
 <template>
-    <Sidebar />
-    <Header/>
+    <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
+    <Header :logoDisplay="logoDisplayed"/>
     <AddTaskModal
         v-model:isOpen="isAddTaskModalOpen"
         :sprint="sprintSelected"
@@ -190,7 +192,7 @@ const handleDeleteTask = () => {
     />
     <Head title=" | Timeline" />
     <div class="min-h-screen overflow-y-auto">
-        <div class="ml-64 pt-16">
+        <div class="transition-all duration-300 ease-in-out pt-16" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
             <div class="p-6 flex items-center justify-between">
                 <div class=" flex items-center gap-4">
                     <h1 class="text-2xl font-bold">{{ page.projectDetails.name }}<span class="text-xl font-normal"> >

@@ -10,14 +10,15 @@ import {
   Logs,
   Rocket,
   CalendarDays,
-  Search,
-  Filter,
+  Plus,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Menu
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
+import Logo from '../../../public/assets/logo.png'
+import CreateProjectModal from './CreateProjectModal.vue'
 
 const page = usePage()
 const props = defineProps({
@@ -32,12 +33,11 @@ const props = defineProps({
     ]
   }, 
 })
-
+const emits = defineEmits(['sidebarCollapsed', 'logoAppear'])
 const isCollapsed = ref(false);
 const isProjectSectionCollapsed = ref(false)
 const projects = ref(page.props.projects.project)
-const searchQuery = ref('')
-const currentProject = ref('Scrum Project')
+const isCreateModal = ref(false)
 
 const menuItems = ref([
   { icon: Home, text: 'Home', path: '/home', isActive: true },
@@ -50,6 +50,8 @@ const projectStates = ref(new Map())
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
+  emits('sidebarCollapsed', isCollapsed.value)
+  emits('logoAppear', !isCollapsed.value)
 }
 
 const toggleProjectSection = () => {
@@ -107,6 +109,9 @@ watch(
   },
   { immediate: true, deep: true }
 )
+watch(isCollapsed.value, (newVal) => {
+  emits('sidebarCollapsed', newVal)
+}, { immediate: true, deep: true })
 
 </script>
 
@@ -123,24 +128,19 @@ watch(
     </button>
   <aside :class="[
     'fixed top-0 bottom-0 z-10 transition-all duration-300 ease-in-out bg-light border-r',
-    isCollapsed ? 'w-16 pt-16' : 'md:w-64 w-64'
+    isCollapsed ? 'w-16 pt-6' : 'md:w-64 w-64'
   ]">
-    <div class="p-4" v-if="!isCollapsed">
-      <div class="relative">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search"
-          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
-        <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-        <Filter class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
-      </div>
-    </div>
+    <img v-if="isCollapsed" :src="Logo" alt="Aithorix" class="h-8 mx-auto mt-4" />
 
     <!-- Main Navigation -->
     <nav class="px-2">
       <ul class="space-y-1">
+        <li class="my-4">
+          <button @click="isCreateModal = true" class="flex items-center w-full btn-primary gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-neutral">
+            <Plus class="w-4 h-4" />
+            <p v-if="!isCollapsed">Create Project</p>
+          </button>
+        </li>
         <li v-for="item in menuItems" :key="item.text">
           <Link 
             :href="item.path" 
@@ -222,6 +222,9 @@ watch(
     class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
     @click="toggleSidebar"
   ></div>
+  <CreateProjectModal
+    v-model="isCreateModal"
+  />
 </template>
 
 <style scoped>

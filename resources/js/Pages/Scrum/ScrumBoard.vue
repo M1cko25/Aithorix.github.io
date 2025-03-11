@@ -272,13 +272,15 @@ const handleTaskUpdate = (updatedTask) => {
     filterTasksByEpic();
   }
 }
+const isSidebarOpen = ref(true);
+const logoDisplayed = ref(true);
 </script>
 
 <template>
   <Head title="| Board" />
   <div class="min-h-screen" @click.self="taskCreating = {}">
-    <Sidebar />
-    <Header />
+    <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
+    <Header :logoDisplay="logoDisplayed" />
     <TaskModal
       v-model:isOpen="isTaskModalOpen"
       :task="selectedTaskToEdit"
@@ -295,7 +297,7 @@ const handleTaskUpdate = (updatedTask) => {
         return acc;
       }, {})"
     />
-    <div class="ml-64 pt-16">
+    <div class="pt-16 transition-all duration-300 ease-in-out"  :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`"v>
       <!-- Board Header -->
       <div class="p-6 flex items-center justify-between">
         <div class="flex items-center gap-4">

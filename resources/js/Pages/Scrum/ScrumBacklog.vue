@@ -141,31 +141,40 @@ const handleEpicDeleted = (deletedEpicId) => {
 }
 
 const handleTaskUpdate = (updatedTask) => {
-  // Find and update the task in the backlogs array
-  const taskIndex = page.backlogs.findIndex(t => t.id === updatedTask.id);
-  if (taskIndex !== -1) {
-    // Create a new object with all the updated properties
-    page.backlogs[taskIndex] = {
-      ...page.backlogs[taskIndex],
-      ...updatedTask,
-      attachments: updatedTask.attachments // Ensure attachments are updated
-    };
-    
-    // Update the task in the epic's tasks array
-    const epicTaskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id);
-    if (epicTaskIndex !== -1) {
-      epicSelected.value.tasks[epicTaskIndex] = {
-        ...epicSelected.value.tasks[epicTaskIndex],
-        ...updatedTask,
-        attachments: updatedTask.attachments // Ensure attachments are updated
-      };
-      
-      // Create new array references to trigger reactivity
-      epicSelected.value.tasks = [...epicSelected.value.tasks];
+  // Find and update the task in backlogs
+  const backlogIndex = page.backlogs.findIndex(b => b.id === updatedTask.id);
+  if (backlogIndex !== -1) {
+    // Create new object references to trigger reactivity
+    page.backlogs = [
+      ...page.backlogs.slice(0, backlogIndex),
+      { ...updatedTask },
+      ...page.backlogs.slice(backlogIndex + 1)
+    ];
+  }
+
+  // Find and update the task in the selected epic's tasks
+  if (epicSelected.value && epicSelected.value.tasks) {
+    const taskIndex = epicSelected.value.tasks.findIndex(t => t.id === updatedTask.id);
+    if (taskIndex !== -1) {
+      epicSelected.value.tasks = [
+        ...epicSelected.value.tasks.slice(0, taskIndex),
+        { ...updatedTask },
+        ...epicSelected.value.tasks.slice(taskIndex + 1)
+      ];
     }
-    
-    // Create a new array reference to trigger reactivity
-    page.backlogs = [...page.backlogs];
+  }
+
+  // Update the task in the epics array as well
+  const epicIndex = epics.value.findIndex(e => e.epic_id === updatedTask.epic_id);
+  if (epicIndex !== -1) {
+    const taskIndex = epics.value[epicIndex].tasks.findIndex(t => t.id === updatedTask.id);
+    if (taskIndex !== -1) {
+      epics.value[epicIndex].tasks = [
+        ...epics.value[epicIndex].tasks.slice(0, taskIndex),
+        { ...updatedTask },
+        ...epics.value[epicIndex].tasks.slice(taskIndex + 1)
+      ];
+    }
   }
 }
 
@@ -256,12 +265,14 @@ const handleDeleteTask = () => {
       console.error('Error deleting tasks:', error);
     });
 }
+const isSidebarOpen = ref(true);
+const logoDisplayed = ref(true);
 </script>
 
 <template>
   <Head title="| Backlog" />
-  <Header />
-  <Sidebar />
+  <Header :logoDisplay="logoDisplayed"/>
+  <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
   
   <DeleteTaskModal 
     v-model:isOpen="isDeleteModalOpen"
@@ -304,7 +315,7 @@ const handleDeleteTask = () => {
     @tasks-moved="handleTasksMoved"
   />
 
-  <div class="ml-64 pt-16 p-6 mb-5">
+  <div class="pt-16 p-6 mb-5 transition-all duration-300 ease-in-out" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="py-6 flex items-center">

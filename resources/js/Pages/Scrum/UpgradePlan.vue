@@ -9,12 +9,14 @@ const billingCycle = ref('monthly')
 const handleUpgrade = () => {
     console.log('Upgrading plan:', billingCycle.value)
 }
+const isSidebarOpen = ref(true);
+const logoDisplayed = ref(true);
 </script>
 
 <template>
-    <Header />
-    <Sidebar />
-    <div class="pt-24 ml-64 min-h-screen bg-gray-0 p-6">
+    <Header :logoDisplay="logoDisplayed"/>
+    <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
+    <div class="pt-24 min-h-screen bg-gray-0 p-6 transition-all duration-300 ease-in-out" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
         <div class="mx-auto max-w-5xl rounded-xl bg-white p-8 shadow-lg">
             <h1 class="mb-6 text-2xl font-bold">Upgrade To Plus</h1>
 

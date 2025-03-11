@@ -103,13 +103,14 @@ const formatDate = (dateString) => {
 
 
 const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
-
+const isSidebarOpen = ref(true);
+const logoDisplayed = ref(true);
 </script>
 
 <template>
-  <Header />
-  <Sidebar />
-  <div class="md:ml-64 md:pt-16 md:p-6 p-2" id="content">
+  <Header :logoDisplay="logoDisplayed"/>
+  <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
+  <div class="md:pt-16 md:p-6 p-2 transition-all duration-300 ease-in-out"  :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`" id="content">
     <div class="py-6 flex items-center">
         <h1 class="text-2xl font-bold ">{{ page.projectDetails.name }}<span class="text-xl font-normal"> > Dashboard</span></h1>
     </div>

@@ -159,6 +159,7 @@ const uploadFile = async () => {
       
       if (!form.value.attachments) form.value.attachments = []
       form.value.attachments.push(newAttachment)
+      attachments.value.push(newAttachment)
       
       // Clear the file input
       if (fileInputRef.value) {

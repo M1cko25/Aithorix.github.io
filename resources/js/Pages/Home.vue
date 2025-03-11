@@ -26,15 +26,16 @@ const activeMyWorkTab = ref('Upcoming')
 const tasks = ref()
 
 const projects = ref()
-
+const isSidebarOpen = ref(true);
 const meetings = ref()
+const logoDisplayed = ref(true);
 </script>
 
 <template>
-  <Header />
-  <SideBar/>
+  <Header :logoDisplay="logoDisplayed"/>
+  <SideBar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value" />
   
-  <div class="ml-64 pt-16 p-6">
+  <div class="pt-16 p-6 transition-all duration-300 ease-in-out" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
     <div class="my-8">
       <div class="flex flex-row items-center justify-between">
         <h1 class="text-3xl font-bold">HOME</h1>
