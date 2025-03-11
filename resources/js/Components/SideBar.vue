@@ -114,7 +114,7 @@ watch(
   <div class="relative transition-all duration-300 ease-in-out" :class="isCollapsed ? 'w-16' : 'md:w-64 w-64'">
     <button
       @click="toggleSidebar"
-      class="absolute z-50 -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50"
+      class="absolute z-30 -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50"
     >
       <component
         :is="isCollapsed ? ChevronRight : ChevronLeft" 
