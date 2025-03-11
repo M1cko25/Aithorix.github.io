@@ -16,6 +16,22 @@ class MeetingConferenceController extends Controller
 
     public function createRoom(Request $request) {
         try {
+            // First, check if the room exists
+            $checkResponse = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('DAILY_API_KEY'),
+                'Content-Type' => 'application/json',
+            ])->get('https://' . env('DAILY_DOMAIN') . '/api/v1/rooms/' . $request->name);
+
+            // If room exists, return its URL for joining
+            if ($checkResponse->successful()) {
+                $room = $checkResponse->json();
+                return response()->json([
+                    'url' => $room['url'],
+                    'name' => $request->name
+                ]);
+            }
+
+            // If room doesn't exist, create a new one
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . env('DAILY_API_KEY'),
                 'Content-Type' => 'application/json',
@@ -45,17 +61,21 @@ class MeetingConferenceController extends Controller
                 return response()->json(['error' => 'Failed to create room'], 500);
             }
 
-            return response()->json($response->json());
+            $newRoom = $response->json();
+            return response()->json([
+                'url' => $newRoom['url'],
+                'name' => $request->name
+            ]);
+
         } catch (\Exception $e) {
-            Log::error('Daily.co room creation error', [
+            Log::error('Daily.co room operation error', [
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['error' => 'Failed to create room'], 500);
+            return response()->json(['error' => 'Failed to process room operation'], 500);
         }
     }
 
     public function joinRoom(Request $request, $name = null) {
-        // Handle both POST and GET requests
         $meetingName = $name ?? $request->name;
         
         if (!$meetingName) {

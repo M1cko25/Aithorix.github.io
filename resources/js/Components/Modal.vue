@@ -36,6 +36,14 @@ const close = () => {
   show.value = false;
   emit("update:modelValue", false);
 };
+
+const createProject = () => {
+  form.post('/create-new-project', {
+    onSuccess: () => {
+      emit('update:modelValue', false)
+    }
+  })
+}
 </script>
 <template>  
     <div v-if="show" class="w-screen min-h-screen bg-dark/50 absolute z-50"></div>

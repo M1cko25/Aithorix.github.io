@@ -6,7 +6,7 @@ import Button from '../Components/Button.vue';
 import DropDown from '../Components/DropDown.vue';
 import { ref, computed } from 'vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
-import { ChevronRight, Delete, MoveRight } from 'lucide-vue-next';
+import { ChevronRight, Delete, MoveRight, X } from 'lucide-vue-next';
 import Modal from '../Components/Modal.vue';
 import { watch } from 'vue';
 import axios from 'axios';
@@ -15,8 +15,15 @@ const searchResults = ref([]);
 const isSearching = ref(false);
 let projectName = ref('');
 let memberToRemoveId = ref(null);
-
 const props = usePage().props;
+const templateSelected = ref(props.selectedTemplate.selectedTemplate);
+const templateNum = ref(templateSelected.value == 'Scrum' ? 0 
+: templateSelected.value == 'Education Purpose' ? 1 
+: templateSelected.value == 'Event Planning' ? 2 
+: templateSelected.value == 'Research Development' ? 3 
+: templateSelected.value == 'Content Calendar' ? 4 
+: 5);
+const leader = ['Scrum Master', 'Educator', 'Coordinator', 'Team Lead', 'Content Manager']
 let projectKey = ref('');
 let generatedKey = computed( () => {
   if (!projectName.value) return '';
@@ -44,25 +51,53 @@ watch(projectName, (newValue) => {
 
 let member = ref('');
 
+const roles = [{
+  'Scrum': [
+    'Product Owner',
+    'Frontend Developer',
+    'Backend Developer',
+    'UI/UX Designer',
+    'Quality Assurance',
+    'Custom'
+  ]},{
+  'Education Purpose': [
+    'Student',
+    'Assistant',
+    'Custom'
+  ]},{
+  'Event Planning': [
+    'Vendor',
+    'Guest',
+    'Custom'
+  ]},{
+  'Research Development': [
+    'Researcher',
+    'Grammarian',
+    'Evaluator',
+    'Participant',
+    'Statistician',
+    'Custom'
+  ]},{
+  'Content Calendar': [
+    'Assistant',
+    'Artist',
+    'Writer',
+    'Editor',
+    'Custom'
+  ]}
+  
+]
+
 const members = ref([
   {
     id: props.auth.user.id,
     name: props.auth.user.name,
     email: props.auth.user.email,
-    role: 'Scrum Master',
+    role: leader[templateNum.value],
     avatar: props.auth.user.avatar,
     isOwner: true
   },
 ])
-
-const roles = [
-  'Product Owner',
-  'Frontend Developer',
-  'Backend Developer',
-  'UI/UX Designer',
-  'Quality Assurance',
-  'Custom'
-]
 
 const form = useForm({
     name: projectName.value,
@@ -112,7 +147,7 @@ const addMember = (user) => {
     id: user.id,
     name: user.name,
     email: user.email || user.google_email || user.slack_email,
-    role: roles[0], // Default role
+    role: roles[templateNum.value][templateSelected.value][0],
     avatar: user.avatar,
     isOwner: false
   });
@@ -314,14 +349,17 @@ const createProject = () => {
                     <p class="text-xs">Owner</p>
                   </div>
                 </div>
-                <DropDown v-if="index === 0 && template == 'Scrum'" oneValue :value="member.role"/>
-                <div v-else class="flex flex-row md:gap-2 items-center">
-                  <DropDown v-if="member.role !== 'Custom'" :options="roles" style1 v-model="member.role" @select="(value) => updateMemberRole(member.id, value)"/>
-                  <TextField v-if="member.role === 'Custom'" v-model="customRole" 
-                  hasButton :icon="Icons.plusIcon" :style="`w-3/4 h-10`" 
+                <DropDown v-if="index === 0" oneValue :value="member.role"/>
+                <div v-else class="flex flex-row md:gap-2  items-center">
+                  <DropDown v-if="member.role !== 'Custom'" :options="roles[templateNum][templateSelected]" style1 v-model="member.role" @select="(value) => updateMemberRole(member.id, value)"/>
+                  <TextField v-if="member.role === 'Custom'" v-model="customRole"
+                  hasButton :icon="Icons.plusIcon" :style="`w-full h-10`" 
                   @click="addCustomRole(member.id)" @onEnter="addCustomRole(member.id)"  />
-                  <button @click="RemoveOpen(member.id)">
+                  <button v-if="member.role !== 'Custom' && member.role !== leader[templateNum]" @click="RemoveOpen(member.id)">
                     <Delete class="text-red-600"/>
+                  </button>
+                  <button v-else @click="member.role = roles[templateNum][templateSelected][0]">
+                    <X class="text-red-600"/>
                   </button>
                 </div>
               </div>

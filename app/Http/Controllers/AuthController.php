@@ -20,11 +20,11 @@ class AuthController extends Controller
 {
 
     public function login(Request $request) {
-        //validation
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+        
         // Check if user exists first
         $user = User::where('email', $request->email)->first();
         if (!$user) {
@@ -32,13 +32,32 @@ class AuthController extends Controller
                 'email' => 'Email not found'
             ])->onlyInput('email');
         }
+
         $userId = User::where('email', $request->email)->value('id');
         $projectMember = ProjectMembers::where('user_id', $userId)->get();
+        
+        // Initialize arrays and name count tracker
         $projects = [];
+        $nameCount = [];
+
         foreach ($projectMember as $member) {
             $project = Project::where('id', $member->project_id)->first();
-            array_push($projects, $project);
+            if ($project) {
+                $originalName = $project->name;
+                
+                // Check if this name already exists in our projects
+                if (isset($nameCount[$originalName])) {
+                    $nameCount[$originalName]++;
+                    $project->name = $originalName . ' (' . $nameCount[$originalName] . ')';
+                } else {
+                    // First occurrence of this name
+                    $nameCount[$originalName] = 0;
+                }
+                
+                array_push($projects, $project);
+            }
         }
+
         $members = [];
         foreach ($projects as $project) {
             $member = ProjectMembers::where('project_id', $project->id)->get();
