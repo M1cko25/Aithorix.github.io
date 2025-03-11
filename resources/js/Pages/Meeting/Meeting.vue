@@ -21,7 +21,7 @@ const createDailyRoom = async () => {
       return storedUrl;
     }
 
-    // If no stored URL, create a new room
+    // Create or join room
     const response = await axios.post("/daily/create-room", {
       name: meetingName.value
     });
@@ -34,8 +34,8 @@ const createDailyRoom = async () => {
     sessionStorage.setItem(`meeting_${meetingName.value}`, response.data.url);
     return response.data.url;
   } catch (error) {
-    console.error("Error creating Daily room:", error);
-    throw new Error("Failed to create meeting room");
+    console.error("Error with Daily room:", error);
+    throw new Error("Failed to join or create meeting room");
   }
 };
 
@@ -103,12 +103,10 @@ const startMeeting = async () => {
         showLeaveButton: true,
         showFullscreenButton: true
       });
-
-      console.log('Join command sent');
     }
   } catch (error) {
     console.error("Error in startMeeting:", error);
-    alert(error.message || "Failed to start meeting. Please try again.");
+    alert(error.message || "Failed to start or join meeting. Please try again.");
   } finally {
     isLoading.value = false;
   }
@@ -167,14 +165,6 @@ const handleTaskUpdate = (updatedTask) => {
   }
 };
 
-// Add watch for task updates
-watch(() => props.task, (newTask) => {
-  if (newTask) {
-    handleTaskUpdate(newTask);
-  }
-}, { deep: true });
-
-// Clean up on component unmount
 onUnmounted(() => {
   try {
     if (callFrame.value) {

@@ -5,6 +5,7 @@ import { format, isToday, isThisWeek, parseISO, isAfter, isSameDay, addDays } fr
 import MeetingModal from '@/Components/Meeting/MeetingModal.vue';
 import axios from 'axios';
 import { usePage, useForm } from '@inertiajs/vue3';
+import Icons from '../../Icons'
 
 
 const page = usePage().props;
@@ -330,7 +331,13 @@ const joinMeeting = () => {
   <Head title="Meeting Home" />
   <div class="min-h-screen bg-gray-50 p-4">
     <div class="container max-w-5xl mx-auto">
-      <!-- Header -->
+      <div>
+        <Link :href="route('home')" preserve-scroll class="flex flex-row 
+        items-center gap-4 top-4 left-4">
+            <img :src="Icons.leftIcon">
+            <p>Back to Home</p>
+        </Link>
+      </div>
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold mb-3 text-gray-800">Meet, connect, and collaborate in real-time</h1>
         <p class="text-base text-gray-600 max-w-2xl mx-auto">Professional video conferencing that brings teams together, wherever they are</p>

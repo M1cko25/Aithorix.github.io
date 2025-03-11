@@ -107,4 +107,82 @@ class TemplatesController extends Controller
             ]);
         }
     }
+
+    public function createNewProject(Request $request){
+        $request->validate([
+            'name' => 'required|string|min:3|max:255',
+            'key' => 'required|string|min:2|max:4|unique:projects,key',
+            'owner_id' => 'required|integer|exists:users,id',
+            'template' => [
+                'required',
+                'string',
+                'in:Scrum,Education Purpose,Event Planning,Research Development,Content Calendar'
+            ]
+        ]);
+
+        try {
+            $project = Project::create([
+                'name' => $request->name,
+                'key' => strtoupper($request->key),
+                'owner_id' => $request->owner_id,
+                'template' => $request->template,
+                'members' => count($request->members),
+            ]);
+
+            // Add members to the project
+            foreach($request->members as $member) {
+                ProjectMembers::create([
+                    'project_id' => $project->id,
+                    'user_id' => $member['id'],
+                    'role' => $member['role'],
+                ]);
+            }
+
+            $taskColumns = match($request->template) {
+                'Scrum' => ['To Do', 'In Progress', 'Code Review', 'Testing', 'Done'],
+                'Education Purpose' => ['Not Started', 'Working On', 'Need Help', 'Completed'],
+                'Event Planning' => ['Planning', 'In Progress', 'Pending Review', 'Confirmed', 'Completed'],
+                'Research Development' => ['Proposed', 'In Research', 'Analysis', 'Review', 'Published'],
+                'Content Calendar' => ['Draft', 'Review', 'Scheduled', 'Published'],
+                default => ['To Do', 'In Progress', 'Done']
+            };
+
+            foreach ($taskColumns as $columnTitle) {
+                TaskStatusCol::create([
+                    'title' => $columnTitle,
+                    'project_id' => $project->id
+                ]);
+            }
+
+            // Get all projects for the user to update session
+            $userProjects = ProjectMembers::where('user_id', $request->owner_id)
+                ->with('project')
+                ->get()
+                ->map(function ($projectMember) {
+                    return $projectMember->project;
+                });
+
+            \DB::commit();
+
+            // Update session data
+            session()->put('projects', $userProjects);
+            session()->put('members', $request->members);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Project created successfully',
+                'project' => $project,
+                'redirect' => route('scrum-board', ['id' => $project->id])
+            ]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create project',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
