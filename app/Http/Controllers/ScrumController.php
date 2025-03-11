@@ -129,7 +129,7 @@ class ScrumController extends Controller
 
     public function getTimelineDatas(Request $request) {
         try {
-            $projectDetails = Project::where('id', $request->query('id'))->first();
+        $projectDetails = Project::where('id', $request->query('id'))->first();
             $epics = Epics::where('project_id', $request->query('id'))->get();
             
             // Initialize empty collections
@@ -156,7 +156,7 @@ class ScrumController extends Controller
             }
             
             return Inertia::render('Scrum/ScrumTimeline', [
-                'projectDetails' => $projectDetails,
+            'projectDetails' => $projectDetails,
                 'sprints' => $sprints->values()->all(), // Convert to array and reindex
                 'sprintTasks' => $sprintTasks->values()->all(),
                 'backlogs' => $backlogs->values()->all(),
@@ -245,20 +245,20 @@ class ScrumController extends Controller
             $endDate = now()->addDays(7);
 
             $epicData = [
-                'project_id' => $projId,
-                'name' => $request->name,
-                'description' => '',
-                'progress_percent' => 0,
-                'status' => 'Pending',
-                'key' => $request->key,
-                'order' => $epicNum + 1,
+            'project_id' => $projId,
+            'name' => $request->name,
+            'description' => '',
+            'progress_percent' => 0,
+            'status' => 'Pending',
+            'key' => $request->key,
+            'order' => $epicNum + 1,
                 'start_date' => $startDate->format('Y-m-d'),
                 'end_date' => $endDate->format('Y-m-d')
             ];
 
             $epic = Epics::create($epicData);
             
-            $this->registerUpdate($projId, Auth::user()->id, ' created an epic named ', $request->name);
+        $this->registerUpdate($projId, Auth::user()->id, ' created an epic named ', $request->name);
             
             return response()->json([
                 'success' => true,
@@ -320,7 +320,7 @@ class ScrumController extends Controller
             DB::beginTransaction();
             
             // Find the backlog
-            $backlog = Backlogs::where('id', $request->id)->first();
+        $backlog = Backlogs::where('id', $request->id)->first();
             if (!$backlog) {
                 throw new \Exception('Backlog not found');
             }
@@ -384,11 +384,11 @@ class ScrumController extends Controller
 
     public function updateBacklogStatus(Request $request) {
         try {
-            $backlog = Backlogs::where('id', $request->id)->first();
-            $backlog->status = $request->status;
-            $backlog->save();
-            
-            $epic = Epics::where('id', $backlog->epic_id)->first();
+        $backlog = Backlogs::where('id', $request->id)->first();
+        $backlog->status = $request->status;
+        $backlog->save();
+        
+        $epic = Epics::where('id', $backlog->epic_id)->first();
 
             $totalBacklogs = Backlogs::where('epic_id', $backlog->epic_id)->count();
             $progressBacklogs = Backlogs::where('epic_id', $backlog->epic_id)
@@ -477,9 +477,9 @@ class ScrumController extends Controller
         try {
             DB::beginTransaction();
             
-            $sprint = Sprints::where('epic_id', $request->epicId)
-                ->where('status', 'Active')
-                ->first();
+        $sprint = Sprints::where('epic_id', $request->epicId)
+            ->where('status', 'Active')
+            ->first();
 
             if (!$sprint) {
                 return response()->json(['success' => false, 'message' => 'Sprint not found'], 404);
@@ -737,14 +737,14 @@ class ScrumController extends Controller
     public function updateEpic(Request $request)
     {
         try {
-            $request->validate([
-                'epicId' => 'required|exists:epics,id',
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
+        $request->validate([
+            'epicId' => 'required|exists:epics,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'projectId' => 'required|exists:projects,id'
-            ]);
+            'projectId' => 'required|exists:projects,id'
+        ]);
 
             $epic = Epics::findOrFail($request->epicId);
             
@@ -1090,6 +1090,56 @@ class ScrumController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error adding task: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteAttachment(Request $request)
+    {
+        $request->validate([
+            'attachmentId' => 'required|exists:task_attachments,id',
+            'taskId' => 'required|exists:backlogs,id',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $attachment = TaskAttachments::findOrFail($request->attachmentId);
+            
+            // Check if attachment belongs to the task
+            if ($attachment->task_id != $request->taskId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attachment does not belong to this task'
+                ], 403);
+            }
+
+            // Delete the file from storage
+            if (Storage::disk('public')->exists($attachment->file_path)) {
+                Storage::disk('public')->delete($attachment->file_path);
+            }
+
+            // Delete the attachment record
+            $attachment->delete();
+
+            // Log activity
+            $backlog = Backlogs::with('epic')->find($request->taskId);
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "deleted attachment " . $attachment->file_name . " from task in ",
+                $backlog->epic->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attachment deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting attachment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting attachment'
             ], 500);
         }
     }
