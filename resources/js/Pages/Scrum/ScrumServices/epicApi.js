@@ -45,7 +45,7 @@ export function createNewEpic(epics, epicProcessing, newEpic, projEpics, project
       });
 
       const newEpicObj = {
-        epic_id: response.data.id,
+        id: response.data.id,
         name: newEpic,
         isActive: true,
         description: '',
