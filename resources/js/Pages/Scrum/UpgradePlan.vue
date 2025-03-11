@@ -59,11 +59,11 @@ const handleUpgrade = () => {
                 <ul class="space-y-4">
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
-                        <span><span class="font-medium text-button">UNLIMITED</span> Video Call Meetings</span>
+                        <span><span class="font-lg text-button">UNLIMITED</span> Video Call Meetings</span>
                     </li>
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
-                        <span><span class="font-medium text-button">UNLIMITED</span> Access to AI LIRA</span>
+                        <span><span class="font-lg text-button">UNLIMITED</span> Access to AI LIRA</span>
                     </li>
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
