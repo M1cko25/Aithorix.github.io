@@ -21,6 +21,7 @@
         "@syncfusion/ej2-material-theme": "^28.2.6",
         "@syncfusion/ej2-vue-calendars": "^28.2.7",
         "@syncfusion/ej2-vue-gantt": "^28.2.6",
+        "@syncfusion/ej2-vue-schedule": "^28.2.7",
         "@vitejs/plugin-vue": "^5.2.1",
         "@vueuse/core": "^12.8.2",
         "@vueuse/motion": "^2.2.6",
