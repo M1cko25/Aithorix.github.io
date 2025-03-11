@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { CheckCircle } from 'lucide-vue-next'
-import Header from '../../components/Header.vue'
-import Sidebar from '../../components/Sidebar.vue'
+import Header from '../../Components/Header.vue'
+import Sidebar from '../../Components/Sidebar.vue'
 
 const billingCycle = ref('monthly')
 
 const handleUpgrade = () => {
-    // Handle upgrade logic here
     console.log('Upgrading plan:', billingCycle.value)
 }
 </script>
@@ -19,7 +18,6 @@ const handleUpgrade = () => {
         <div class="mx-auto max-w-5xl rounded-xl bg-white p-8 shadow-lg">
             <h1 class="mb-6 text-2xl font-bold">Upgrade To Plus</h1>
 
-            <!-- Plan Selection -->
             <div class="mb-8">
                 <h2 class="mb-2 text-lg font-medium">Select a plan</h2>
                 <div class="flex gap-4">

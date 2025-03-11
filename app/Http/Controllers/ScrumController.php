@@ -1093,5 +1093,55 @@ class ScrumController extends Controller
             ], 500);
         }
     }
+
+    public function deleteAttachment(Request $request)
+    {
+        $request->validate([
+            'attachmentId' => 'required|exists:task_attachments,id',
+            'taskId' => 'required|exists:backlogs,id',
+            'projectId' => 'required|exists:projects,id'
+        ]);
+
+        try {
+            $attachment = TaskAttachments::findOrFail($request->attachmentId);
+            
+            // Check if attachment belongs to the task
+            if ($attachment->task_id != $request->taskId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attachment does not belong to this task'
+                ], 403);
+            }
+
+            // Delete the file from storage
+            if (Storage::disk('public')->exists($attachment->file_path)) {
+                Storage::disk('public')->delete($attachment->file_path);
+            }
+
+            // Delete the attachment record
+            $attachment->delete();
+
+            // Log activity
+            $backlog = Backlogs::with('epic')->find($request->taskId);
+            $this->registerUpdate(
+                $request->projectId,
+                Auth::user()->id,
+                "deleted attachment " . $attachment->file_name . " from task in ",
+                $backlog->epic->name
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attachment deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting attachment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting attachment'
+            ], 500);
+        }
+    }
 }
 

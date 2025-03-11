@@ -14,7 +14,8 @@ const props = defineProps({
   },
   task: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({})
   },
   epicSelected: {
     type: Object,
@@ -82,14 +83,14 @@ watch(() => props.task, (newTask) => {
       assignees: newTask.assignees || [],
       attachments: newTask.attachments || []
     }
-    attachments.value = newTask.attachments || []
+    attachments.value = [...(newTask.attachments || [])];
     if (page.comments && page.comments[newTask.id]) {
       comments.value = page.comments[newTask.id]
     } else {
       comments.value = []
     }
   }
-}, { immediate: true })
+}, { immediate: true, deep: true })
 
 const updateTask = () => {
   axios.post('/scrum/backlog-update', {
@@ -156,7 +157,6 @@ const uploadFile = async () => {
         file_path: response.data.file_path
       }
       
-      attachments.value.push(newAttachment)
       if (!form.value.attachments) form.value.attachments = []
       form.value.attachments.push(newAttachment)
       
@@ -317,6 +317,36 @@ const toggleAssignee = async (member) => {
     console.error('Error updating assignees:', error)
   }
 }
+
+const deleteAttachment = async (attachmentId) => {
+  try {
+    const response = await axios.post('/scrum/delete-attachment', {
+      attachmentId: attachmentId,
+      taskId: props.task.id,
+      projectId: page.projectDetails.id
+    });
+
+    if (response.data.success) {
+      // Remove the attachment from both arrays
+      form.value.attachments = form.value.attachments.filter(a => a.id !== attachmentId);
+      attachments.value = attachments.value.filter(a => a.id !== attachmentId);
+      
+      // Update the task's attachments in the parent component
+      const updatedTask = {
+        ...props.task,
+        attachments: form.value.attachments
+      };
+      
+      // Emit the updated task
+      emit('update:task', updatedTask);
+      
+      // Also update the original task object
+      Object.assign(props.task, updatedTask);
+    }
+  } catch (error) {
+    console.error('Error deleting attachment:', error);
+  }
+};
 </script>
 
 <template>
@@ -513,7 +543,7 @@ const toggleAssignee = async (member) => {
                     <div v-if="isUploading" class="mt-2">
                       <div class="w-full bg-gray-200 rounded-full h-1.5">
                         <div
-                          class="bg-blue-600 h-1.5 rounded-full"
+                          class="bg-blue h-1.5 rounded-full"
                           :style="{ width: uploadProgress + '%' }"
                         ></div>
                       </div>
@@ -533,14 +563,22 @@ const toggleAssignee = async (member) => {
                           <span class="text-sm font-medium">{{ file.file_name }}</span>
                           <span class="text-xs text-gray-500">({{ formatFileSize(file.file_size) }})</span>
                         </div>
-                        <a
-                          v-if="file.file_path"
-                          :href="'/storage/' + file.file_path"
-                          target="_blank"
-                          class="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Open
-                        </a>
+                        <div class="flex items-center gap-2">
+                          <a
+                            v-if="file.file_path"
+                            :href="'/storage/' + file.file_path"
+                            target="_blank"
+                            class="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Open
+                          </a>
+                          <button
+                            @click="deleteAttachment(file.id)"
+                            class="text-gray-400 hover:text-gray-600"
+                          >
+                            <X class="w-4 h-4" />
+                          </button>
+                        </div>
                       </li>
                     </ul>
                   </div>

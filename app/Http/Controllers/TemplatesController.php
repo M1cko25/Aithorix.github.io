@@ -8,7 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectMembers;
 use App\Models\User;
 use App\Models\TaskStatusCol;
-
+use Illuminate\Support\Facades\Auth;
 class TemplatesController extends Controller
 {
     public function templateSelected(Request $request)
@@ -63,11 +63,33 @@ class TemplatesController extends Controller
                     'role' => $member['role'],
                 ]);
             }
-            $getAllProjects = Project::where('owner_id', session('user.id'))->get();
-            foreach ($getAllProjects as $project) {
-                $member = ProjectMembers::where('project_id', $project->id)->get();
-                array_push($members, $member);
+
+            // Initialize projects array and name count tracker
+            $projects = [];
+            $nameCount = [];
+
+            // Get all projects for the user
+            $getAllProjects = ProjectMembers::where('user_id', Auth::user()->id)->get();
+            
+            foreach ($getAllProjects as $projectMember) {
+                $project = Project::where('id', $projectMember->project_id)->first();
+                
+                if ($project) {
+                    $originalName = $project->name;
+                    
+                    // Check if this name already exists
+                    if (isset($nameCount[$originalName])) {
+                        $nameCount[$originalName]++;
+                        $project->name = $originalName . ' (' . $nameCount[$originalName] . ')';
+                    } else {
+                        // First occurrence of this name
+                        $nameCount[$originalName] = 0;
+                    }
+                    
+                    array_push($projects, $project);
+                }
             }
+
             $taskTypes = ['To Do', 'In Progress', 'Done'];
             foreach ($taskTypes as $taskType) {
                 TaskStatusCol::create([
@@ -75,7 +97,8 @@ class TemplatesController extends Controller
                     'project_id' => $projectCreated->id
                 ]);
             }
-            session()->put('projects', $getAllProjects);
+
+            session()->put('projects', $projects);
             session()->put('members', $request->members);
             return redirect()->route('scrum-board', ['id' => $projectCreated->id]);
         } catch (\Exception $e) {

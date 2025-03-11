@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { Bell, Settings, HelpCircle, ChevronDown } from 'lucide-vue-next'
+import { Bell, Settings, HelpCircle, ChevronDown, Plus } from 'lucide-vue-next'
 import Button from './Button.vue'
 import Logo from '../../../public/assets/logo.png'
 import { usePage } from '@inertiajs/vue3'
@@ -19,8 +19,14 @@ const showLogin = () => {
 <template>
   <div v-if="isShowLogin" class="absolute w-screen h-screen" @click="showLogin"></div>
   <header class="h-16 bg-light border-b fixed top-0 md:left-64 left-0 right-0 flex items-center justify-between px-6">
-    <div class="flex items-center">
+    <div class="flex items-center gap-6">
       <img :src="Logo" alt="Aithorix" class="h-8" />
+      <div>
+        <button class="btn-primary flex items-center gap-2">
+          <Plus class="w-4 h-4" />
+          New Project
+        </button>
+      </div>
     </div>
 
     <div class="flex items-center gap-4">

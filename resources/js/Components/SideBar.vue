@@ -16,7 +16,6 @@ import {
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
 
-// Add this after your existing props definition
 const page = usePage()
 const props = defineProps({
   projectItems: {
@@ -26,10 +25,11 @@ const props = defineProps({
       { id: 'board', icon: Kanban, text: 'Board', path: '/scrum/board?id=', active: true },
       { id: 'timeline', icon: ChartGantt, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
       { id: 'backlog', icon: Logs, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
-      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/scrum/upgrade-plan?id=', active: false },
     ]
-  }
+  }, 
 })
+const projects = ref(page.props.projects.project)
 
 const searchQuery = ref('')
 const currentProject = ref('Scrum Project')
@@ -130,7 +130,7 @@ watch(
       <div class="px-4 mb-2 border-b border-neutral mx-2">
         Projects
       </div>  
-      <div v-for="project in page.props.projects.project" :key="project.id" class="w-full my-2">
+      <div v-for="project in projects" :key="project.id" class="w-full my-2">
         <button @click="toggleDown(project.id)" class="flex w-full flex-row px-5 justify-between items-center">
           <p class="text-lg">{{ project.name }}</p>
           <ChevronDown :class="{ 'transform rotate-180 transition-transform duration-300': projectStates.get(project.id) }"/>

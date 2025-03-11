@@ -147,7 +147,8 @@ const handleTaskUpdate = (updatedTask) => {
     // Create a new object with all the updated properties
     page.backlogs[taskIndex] = {
       ...page.backlogs[taskIndex],
-      ...updatedTask
+      ...updatedTask,
+      attachments: updatedTask.attachments // Ensure attachments are updated
     };
     
     // Update the task in the epic's tasks array
@@ -155,7 +156,8 @@ const handleTaskUpdate = (updatedTask) => {
     if (epicTaskIndex !== -1) {
       epicSelected.value.tasks[epicTaskIndex] = {
         ...epicSelected.value.tasks[epicTaskIndex],
-        ...updatedTask
+        ...updatedTask,
+        attachments: updatedTask.attachments // Ensure attachments are updated
       };
       
       // Create new array references to trigger reactivity
@@ -283,7 +285,7 @@ const handleDeleteTask = () => {
 
   <TaskModal
     v-model:isOpen="isTaskModalOpen"
-    :task="selectedTaskToEdit"
+    :task="selectedTaskToEdit || {}"
     :epicSelected="epicSelected"
     context="backlog"
     @update:task="handleTaskUpdate"
