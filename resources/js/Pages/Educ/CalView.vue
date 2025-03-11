@@ -13,15 +13,15 @@ import {
 
 provide('schedule', [Day, Week, WorkWeek, Month, Agenda]);
 
-const selectedDate = new Date(2024, 11, 4);
+const selectedDate = new Date(2025, 2, 11);
 const eventSettings = {
   dataSource: [
     {
       Id: 1,
       Subject: 'Mathematics',
       EventType: 'Confirmed',
-      StartTime: new Date(2024, 11, 4, 10, 0),
-      EndTime: new Date(2024, 11, 4, 11, 0),
+      StartTime: new Date(2025, 2, 11, 10, 0),
+      EndTime: new Date(2025, 2, 11, 11, 0),
       OwnerId: 1
     },
   ]

@@ -141,7 +141,7 @@ const uploadFiles = () => {
 
 <template>
 
-    <Head title=" | Resources" />
+    <Head title=" | Repository" />
     <div class="p-6 bg-gray-50 min-h-screen">
         <Sidebar />
         <Header />
@@ -152,7 +152,7 @@ const uploadFiles = () => {
                         <div class="flex flex-1 justify-between items-center gap-4">
 
                             <!-- Course Management Heading -->
-                            <h1 class="text-2xl font-semibold text-gray-900">Resources</h1>
+                            <h1 class="text-2xl font-semibold text-gray-900">Repository</h1>
 
                             <!-- Create Meeting Button -->
 

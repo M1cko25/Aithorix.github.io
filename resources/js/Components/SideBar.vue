@@ -4,9 +4,10 @@ import {
   Home,
   Briefcase,
   Star,
+  LayoutDashboard,
   Activity,
   Calendar,
-  Radar,
+  Logs,
   File,
   Rocket,
   CalendarDays,
@@ -22,11 +23,12 @@ const props = defineProps({
   projectItems: {
     type: Array,
     default: [
-      { id: 'dashboard', icon: Activity, text: 'Course', path: '/educ/course-management?id=', active: true },
-      { id: 'board', icon: Calendar, text: 'Calendar', path: '/educ/calendar-view?id=', active: false },
-      { id: 'timeline', icon: Radar, text: 'Tracker', path: '/educ/assignment-tracker?id=', active: false },
-      { id: 'backlog', icon: File, text: 'Resources', path: '/educ/resources?id=', active: false },
-      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { id: 'dashboard', icon: LayoutDashboard, text: 'Dashboard', path: '/educ/dashboard?id=', active: true },
+      { id: 'course', icon: Activity, text: 'Course', path: '/educ/course-management?id=', active: false },
+      { id: 'calendar', icon: Calendar, text: 'Calendar', path: '/educ/calendar-view?id=', active: false },
+      { id: 'journal', icon: Logs, text: 'Journal', path: '/educ/research-journal?id=', active: false },
+      { id: 'resources', icon: File, text: 'Repository', path: '/educ/repository?id=', active: false },
+      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/educ/upgrade-plan?id=', active: false },
     ]
   }
 })

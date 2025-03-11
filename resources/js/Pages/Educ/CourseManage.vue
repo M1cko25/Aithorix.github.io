@@ -60,7 +60,7 @@ const handleAddCourse = () => {
     }
 
     // Reset datetime picker
-    selectedDateTime.value = null
+    selectedDateTime.value = null;
 
     // Close modal
     addCourseButton.value = false
@@ -116,8 +116,8 @@ const course = ref([
         id: 1,
         title: "Mathematics",
         description: "the science and study of quality, structure, space, and change.",
-        Date: "Dec 4, 2024",
-        time: "10:00 AM",
+        Date: "Mar 11, 2025",
+        time: "4:00 PM",
         tags: ["High Priority", "Personal Goal"],
         showMenu: false
     }
