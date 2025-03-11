@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subtasks', function (Blueprint $table) {
+        Schema::create('sprint_tasks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('sprint_id')->constrained('sprints');
+            $table->foreignId('backlog_id')->constrained('backlogs');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->integer('duration');
+            $table->integer('progress');
             $table->timestamps();
         });
     }
@@ -22,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subtasks');
+        Schema::dropIfExists('sprint_tasks');
     }
 };

@@ -3,12 +3,18 @@ import Sidebar from '../../Components/Sidebar.vue';
 import Header from '../../Components/Header.vue';
 import Button from '../../Components/Button.vue';
 import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import Gantt from '../../Components/Gantt.vue'
+import AddTaskModal from './ScrumComponents/AddTaskModal.vue'
+import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 
 const page = usePage().props;
 const activeTab = ref('timeline')
+const taskNum = ref(0);
+const sprint_tasks = ref(page.sprintTasks);
+const sprints = ref(page.sprints);
+const data = ref([])
 
 const activities = ref([
     {
@@ -35,10 +41,153 @@ const activities = ref([
     }
 ])
 
+const sprintTasks = (sprintId) => {
+  let subtasks = []
+  sprint_tasks.value.forEach(task => {
+    if (task.sprint_id == sprintId) {
+      page.backlogs.forEach(backlog => {
+        if (backlog.id == task.backlog_id) {
+          subtasks.push({
+            TaskID: taskNum.value += 1,
+            TaskName: backlog.title + " (" + backlog.key + ")",
+            StartDate: task.start_date,
+            EndDate: task.end_date,
+            Status: backlog.status,
+            Progress: backlog.status == 'Done' ? 100 : backlog.status == 'In Progress' ? 50 : backlog.status == 'To Do' ? 0 : 100,
+            sprintTaskId: task.id,
+          })
+        }
+      })
+    }
+  })
+  return subtasks;
+}
+
+[...sprints.value].sort((a, b) => a.order - b.order).forEach(epic => {
+ data.value.push({
+    TaskID: taskNum.value += 1,
+    TaskName: epic.name,
+    StartDate: epic.start_date,
+    EndDate: epic.end_date,
+    Status: epic.status,
+    Progress: epic.progress_percent || 0,
+    isSubtask: false,
+    subtasks: sprintTasks(epic.id)
+  })
+})
+
+const rowSelected = ref('');
+const sprintSelected = computed(() => {
+  const sprint = page.sprints.find(sprint => sprint.name === rowSelected.value);
+  if (sprint && sprint.status == "Active") {
+    return {
+      ...sprint,
+      project_id: page.projectDetails.id
+    };
+  }
+  return null;
+});
+const taskSelected = computed(() => {
+  const task = page.backlogs.find(backlog => backlog.title + " (" + backlog.key + ")" == rowSelected.value);
+  if (task ) {
+    const sprint = page.sprints.find(sprint => sprint.epic_id == task.epic_id);
+    if (sprint && sprint.status == "Active") {
+      return {
+        ...task,
+        project_id: page.projectDetails.id
+      };
+    }
+  }
+  return null;
+})
+
+const isAddTaskModalOpen = ref(false)
+const isDeleteTaskModalOpen = ref(false)
+
+const handleTaskAdded = (newTask) => {
+  console.log('New task received:', newTask);
+  
+  // Find the sprint in data
+  const sprintIndex = data.value.findIndex(item => item.TaskName === sprintSelected.value.name);
+  console.log('Sprint index:', sprintIndex);
+  
+  if (sprintIndex !== -1) {
+    // Create a new array for subtasks if it doesn't exist
+    if (!data.value[sprintIndex].subtasks) {
+      data.value[sprintIndex].subtasks = [];
+    }
+    
+    // Add the new task to the sprint's subtasks
+    const newSubtask = {
+      TaskID: taskNum.value += 1,
+      TaskName: newTask.backlog.title + " (" + newTask.backlog.key + ")",
+      StartDate: newTask.start_date,
+      EndDate: newTask.end_date,
+      Status: newTask.backlog.status,
+      Progress: 0,
+      sprintTaskId: newTask.id
+    };
+    
+    console.log('Adding new subtask:', newSubtask);
+    
+    // Create a new array reference for data to trigger reactivity
+    data.value = [...data.value];
+    data.value[sprintIndex].subtasks.push(newSubtask);
+    sprint_tasks.value.push(newTask);
+  }
+}
+
+const handleDeleteTask = () => {
+  if (!taskSelected.value) return;
+  
+  axios.post('/scrum/backlog-delete', {
+    id: taskSelected.value.id,
+    epicId: taskSelected.value.epic_id,
+    title: taskSelected.value.title,
+    projectId: page.projectDetails.id
+  })
+  .then(() => {
+    // Find the sprint in data
+    const sprintIndex = data.value.findIndex(item => 
+      item.subtasks && item.subtasks.some(task => 
+        task.TaskName === taskSelected.value.title + " (" + taskSelected.value.key + ")"
+      )
+    );
+    
+    if (sprintIndex !== -1) {
+      // Find and remove the task from subtasks
+      const taskIndex = data.value[sprintIndex].subtasks.findIndex(task => 
+        task.TaskName === taskSelected.value.title + " (" + taskSelected.value.key + ")"
+      );
+      
+      if (taskIndex !== -1) {
+        data.value[sprintIndex].subtasks.splice(taskIndex, 1);
+        // Create a new array reference to trigger reactivity
+        data.value = [...data.value];
+      }
+    }
+    
+    isDeleteTaskModalOpen.value = false;
+    rowSelected.value = '';
+  })
+  .catch(error => {
+    console.error('Error deleting task:', error);
+  });
+}
 </script>
 <template>
     <Sidebar />
     <Header/>
+    <AddTaskModal
+        v-model:isOpen="isAddTaskModalOpen"
+        :sprint="sprintSelected"
+        @taskAdded="handleTaskAdded"
+    />
+    <DeleteTaskModal
+        v-model:isOpen="isDeleteTaskModalOpen"
+        :task="taskSelected"
+        @confirm="handleDeleteTask"
+    />
     <Head title=" | Timeline" />
     <div class="min-h-screen overflow-y-auto">
         <div class="ml-64 pt-16">
@@ -102,8 +251,30 @@ const activities = ref([
                         </div>
                     </div>
                 </div>
-                <div v-if="activeTab == 'gantt'" class="w-full h-full">
-                  <Gantt></Gantt>
+                
+                <div v-if="activeTab == 'gantt'" class="w-full h-full flex flex-col gap-4">
+                    <div class="w-full flex items-center justify-end">
+                        <button 
+                            v-if="sprintSelected" 
+                            class="btn-primary"
+                            @click="isAddTaskModalOpen = true"
+                        >
+                            Add Task
+                        </button>
+                        <button 
+                            v-if="taskSelected" 
+                            class="btn-primary ml-2"
+                            @click="isDeleteTaskModalOpen = true"
+                        >
+                            Remove Task
+                        </button>
+                    </div>
+                    <div class="h-full w-full">
+                        <Gantt 
+                        :data="data"
+                        :key="data.length"
+                        @rowSelected="(value) => rowSelected = value" />
+                    </div>
                 </div>
             </div>
         </div>

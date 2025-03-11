@@ -116,6 +116,7 @@ const handleCreateEpic = async () => {
   if (epicProcessing.value || !newEpic.value.trim()) return;
   
   try {
+    epicProcessing.value = true;
     const createdEpic = await createNewEpic(
       epics.value,
       epicProcessing.value,

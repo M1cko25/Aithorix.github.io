@@ -3,7 +3,7 @@ import axios from "axios";
 
 export function updateEpicStatus(epics, epicSelected, projectDetails) {
     return axios.post('/scrum/epic-status-update', {
-        epicId: epicSelected.epic_id,
+        epicId: epicSelected.id,
         status: epicSelected.status === 'On Sprint' ? 'Completed' : 'On Sprint',
         projectId: projectDetails.id
     })
@@ -13,7 +13,7 @@ export function updateEpicStatus(epics, epicSelected, projectDetails) {
         
         // Update the status in the epics array
         if (epics.value) {
-            const epicIndex = epics.value.findIndex(e => e.epic_id === epicSelected.epic_id);
+            const epicIndex = epics.value.findIndex(e => e.id === epicSelected.id);
             if (epicIndex !== -1) {
                 epics.value[epicIndex].status = epicSelected.status;
             }
@@ -45,7 +45,7 @@ export function createNewEpic(epics, epicProcessing, newEpic, projEpics, project
       });
 
       const newEpicObj = {
-        epic_id: response.data.id,
+        id: response.data.id,
         name: newEpic,
         isActive: true,
         description: '',

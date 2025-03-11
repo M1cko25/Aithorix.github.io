@@ -22,7 +22,7 @@ const form = ref({
   description: '',
   start_date: '',
   end_date: '',
-  epic_id: props.epicSelected?.epic_id,
+  epic_id: props.epicSelected?.id,
   projectId: props.epicSelected?.project_id
 })
 
@@ -85,14 +85,14 @@ watch(() => props.epicSelected, (newEpic) => {
 const submit = () => {
   axios.post('/scrum/start-sprint', {
     ...form.value,
-    epic_id: props.epicSelected.epic_id,
+    epic_id: props.epicSelected.id,
     projectId: page.projectDetails.id
   })
   .then((response) => {
     updateEpicStatus(props.epics, props.epicSelected, page.projectDetails)
     // Emit the sprint data to update parent component
     emit('sprintCreated', {
-      epic_id: props.epicSelected.epic_id,
+      epic_id: props.epicSelected.id,
       start_date: form.value.start_date,
       end_date: form.value.end_date,
       name: form.value.name,

@@ -1,4 +1,3 @@
-import { onMounted, ref } from 'vue'
 import axios from 'axios'
 import { taskCountsUpdate } from '../ScrumComposables/UseTasks';
 
@@ -16,35 +15,40 @@ export function updateTaskStatus(task, taskCounts, epicSelected, projectDetails)
     });
 }
 
-export function createTask(newTask, statusOptions, taskCounts, selectedType, epics, epicSelected, projectDetails) {
+export function createTask(newTask, taskCounts, selectedType, epics, epicSelected, projectDetails) {
     if (newTask.trim().length > 0) {
+      let taskProcessing = false;
       const activeEpic = epics.find(epic => epic.isActive);
-      axios.post('/scrum/backlog-create', {
-        title: newTask,
-        description: '',
-        priority: 'Low',
-        status: 'To Do',
-        type: selectedType.name,
-        epicId: activeEpic.id,
-        order: activeEpic.order + 1,
-        projectId: projectDetails.id
-      })
-      .then(response => { 
-        epicSelected.tasks.push({
-          id: response.data.id,
+      if (!taskProcessing) {
+        axios.post('/scrum/backlog-create', {
           title: newTask,
           description: '',
           priority: 'Low',
-          type: selectedType.name,
           status: 'To Do',
-          assignees: [],
-          epic_id: activeEpic.epic_id
+          type: selectedType.name,
+          epicId: activeEpic.id,
+          order: activeEpic.order + 1,
+          projectId: projectDetails.id
+        })
+        .then(response => { 
+          epicSelected.tasks.push({
+            id: response.data.id,
+            title: newTask,
+            description: '',
+            priority: 'Low',
+            type: selectedType.name,
+            status: 'To Do',
+            assignees: [],
+            epic_id: activeEpic.id
+          });
+          taskCountsUpdate(taskCounts, epicSelected);
+          taskProcessing = false;
+        })
+        .catch(error => {
+          console.error('Error making task:', error);
+          taskProcessing = false;
         });
-        taskCountsUpdate(taskCounts, epicSelected);
-      })
-      .catch(error => {
-        console.error('Error making task:', error);
-      });
+      }
     }
   }
 
@@ -52,7 +56,7 @@ export function deleteTask(epicSelected, taskCounts, selectedTaskToUpdate, proje
     selectedTaskToUpdate.forEach(task => {
       axios.post('/scrum/backlog-delete', {
         id: task.id,
-        epicId: epicSelected.epic_id,
+        epicId: epicSelected.id,
         title: task.title,
         projectId: projectDetails.id
       })

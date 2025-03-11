@@ -20,11 +20,11 @@ class AuthController extends Controller
 {
 
     public function login(Request $request) {
-        //validation
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+        
         // Check if user exists first
         $user = User::where('email', $request->email)->first();
         if (!$user) {
@@ -32,13 +32,32 @@ class AuthController extends Controller
                 'email' => 'Email not found'
             ])->onlyInput('email');
         }
+
         $userId = User::where('email', $request->email)->value('id');
         $projectMember = ProjectMembers::where('user_id', $userId)->get();
+        
+        // Initialize arrays and name count tracker
         $projects = [];
+        $nameCount = [];
+
         foreach ($projectMember as $member) {
             $project = Project::where('id', $member->project_id)->first();
-            array_push($projects, $project);
+            if ($project) {
+                $originalName = $project->name;
+                
+                // Check if this name already exists in our projects
+                if (isset($nameCount[$originalName])) {
+                    $nameCount[$originalName]++;
+                    $project->name = $originalName . ' (' . $nameCount[$originalName] . ')';
+                } else {
+                    // First occurrence of this name
+                    $nameCount[$originalName] = 0;
+                }
+                
+                array_push($projects, $project);
+            }
         }
+
         $members = [];
         foreach ($projects as $project) {
             $member = ProjectMembers::where('project_id', $project->id)->get();
@@ -77,25 +96,43 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
-                'password' => 'required|min:8|max:255|confirmed',
-            ]);
-            if ($validator->fails()) {
-                return redirect()->back()->with('email', $request->email)->withErrors($validator->errors())->withInput();
-            }
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'avatar' => $request->avatar,
-                'google_id' => $request->google_id,
-                'password' => bcrypt($request->password),
-                'email_verified_at' => now()
-            ]);
-            Auth::login($user);
-            session()->put('user', $user);
-            Mail::to($request->email)->send(new WelcomeMail($request->name));
-            return redirect()->route('template')->with('success', 'Registration successful.');
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255|regex:/^[a-zA-Z\s]+$/',
+            'password' => 'required|min:8|max:255|confirmed',
+        ]);
+        if ($validator->fails()) {
+            return redirect()->back()->with('email', $request->email)->withErrors($validator->errors())->withInput();
+        }
+
+        $colors = ['#3A5573', '#032F61', '#0F7E78', '#AE4432', '#B9850D'];
+        $randomColor = $colors[array_rand($colors)];
+        $avatar = $request->avatar;
+        
+        if ($avatar == null) {
+            $initials = strtoupper(substr($request->name, 0, 2));
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
+                 . '<circle cx="50" cy="50" r="50" fill="' . $randomColor . '"/>'
+                 . '<text x="50%" y="50%" fill="white" text-anchor="middle" alignment-baseline="central" '
+                 . 'font-family="Arial, sans-serif" font-size="40" font-weight="bold" style="dominant-baseline: central;">'
+                 . $initials
+                 . '</text>'
+                 . '</svg>';
+            $avatar = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'avatar' => $avatar,
+            'google_id' => $request->google_id,
+            'password' => bcrypt($request->password),
+            'email_verified_at' => now()
+        ]);
+        
+        Auth::login($user);
+        session()->put('user', $user);
+        Mail::to($request->email)->send(new WelcomeMail($request->name));
+        return redirect()->route('template')->with('success', 'Registration successful.');
     }
 
     public function logout(Request $request) {

@@ -3,10 +3,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Clock, ChevronDown, ChevronLeft, ChevronRight, Video, Calendar, Clock3, CalendarPlus, X, Users } from 'lucide-vue-next';
 import { format, isToday, isThisWeek, parseISO, isAfter, isSameDay, addDays } from 'date-fns';
 import MeetingModal from '@/Components/Meeting/MeetingModal.vue';
-import { Head } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
+import axios from 'axios';
+import { usePage, useForm } from '@inertiajs/vue3';
+import Icons from '../../Icons'
 
-// Sample meeting data with ISO dates
+
+const page = usePage().props;
+  // Sample meeting data with ISO dates
 const meetings = ref([
   { 
     id: 1,
@@ -299,13 +302,42 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
+
+const form = useForm({
+  name: ''
+})
+
+// Add this ref for the join input
+const joinCode = ref('');
+
+// Update the joinMeeting function
+const joinMeeting = () => {
+  if (!joinCode.value) {
+    alert('Please enter a meeting code');
+    return;
+  }
+  
+  form.post(route('meeting-room-post'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      joinCode.value = '';
+    },
+  });
+};
+
 </script>
 
 <template>
   <Head title="Meeting Home" />
   <div class="min-h-screen bg-gray-50 p-4">
     <div class="container max-w-5xl mx-auto">
-      <!-- Header -->
+      <div>
+        <Link :href="route('home')" preserve-scroll class="flex flex-row 
+        items-center gap-4 top-4 left-4">
+            <img :src="Icons.leftIcon">
+            <p>Back to Home</p>
+        </Link>
+      </div>
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold mb-3 text-gray-800">Meet, connect, and collaborate in real-time</h1>
         <p class="text-base text-gray-600 max-w-2xl mx-auto">Professional video conferencing that brings teams together, wherever they are</p>
@@ -344,12 +376,16 @@ onUnmounted(() => {
 
         <div class="border rounded-lg flex-1 p-2 flex items-center bg-white shadow-sm">
           <input 
+            v-model="joinCode"
             type="text" 
             placeholder="Enter a code or link" 
             class="w-full outline-none text-sm"
           />
         </div>
-        <button class="bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-6 py-3 text-sm font-medium shadow-sm transition-colors">
+        <button 
+          @click="joinMeeting" 
+          class="bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-6 py-3 text-sm font-medium shadow-sm transition-colors"
+        >
           Join
         </button>
       </div>
@@ -515,13 +551,14 @@ onUnmounted(() => {
               <p class="text-sm text-gray-600 mb-4">  
                 Start a meeting right now. Your team can join using the meeting link.
               </p>
-              <div class="space-y-4">
+              <form @submit.prevent="form.post(route('meeting-room-post'))" class="space-y-4">
                 <div>
                   <label class="text-sm font-medium block mb-1">Meeting name</label>
                   <input 
                     type="text" 
                     class="w-full border rounded-md px-3 py-2 text-sm"
                     placeholder="My Instant Meeting"
+                    v-model="form.name"
                   />
                 </div>
                 <div>
@@ -535,16 +572,16 @@ onUnmounted(() => {
                 </div>
                 <div class="flex justify-end gap-2">
                   <button 
-                    class="px-4 py-2 text-sm border rounded-md hover:bg-gray-100"
+                    class="btn-cancel"
                     @click="closeModal"
                   >
                     Cancel
                   </button>
-                  <Link :href="route('meeting-conference')" class="px-4 py-2 text-sm bg-violet-500 text-white rounded-md hover:bg-violet-600">
-  Start Meeting
-</Link>
+                  <button type="submit" class="btn-primary">
+                    Start Meeting
+                  </button>
                 </div>
-              </div>
+              </form>
             </template>
 
             <!-- Create Meeting Modal Content -->
@@ -559,6 +596,7 @@ onUnmounted(() => {
                     type="text" 
                     class="w-full border rounded-md px-3 py-2 text-sm"
                     placeholder="Team Meeting"
+                    v-model="meetingName"
                   />
                 </div>
                 <div>

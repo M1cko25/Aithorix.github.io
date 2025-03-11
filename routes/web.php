@@ -10,7 +10,6 @@ Route::get('/home', [HomeController::class, 'getUserDatas'])->name('home')->midd
 Route::inertia('/meeting/home', 'Meeting/Home')->name('meeting-home')->middleware('auth');
 Route::inertia('/meeting/conference', 'Meeting/Conference')->name('meeting-conference')->middleware('auth');
 
-//Eventt Planning
 Route::inertia('/eventplanning/eventdashboard', 'EventPlanning/EventDashboard')->name('eventplanning-eventdashboard')->middleware('auth');
 Route::inertia('/eventplanning/schedule', 'EventPlanning/Schedule')->name('eventplanning-Schedule')->middleware('auth');
 Route::inertia('/eventplanning/vendor', 'EventPlanning/Vendor')->name('eventplanning-vendor')->middleware('auth');

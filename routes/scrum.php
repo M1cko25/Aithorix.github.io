@@ -22,12 +22,20 @@ Route::controller(ScrumController::class)->group(function(){
         Route::post('/scrum/start-sprint', 'startSprint')->name('start-sprint');
         Route::post('/scrum/complete-sprint', 'completeSprint')->name('complete-sprint');
         Route::post('/scrum/upload-attachment', 'uploadAttachment')->name('upload-attachment');
+        Route::post('/scrum/delete-attachment', 'deleteAttachment')->name('delete-attachment');
         Route::post('/scrum/add-comment', 'addComment')->name('add-comment');
         Route::get('/scrum/project-members/{projectId}', 'getProjectMembers')->name('get-project-members');
         Route::post('/scrum/update-assignees', 'updateTaskAssignees')->name('update-assignees');
         Route::post('/scrum/add-column', 'addColumn')->name('add-column');
         Route::post('/scrum/delete-column', 'deleteColumn')->name('delete-column');
         Route::post('/scrum/move-tasks', 'moveTasks')->name('move-tasks');
+        Route::post('/scrum/sprint-task-update', 'updateSprintTask')->name('sprint-task-update');
+        Route::post('/scrum/add-sprint-task', 'addSprintTask')->name('add-sprint-task');
     });
 });
-// Route::inertia('/scrum/meeting', 'Scrum/Meeting')->name('scrum-meeting')->middleware('auth');
+
+Route::get('/scrum/upgrade-plan', function () {
+    return inertia('Scrum/UpgradePlan', [
+        'title' => 'Upgrade Plan',
+    ]);
+})->name('upgrade-plan');

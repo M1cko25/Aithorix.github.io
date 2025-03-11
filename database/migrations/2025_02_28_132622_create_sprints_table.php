@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreign('epic_id')->references('id')->on('epics');
             $table->date('start_date');
             $table->date('end_date');
-            $table->integer('status');
+            $table->string('status');
             $table->string('description')->nullable();
             $table->timestamps();
         });

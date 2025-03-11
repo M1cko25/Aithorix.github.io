@@ -326,12 +326,12 @@ const handleTaskUpdate = (updatedTask) => {
               v-model="selectedEpic" 
               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             >
-              <option v-for="epic in epics" :key="epic.id" :value="epic">
+              <option v-for="epic in [...epics].sort((a, b) => a.order - b.order)" :key="epic.id" :value="epic">
                 {{ epic.name }}
               </option>
             </select>
-          </div>
-          <Button text="Members" :icon="Users" variant="outline" />
+        </div>
+        <Button text="Members" :icon="Users" variant="outline" />
         </div>
       </div>
 
@@ -347,20 +347,20 @@ const handleTaskUpdate = (updatedTask) => {
       <!-- Kanban Board -->
       <div v-else class="px-6 pb-6">
         <div class="flex gap-6 overflow-x-auto min-w-full kanban-container">
-          <KanbanColumn 
-            v-for="column in columns" 
-            :key="column.id" 
-            :title="column.title"
-            :tasks="column.tasks"
-            :columnId="column.id"
-            :createTask="() => createTask(column.id)" 
-            :isCreatingTask="taskCreating[column.id]"
-            @create-new-task="(task) => createNewTask(task, column.id)" 
-            @update:tasks="(newTasks) => column.tasks = newTasks"
-            @taskMoved="handleTaskMove"
+        <KanbanColumn 
+          v-for="column in columns" 
+          :key="column.id" 
+          :title="column.title" 
+          :tasks="column.tasks"
+          :columnId="column.id"
+          :createTask="() => createTask(column.id)" 
+          :isCreatingTask="taskCreating[column.id]"
+          @create-new-task="(task) => createNewTask(task, column.id)" 
+          @update:tasks="(newTasks) => column.tasks = newTasks"
+          @taskMoved="handleTaskMove"
             @editTask="handleEditTask"
             @deleteTask="handleDeleteTask"
-            :taskNum="TaskNum"
+          :taskNum="TaskNum" 
             class="flex-shrink-0"
           >
             <template v-if="!column.isDefault" #column-header-actions>
@@ -396,17 +396,17 @@ const handleTaskUpdate = (updatedTask) => {
               >
                 Cancel
               </button>
-              <button 
+        <button
                 @click="addColumn"
                 class="btn-primary px-3 py-1"
               >
                 Add
-              </button>
+        </button>
             </div>
           </div>
         </div>
       </div>
-  </div>
+    </div>
   </div>
   <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />
 </template>

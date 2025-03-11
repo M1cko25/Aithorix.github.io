@@ -1,6 +1,6 @@
 <script setup>
 import Header from '../Components/Header.vue'
-import Sidebar from '../Components/Sidebar.vue'
+import SideBar from '../Components/SideBar.vue'
 import { ref } from 'vue'
 import { MoreVertical, Plus } from 'lucide-vue-next'
 import TextField from '../Components/TextField.vue'
@@ -32,7 +32,7 @@ const meetings = ref()
 
 <template>
   <Header />
-  <Sidebar />
+  <SideBar/>
   
   <div class="ml-64 pt-16 p-6">
     <!-- Header -->
