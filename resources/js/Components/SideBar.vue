@@ -4,10 +4,10 @@ import {
   Home,
   Briefcase,
   Star,
-  LayoutDashboard,
-  Kanban,
-  ChartGantt,
-  Logs,
+  Activity,
+  Calendar,
+  Radar,
+  File,
   Rocket,
   CalendarDays,
   Search,
@@ -22,10 +22,10 @@ const props = defineProps({
   projectItems: {
     type: Array,
     default: [
-      { id: 'dashboard', icon: LayoutDashboard, text: 'Course', path: '/educ/course-management?id=', active: true },
-      { id: 'board', icon: Kanban, text: 'Calendar', path: '/educ/calendar-view?id=', active: false },
-      { id: 'timeline', icon: ChartGantt, text: 'Tracker', path: '/educ/assignment-tracker?id=', active: false },
-      { id: 'backlog', icon: Logs, text: 'Resources', path: '/educ/resources?id=', active: false },
+      { id: 'dashboard', icon: Activity, text: 'Course', path: '/educ/course-management?id=', active: true },
+      { id: 'board', icon: Calendar, text: 'Calendar', path: '/educ/calendar-view?id=', active: false },
+      { id: 'timeline', icon: Radar, text: 'Tracker', path: '/educ/assignment-tracker?id=', active: false },
+      { id: 'backlog', icon: File, text: 'Resources', path: '/educ/resources?id=', active: false },
       { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
     ]
   }

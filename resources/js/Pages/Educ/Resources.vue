@@ -44,17 +44,25 @@ const isValidForm = computed(() => {
 
 const viewMode = ref('grid')
 
+const closeAllModals = () => {
+    filterOverlay.value = false
+}
+// Filter
+const filterButton = () => {
+    if (!filterOverlay.value) {
+        closeAllModals()
+    }
+    filterOverlay.value = !filterOverlay.value
+}
+const filterOverlay = ref(false)
 const filterOptions = [
     'Name',
     'Date Motified',
     'Type',
 ]
-const closeAllModals = () => {
-    isFilterModalOpen.value = false
-}
-const toggleFilterModal = () => {
-    closeAllModals()
-    isFilterModalOpen.value = !isFilterModalOpen.value
+const handlefilterOption = (filter: string) => {
+    console.log('Selected filter:', filter)
+    filterOverlay.value = false
 }
 const isFilterModalOpen = ref(false)
 
@@ -182,19 +190,19 @@ const uploadFiles = () => {
 
                                 <!-- Filter Button -->
                                 <div class="relative">
-                                    <button @click="toggleFilterModal"
+                                    <button @click="filterButton"
                                         class="flex items-center justify-center rounded-md border h-10 w-10 border-input">
                                         <Filter class="w-4 h-4" />
                                     </button>
 
-                                    <div v-if="isFilterModalOpen"
+                                    <!-- Filter Overlay -->
+                                    <div v-if="filterOverlay"
                                         class="absolute top-full right-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[160px]">
-                                        <button v-for="status in filterOptions" :key="status"
-                                            @click="handleStatusOption(status)"
+                                        <button v-for="filter in filterOptions" :key="filter"
+                                            @click="handlefilterOption(filter)"
                                             class="w-full px-4 py-2 text-left hover:bg-gray-100">
-                                            {{ status }}
+                                            {{ filter }}
                                         </button>
-
                                     </div>
                                 </div>
                             </div>

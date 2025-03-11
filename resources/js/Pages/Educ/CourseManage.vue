@@ -3,6 +3,11 @@ import { Filter, Video, MoreVertical, LayoutGrid, Table, Plus, Calendar, Clock }
 import Header from '../../Components/Header.vue'
 import Sidebar from '../../Components/Sidebar.vue'
 import { ref, computed } from 'vue'
+import { DateTimePickerComponent as ejsdatetimepicker } from '@syncfusion/ej2-vue-calendars';
+
+// DateTimePicker setup
+const waterMark = ref('Select a datetime')
+const selectedDateTime = ref(null)
 
 //View Toggle
 const viewMode = ref('table')
@@ -54,6 +59,10 @@ const handleAddCourse = () => {
         tags: []
     }
 
+    // Reset datetime picker
+    selectedDateTime.value = null
+
+    // Close modal
     addCourseButton.value = false
 }
 const canSelectMoreTags = computed(() => {
@@ -114,44 +123,20 @@ const course = ref([
     }
 ])
 const getTagClass = (tag: string): string => {
-    const classes = {
-        'Class': 'bg-teal-50 text-teal-700',
-        'Assignment': 'bg-emerald-50 text-emerald-700',
-        'Group Study': 'bg-indigo-50 text-indigo-700',
-        'Lab': 'bg-purple-50 text-purple-700',
-        'Meeting': 'bg-pink-50 text-pink-700',
-
-        'Optional': 'bg-orange-50 text-orange-700',
-        'Collaborative': 'bg-yellow-50 text-yellow-700',
-        'Group Activity': 'bg-fuchsia-50 text-fuchsia-700',
-        'High Priority': 'bg-red-50 text-red-700',
-        'Personal Goal': 'bg-green-50 text-green-700',
-    }
-    return classes[tag as keyof typeof classes] || 'bg-gray-50 text-gray-700'
+    const tagOption = tagOptions.find(option => option.value === tag)
+    return tagOption ? tagOption.color : 'bg-gray-50 text-gray-700'
 }
 
 //Menu
 const selectedCourse = ref<Course | null>(null)
 const menuButton = (course: Course) => {
-    if (!menuOverlay.value) {
-        closeAllModals()
+    if (selectedCourse.value?.id === course.id) {
+        selectedCourse.value = null
+    } else {
+        selectedCourse.value = course
     }
-    menuOverlay.value = !menuOverlay.value
-    selectedCourse.value = course
 }
-const menuOverlay = ref(false)
-const menuOptions = [
-    {
-        label: 'Edit Course',
-        action: 'edit',
-        class: 'text-gray-900 hover:bg-gray-100'
-    },
-    {
-        label: 'Delete Course',
-        action: 'delete',
-        class: 'text-red-500 hover:bg-gray-100'
-    }
-]
+
 const handleMenuOption = (option: string, selectedCourse: Course) => {
     if (option === 'edit') {
         editingCourse.value = { ...selectedCourse };
@@ -160,14 +145,13 @@ const handleMenuOption = (option: string, selectedCourse: Course) => {
         courseToDelete.value = selectedCourse;
         showDeleteModal.value = true;
     }
-    menuOverlay.value = false;
+    selectedCourse.value = null
 }
-
 
 // Close all modals
 const closeAllModals = () => {
     filterOverlay.value = false
-    menuOverlay.value = false
+    selectedCourse.value = null
 }
 
 //Edit Modal
@@ -180,6 +164,23 @@ const editingCourse = ref({
     time: '',
     tags: [] as string[]
 })
+const handleDateTimeChange = (args: any) => {
+    if (args.value) {
+        const date = new Date(args.value)
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+        if (addCourseButton.value) {
+            newCourse.value.Date = formattedDate
+            newCourse.value.time = formattedTime
+        }
+
+        if (showEditModal.value) {
+            editingCourse.value.Date = formattedDate
+            editingCourse.value.time = formattedTime
+        }
+    }
+}
 const toggleEditTag = (tagValue: string) => {
     const index = editingCourse.value.tags.indexOf(tagValue)
     if (index === -1) {
@@ -196,6 +197,7 @@ const updateCourse = () => {
         course.value[index] = { ...editingCourse.value, showMenu: false }
     }
     showEditModal.value = false
+    selectedCourse.value = null
 }
 const canSelectMoreEditTags = computed(() => {
     return editingCourse.value.tags.length < 2
@@ -341,10 +343,8 @@ const deleteCourse = () => {
                                                 <MoreVertical class="h-6 w-6" />
                                             </button>
 
-
-
                                             <!-- Menu Overlay -->
-                                            <div v-if="menuOverlay"
+                                            <div v-if="selectedCourse?.id === course.id"
                                                 class="absolute top-full right-10 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
                                                 <div class="p-2">
                                                     <button @click="handleMenuOption('edit', course)"
@@ -373,12 +373,18 @@ const deleteCourse = () => {
                                                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" />
                                                         <textarea v-model="editingCourse.description"
                                                             class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2"></textarea>
-                                                        <div class="grid gap-4 sm:grid-cols-2">
-                                                            <input v-model="editingCourse.Date" type="date"
-                                                                class="flex h-10 w-full rounded-md border" />
-                                                            <input v-model="editingCourse.time" type="time"
-                                                                class="flex h-10 w-full rounded-md border" />
+                                                        <div class="flex left-1">
+                                                            <div id="app">
+                                                                <div class='wrapper'>
+                                                                    <ejsdatetimepicker :placeholder="waterMark"
+                                                                        v-model="selectedDateTime"
+                                                                        @change="handleDateTimeChange"
+                                                                        :value="selectedDateTime">
+                                                                    </ejsdatetimepicker>
+                                                                </div>
+                                                            </div>
                                                         </div>
+
 
                                                         <!-- Tags selection -->
                                                         <div class="space-y-2">
@@ -456,7 +462,8 @@ const deleteCourse = () => {
                                     <h3 class="font-bold text-2xl leading-none tracking-tight">{{ course.title }}</h3>
 
                                     <!-- Course Description -->
-                                    <p class="text-lg text-muted-foreground">{{ course.description }}</p>
+                                    <p class="text-lg text-muted-foreground">{{
+                                        course.description }}</p>
                                 </div>
                                 <div class="relative">
 
@@ -467,7 +474,7 @@ const deleteCourse = () => {
                                     </button>
 
                                     <!-- Menu Overlay -->
-                                    <div v-if="menuOverlay"
+                                    <div v-if="selectedCourse?.id === course.id"
                                         class="absolute top-full left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px]">
                                         <div class="p-2">
                                             <button @click="handleMenuOption('edit', course)"
@@ -478,6 +485,87 @@ const deleteCourse = () => {
                                                 class="w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500">
                                                 Delete Course
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Edit Course Modal -->
+                                    <div v-if="showEditModal" class="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
+                                        <div
+                                            class="fixed left-[50%] top-[50%] z-50 w-full max-w-[800px] translate-x-[-50%] translate-y-[-50%] border bg-white p-6 shadow-lg rounded-lg">
+                                            <div class="flex flex-col text-center sm:text-left">
+                                                <h2 class="text-lg font-semibold">Edit Course</h2>
+                                                <p class="text-sm">Update course information below.</p>
+                                            </div>
+                                            <form @submit.prevent="updateCourse" class="space-y-6 py-4">
+                                                <!-- Same form fields as Add Course but with v-model="editingCourse.[field]" -->
+                                                <input v-model="editingCourse.title"
+                                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2" />
+                                                <textarea v-model="editingCourse.description"
+                                                    class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2"></textarea>
+                                                <div class="flex left-1">
+                                                    <div id="app">
+                                                        <div class='wrapper'>
+                                                            <ejsdatetimepicker :placeholder="waterMark">
+                                                            </ejsdatetimepicker>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+                                                <!-- Tags selection -->
+                                                <div class="space-y-2">
+                                                    <label class="text-sm font-medium leading-none">Tags (Select
+                                                        exactly 2)</label>
+                                                    <div class="grid grid-cols-5 gap-2 mt-2">
+                                                        <div v-for="tag in tagOptions" :key="tag.value" :class="[
+                                                            tag.color,
+                                                            'flex items-center p-2 rounded-md transition-colors',
+                                                            editingCourse.tags.includes(tag.value) ? 'ring-2 ring-offset-2' : '',
+                                                            (!canSelectMoreEditTags && !editingCourse.tags.includes(tag.value)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                                        ]" @click="toggleEditTag(tag.value)">
+                                                            <input type="checkbox"
+                                                                :checked="editingCourse.tags.includes(tag.value)"
+                                                                :disabled="!canSelectMoreEditTags && !editingCourse.tags.includes(tag.value)"
+                                                                class="mr-2" />
+                                                            <span class="text-xs">{{ tag.label }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <p v-if="editingCourse.tags.length < 2"
+                                                        class="text-sm text-red-500 mt-1">
+                                                        Please select {{ 2 - editingCourse.tags.length }} more
+                                                        tag{{ 2 - editingCourse.tags.length !== 1 ? 's' : '' }}
+                                                    </p>
+                                                </div>
+
+                                                <div class="flex justify-end space-x-4">
+                                                    <button type="button" @click="showEditModal = false"
+                                                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground">Cancel</button>
+                                                    <button type="submit" class="btn-primary"
+                                                        :disabled="editingCourse.tags.length < 2">Update
+                                                        Course</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delete Course Modal -->
+                                    <div v-if="showDeleteModal" class="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm">
+                                        <div
+                                            class="fixed left-[50%] top-[50%] z-50 w-full max-w-[400px] translate-x-[-50%] translate-y-[-50%] border bg-white p-6 shadow-lg rounded-lg">
+                                            <div class="flex flex-col text-center sm:text-left">
+                                                <h2 class="text-lg font-semibold">Delete Course</h2>
+                                                <p class="text-sm text-gray-600 mt-2">Are you sure you want to
+                                                    delete this course? This action cannot be undone.</p>
+                                            </div>
+                                            <div class="flex justify-end space-x-4 mt-6">
+                                                <button @click="showDeleteModal = false"
+                                                    class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground">
+                                                    Cancel
+                                                </button>
+                                                <button @click="deleteCourse" class="btn-primary">
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -548,21 +636,13 @@ const deleteCourse = () => {
                             class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             placeholder="Advanced Calculus and its applications..."></textarea>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="flex left-1">
 
                             <!-- Date -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium leading-none">Date</label>
-                                <input v-model="newCourse.Date" type="date"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-                                </input>
-                            </div>
-
-                            <!-- Time -->
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium leading-none">Time</label>
-                                <input v-model="newCourse.time" type="time"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" />
+                            <div id="app">
+                                <ejsdatetimepicker :placeholder="waterMark" v-model="selectedDateTime"
+                                    @change="handleDateTimeChange" :value="selectedDateTime">
+                                </ejsdatetimepicker>
                             </div>
                         </div>
                         <div class="grid gap-4">
