@@ -177,8 +177,10 @@ const removeMember = (memberId) => {
 
 const createProject = () => {
   form.post('/create-project', {
-    onSuccess: () => {
+    onSuccess: (response) => {
       emit('update:modelValue', false)
+      // Force a full page reload to update the sidebar projects
+      window.location.reload()
     }
   })
 }
@@ -228,6 +230,7 @@ const createProject = () => {
                         class="w-1/2"
                         readonly
                       />
+                      <p v-if="form.errors.key" class="text-red-500 text-xs mt-1">{{ form.errors.key }}</p>
                     </div>
                   </div>
 
