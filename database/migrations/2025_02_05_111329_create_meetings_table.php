@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('meetings', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('description')->nullable();
-            $table->string('link');
-            $table->string('status')->default('pending');
-            $table->date('date');
-            $table->dateTime('start_time');
+            $table->string('name');
+            $table->unsignedBigInteger('code_id')->unique();
+            $table->foreign('code_id')->references('id')->on('meeting_codes')->onDelete('cascade');
+            $table->string('status')->default('scheduled');
+            $table->date('date')->default(now());
+            $table->dateTime('start_time')->default(now());
             $table->dateTime('end_time');
             $table->unsignedBigInteger('project_id');
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');

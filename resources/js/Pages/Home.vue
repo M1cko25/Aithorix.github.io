@@ -26,16 +26,16 @@ const activeMyWorkTab = ref('Upcoming')
 const tasks = ref()
 
 const projects = ref()
-
+const isSidebarOpen = ref(true);
 const meetings = ref()
+const logoDisplayed = ref(true);
 </script>
 
 <template>
-  <Header />
-  <SideBar/>
+  <Header :logoDisplay="logoDisplayed"/>
+  <SideBar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value" />
   
-  <div class="ml-64 pt-16 p-6">
-    <!-- Header -->
+  <div class="pt-16 p-6 transition-all duration-300 ease-in-out" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
     <div class="my-8">
       <div class="flex flex-row items-center justify-between">
         <h1 class="text-3xl font-bold">HOME</h1>
@@ -44,8 +44,6 @@ const meetings = ref()
       <p class="text-gray-600">{{ currentDate }}</p>
       <h2 class="text-2xl font-bold mt-4">Good Morning, {{ $page.props.auth.user.name }}</h2>
     </div>
-
-    <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div
         v-for="stat in stats"
@@ -57,9 +55,7 @@ const meetings = ref()
       </div>
     </div>
 
-    <!-- Two Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- My Work Section -->
       <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-semibold">My Work</h3>
@@ -80,8 +76,6 @@ const meetings = ref()
             {{ tab }}
           </button>
         </div>
-
-        <!-- Tasks -->
         <div class="space-y-4">
           <div
             v-for="task in tasks"
@@ -96,8 +90,6 @@ const meetings = ref()
           </div>
         </div>
       </div>
-
-      <!-- Projects Section -->
       <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-semibold">Projects</h3>
@@ -132,8 +124,6 @@ const meetings = ref()
           </div>
         </div>
       </div>
-
-      <!-- Upcoming Meetings -->
       <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-semibold">Upcoming Meetings</h3>

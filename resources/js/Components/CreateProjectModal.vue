@@ -321,6 +321,7 @@ const createProject = () => {
                   <button
                     @click="createProject"
                     class="btn-primary flex items-center gap-2"
+                    :class="!projectName || members.length === 0 ? 'opacity-50 cursor-not-allowed' : ''"
                     :disabled="!projectName || members.length === 0"
                   >
                     <Plus class="w-4 h-4" />

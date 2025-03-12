@@ -66,10 +66,13 @@ const initializeCallFrame = (container) => {
 const startMeeting = async () => {
   try {
     isLoading.value = true;
+    console.log('Starting meeting with name:', meetingName.value);
 
     // Get or create room URL
     const url = await createDailyRoom();
     meetingUrl.value = url;
+
+    console.log('Got meeting URL:', url);
 
     // Then initialize the call frame
     if (videoContainer.value) {
@@ -96,6 +99,8 @@ const startMeeting = async () => {
         meetingJoined.value = true;
         sessionStorage.setItem(`meeting_joined_${meetingName.value}`, 'true');
       });
+
+      console.log('Joining meeting with URL:', meetingUrl.value);
 
       // Join the meeting
       await frame.join({ 
@@ -177,6 +182,8 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
+  console.log('Meeting component mounted with name:', meetingName.value);
+  
   if (!meetingName.value) {
     console.error('No meeting name provided');
     alert('Invalid meeting configuration');
@@ -193,13 +200,14 @@ onMounted(() => {
   // Start or rejoin meeting
   startMeeting();
 });
+
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-900">
     <div class="p-0">
       <div v-if="!meetingJoined" class="absolute w-full top-0 mb-4 z-10 flex justify-between items-center">
-        <h1 class="text-xl font-semibold text-white px-4 py-2">{{ meetingName }}</h1>
+        <h1 class="text-xl font-semibold text-white px-4 py-2">{{ meetingName.split('-')[0] }} ({{ meetingName.split('-')[1].match(/.{1,4}/g).join('-') }})</h1>
       </div>
       <div 
         ref="videoContainer"

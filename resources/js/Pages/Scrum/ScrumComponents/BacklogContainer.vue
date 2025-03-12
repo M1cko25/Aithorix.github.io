@@ -105,7 +105,7 @@ const handleTaskClick = (task, event) => {
   ) {
     return
   }
-  emit('editTask', task)
+  emit('editTask', {...task}); // Clone the task object to ensure clean state
 }
 
 // Add click outside handler
@@ -128,18 +128,30 @@ onUnmounted(() => {
 })
 
 // Add watch for task updates
-watch(() => props.epicSelected.tasks, (newTasks) => {
-    if (newTasks) {
-        emit('updateCounts')
+watch(() => props.epicSelected.tasks, (newTasks, oldTasks) => {
+    if (newTasks && oldTasks) {
+        newTasks.forEach((task, index) => {
+            if (oldTasks[index] && task.id === oldTasks[index].id) {
+                // Check if any properties have changed
+                const hasChanged = Object.keys(task).some(key => 
+                    JSON.stringify(task[key]) !== JSON.stringify(oldTasks[index][key])
+                );
+                if (hasChanged) {
+                    emit('taskUpdated', task);
+                }
+            }
+        });
     }
-}, { deep: true })
+    emit('updateCounts');
+}, { deep: true });
 
 const handleTaskStatusChange = async (task) => {
     try {
-        await updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails)
-        emit('taskUpdated', task)
+        await updateTaskStatus(task, props.taskCounts, props.epicSelected, page.projectDetails);
+        // Emit the updated task to ensure parent components are notified
+        emit('taskUpdated', {...task});
     } catch (error) {
-        console.error('Error updating task status:', error)
+        console.error('Error updating task status:', error);
     }
 }
 </script>
