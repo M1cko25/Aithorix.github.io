@@ -6,7 +6,9 @@ import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import Modal from '../Modal.vue';
 import StateDisplay from '../StateDisplay.vue';
+import { usePage } from '@inertiajs/vue3';
 
+const page = usePage().props;
 const props = defineProps({
   modelValue: Boolean
 });
@@ -30,7 +32,6 @@ const form = useForm({
 
 const joinCode = ref('');
 
-// Meeting Options
 const meetingOptions = [
   {
     title: 'Start an instant meeting',
@@ -71,6 +72,7 @@ const handleInstantMeeting = async () => {
       isCreatingMeeting.value = true;
       response = await axios.post('/daily/create-room', {
         name: form.name.split(' ').join('_').trim(),
+        projectId: page.projectDetails.id
       });
     }
 
@@ -136,7 +138,7 @@ const stateDisplayMessage = ref('');
 const stateDisplayState = ref('success');
 
 const copyMeetingCode = () => {
-  navigator.clipboard.writeText(meetingCode.value)
+  navigator.clipboard.writeText(meetingCode.value.substring(0, 4) + '-' + meetingCode.value.substring(4))
     .then(() => {
       const copyButton = document.querySelector('.copy-button');
       copyButton.classList.add('text-green-600');
@@ -282,7 +284,7 @@ const copyMeetingCode = () => {
     <div class="w-full text-center p-4">
       <p class="mb-2">Your meeting code is:</p>
       <div class="bg-gray-50 p-4 rounded-lg mb-4 flex flex-row justify-center gap-4">
-        <p class="text-2xl font-bold text-violet-600">{{ meetingCode }}</p>
+        <p class="text-2xl font-bold text-violet-600">{{ meetingCode.substring(0, 4) }}-{{ meetingCode.substring(4) }}</p>
         <button @click="copyMeetingCode" class="copy-button">
           <Copy class="w-5 h-5 text-violet-600" />
         </button>

@@ -55,11 +55,11 @@ class ScrumController extends Controller
             
         $activities = Activity::with('user:id,name,avatar')
             ->where('project_id', $projectDetails->id)
-            ->whereBetween('date', [Carbon::now()->subMonth(), Carbon::now()])
-            ->orderBy('date', 'desc')
-            ->get(['description', 'date', 'update', 'user_id'])
+            ->whereBetween('created_at', [now()->subMonth(), now()])
+            ->orderBy('created_at', 'desc')
+            ->get(['description', 'date', 'update', 'user_id', 'created_at'])
             ->map(function ($activity) {
-                $activity->date = Carbon::parse($activity->date)->diffForHumans();
+                $activity->created = Carbon::parse($activity->created_at)->diffForHumans();
                 return $activity;
             });
         if ($meetings->isNotEmpty()) {
@@ -139,13 +139,19 @@ class ScrumController extends Controller
 
             // Collect all backlogs
             foreach($epics as $epic) {
-                $epicBacklogs = Backlogs::where('epic_id', $epic->id)->get();
+                $epicBacklogs = Backlogs::with(['attachments', 'assignees'])
+                ->where('epic_id', $epic->id)->
+                where('epic_id', $epic->id)->get();
                 $backlogs = $backlogs->concat($epicBacklogs);
             }
 
             // Collect all sprints
             foreach ($epics as $epic) {
-                $epicSprints = Sprints::where('epic_id', $epic->id)->get();
+                $epicSprints = Sprints::where('epic_id', $epic->id)->get()
+                ->map(function ($sprint) {
+                    $sprint->dated = Carbon::parse($sprint->updated_at)->diffForHumans();
+                    return $sprint;
+                });
                 $sprints = $sprints->concat($epicSprints);
             }
 
@@ -323,8 +329,6 @@ class ScrumController extends Controller
             Backlogs::where('project_id', $request->projectId)
                 ->where('status', $column->title)
                 ->update(['status' => 'To Do']);
-
-            // Delete the column
             $column->delete();
 
             $this->registerUpdate(

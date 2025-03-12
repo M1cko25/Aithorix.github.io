@@ -132,7 +132,7 @@ const handleTaskClick = (task, event) => {
 </script>
 
 <template>
-    <div class="w-80 bg-gray-100 rounded-lg p-4 h-full">
+    <div class="w-80 shadow-xl  rounded-lg p-4 h-full">
         <Overlay
             :isOpen="isOverlayOpen" 
             :buttons="TaskOverlayButtons"

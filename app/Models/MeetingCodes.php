@@ -13,7 +13,8 @@ class MeetingCodes extends Model
         'meeting_name',
         'code',
         'created_by',
-        'expires_at'
+        'expires_at',
+        'project_id',
     ];
 
     /**

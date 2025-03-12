@@ -6,7 +6,7 @@ import { usePage } from '@inertiajs/vue3';
 
 const page = usePage().props;
 const meetingName = ref(page.meetingName || page.params?.name);
-
+const meetingProject = ref(page.project);
 const callFrame = ref(null);
 const meetingUrl = ref("");
 const videoContainer = ref(null);
@@ -23,7 +23,8 @@ const createDailyRoom = async () => {
 
     // Create or join room
     const response = await axios.post("/daily/create-room", {
-      name: meetingName.value
+      name: meetingName.value,
+      projectId: meetingProject.value.id
     });
 
     if (response.data.error) {
@@ -128,7 +129,7 @@ const handleLeftMeeting = () => {
     sessionStorage.removeItem(`meeting_joined_${meetingName.value}`);
     
     // Redirect back to meeting home
-    window.location.href = route('meeting.home');
+    window.location.href = '/scrum/board?id=' + meetingProject.value.id
   } catch (error) {
     console.error('Error in handleLeftMeeting:', error);
   }
@@ -187,7 +188,7 @@ onMounted(() => {
   if (!meetingName.value) {
     console.error('No meeting name provided');
     alert('Invalid meeting configuration');
-    window.location.href = route('meeting.home');
+    window.location.href = '/scrum/board?id=' + meetingProject.value.id
     return;
   }
 

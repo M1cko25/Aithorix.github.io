@@ -120,7 +120,7 @@ const logoDisplayed = ref(true);
       <div 
         v-for="stat in stats" 
         :key="stat.label"
-        class="bg-light rounded-xl p-6 shadow-sm"
+        class="border border-neutral rounded-xl p-6 shadow-sm"
       >
         <div class="flex items-start justify-between">
           <div>
@@ -157,7 +157,7 @@ const logoDisplayed = ref(true);
                 in
                 <span class="text-blue">{{ activity.update }}</span>
               </p>
-              <p class="text-xs text-gray-500 mt-1">{{ activity.date }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ activity.created }}</p>
             </div>
           </div>
         </div>

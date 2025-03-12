@@ -9,6 +9,7 @@ import CompletedSprintModal from './ScrumComponents/CompletedSprintModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 import TaskModal from './ScrumComponents/TaskModal.vue'
 import EpicModal from './ScrumComponents/EpicModal.vue'
+import NoTaskModal from './ScrumComponents/NoTaskModal.vue'
 import MoveTaskModal from './ScrumComponents/MoveTaskModal.vue'
 import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
@@ -52,6 +53,7 @@ const selectedTaskToEdit = ref(null)
 const isEpicModalOpen = ref(false)
 const epicToEdit = ref(null)
 const isMoveModalOpen = ref(false)
+const isNoTaskModalOpen = ref(false)
 
 const calculateTaskCounts = () => {
   const counts = {};
@@ -83,8 +85,10 @@ const updateEpicSelected = (epic) => {
 const handleSprintAction = () => {
   if (epicSelected.value.status === 'On Sprint') {
     openCompleteSprint.value = true
-  } else {
+  } else if((epicSelected.value.status === 'Pending' || epicSelected.value.status === 'Completed') && epicSelected.value.tasks.length > 0) {
     openSprint.value = true
+  } else {
+    isNoTaskModalOpen.value = true
   }
 }
 
@@ -287,7 +291,9 @@ const logoDisplayed = ref(true);
     :epics="epics"
     @sprintCreated="handleSprintCreated"
   />
-
+  <NoTaskModal 
+    v-model:modelValue="isNoTaskModalOpen"
+  />
   <CompletedSprintModal 
     v-model:isOpen="openCompleteSprint"
     :epicSelected="epicSelected"

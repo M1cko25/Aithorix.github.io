@@ -8,14 +8,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\MeetingCodes;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Project;
 
 class MeetingConferenceController extends Controller
 {
-    public function index()
-    {
-        return Inertia::render('Meeting/MeetingHome');
-    }
-
     public function createRoom(Request $request) {
         try {
             $meetingCode = MeetingCodes::generateUniqueCode();
@@ -52,10 +48,6 @@ class MeetingConferenceController extends Controller
             ]);
 
             if (!$response->successful()) {
-                Log::error('Daily.co room creation failed', [
-                    'status' => $response->status(),
-                    'response' => $response->json()
-                ]);
                 return response()->json(['error' => 'Failed to create room'], 500);
             }
             Log::info('room name: ' . $fullRoomName);
@@ -64,6 +56,7 @@ class MeetingConferenceController extends Controller
                 'code' => $meetingCode,
                 'created_by' => Auth::id(),
                 'expires_at' => now()->addDays(1),
+                'project_id' => $request->projectId
             ]);
             
             $newRoom = $response->json();
@@ -96,13 +89,15 @@ class MeetingConferenceController extends Controller
                     ->where('expires_at', '>', now())
                     ->first();
 
+                $project = Project::where('id', $meetingRecord->project_id)->first();
+
                 if (!$meetingRecord) {
                     Log::error('Invalid or expired meeting code');
                     return redirect()->back()->with('error', 'Invalid or expired meeting code');
                 }
                 $fullRoomName = $meetingRecord->getFullRoomName();
                 Log::info('Meeting code: ' . $fullRoomName);
-                return redirect()->route('meeting-room', ['name' => $fullRoomName]);
+                return redirect()->route('meeting-room', ['name' => $fullRoomName, 'project' => $project]);
             }
 
             // For GET requests (accessing meeting room directly)
@@ -127,7 +122,8 @@ class MeetingConferenceController extends Controller
                 ->where('meeting_name', $meetingName)
                 ->where('expires_at', '>', now())
                 ->first();
-
+                
+            $project = Project::where('id', $meetingRecord->project_id)->first();
             if (!$meetingRecord) {
                 Log::error('Invalid or expired meeting, code: ' . $code);
                 return redirect()->back()->with('error', 'Invalid or expired meeting');
@@ -135,6 +131,7 @@ class MeetingConferenceController extends Controller
 
             return Inertia::render('Meeting/Meeting', [
                 'meetingName' => $name,
+                'project' => $project,
                 'params' => [
                     'name' => $name
                 ]
