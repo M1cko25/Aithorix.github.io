@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { CheckCircle } from 'lucide-vue-next'
-import Header from '@/js/Components/Header.vue'
-import Sidebar from '@/js/Components/Sidebar.vue'
+import Header from '@/Components/Header.vue'
+import Sidebar from '@/Components/Sidebar.vue'
 
 const billingCycle = ref('monthly')
 

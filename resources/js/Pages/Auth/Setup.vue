@@ -6,7 +6,7 @@ import logo from '@/images/Logo.png'
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
 import Modal from '@/Components/Modal.vue'
-import { route } from '../../../../vendor/tightenco/ziggy/src/index.js';
+import { route } from '../../../../vendor/tightenco/ziggy/src/js/index.js';
 
 const page = usePage();
 
