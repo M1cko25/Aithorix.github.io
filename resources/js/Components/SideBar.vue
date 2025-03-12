@@ -145,8 +145,8 @@ watch(isCollapsed.value, (newVal) => {
           <Link 
             :href="item.path" 
             :title="isCollapsed ? item.text : ''"
-            class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-neutral"
-            :class="item.isActive ? 'bg-blue text-light hover:bg-button-hover' : ''"
+            class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg"
+            :class="item.isActive ? 'bg-button text-light hover:bg-blue' : 'hover:bg-neutral'"
           >
             <component :is="item.icon" class="w-5 h-5" />
             <span v-if="!isCollapsed">{{ item.text }}</span>
@@ -175,7 +175,7 @@ watch(isCollapsed.value, (newVal) => {
             class="flex w-full flex-row px-4 justify-between items-center"
             :title="isCollapsed ? project.name : ''"
           >
-            <p class="text-sm truncate" :class="{ 'w-full text-center': isCollapsed }">
+            <p class="text-md truncate" :class="isCollapsed ? 'w-full text-center flex items-center justify-center w-7 h-7 rounded-full bg-neutral' : 'w-auto'">
               {{ isCollapsed ? project.name.charAt(0) : project.name }}
             </p>
             <ChevronDown 

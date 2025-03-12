@@ -12,9 +12,11 @@ import axios from 'axios'
 import TaskModal from './ScrumComponents/TaskModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 import Lira from '../../Components/Lira.vue'
+import MeetingModal from '@/Components/Meeting/MeetingModal.vue'
 
 const page = usePage().props;
 const isLiraOpen = ref(false);
+const showMeetingModal = ref(false);
 const toDoTasks = ref([])
 const inProgressTasks = ref([])
 const doneTasks = ref([])
@@ -297,7 +299,8 @@ const logoDisplayed = ref(true);
         return acc;
       }, {})"
     />
-    <div class="pt-16 transition-all duration-300 ease-in-out"  :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`"v>
+    <MeetingModal v-model="showMeetingModal"/>
+    <div class="pt-16 transition-all duration-300 ease-in-out" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
       <!-- Board Header -->
       <div class="p-6 flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -310,9 +313,9 @@ const logoDisplayed = ref(true);
         <div class="flex items-center gap-4">
           <button><Share2/></button>
           <button><Star/></button>
-          <Link :href="route('meeting-home')">
+          <button @click="showMeetingModal = true">
             <Video />
-          </Link>
+          </button>
         </div>
       </div>
       <!-- Board Controls -->

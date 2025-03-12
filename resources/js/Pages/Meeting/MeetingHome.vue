@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Clock, ChevronDown, ChevronLeft, ChevronRight, Video, Calendar, Clock3, CalendarPlus, X, Users } from 'lucide-vue-next';
+import { Clock, ChevronDown, ChevronLeft, ChevronRight, Video, Calendar, Clock3, CalendarPlus, X, Users, Copy } from 'lucide-vue-next';
 import { format, isToday, isThisWeek, parseISO, isAfter, isSameDay, addDays } from 'date-fns';
 import MeetingModal from '@/Components/Meeting/MeetingModal.vue';
 import axios from 'axios';
 import { usePage, useForm } from '@inertiajs/vue3';
 import Icons from '../../Icons'
+import Modal from '@/Components/Modal.vue';
+import StateDisplay from '@/Components/StateDisplay.vue';
 
 
 const page = usePage().props;
@@ -159,6 +161,10 @@ const newMeetingButton = ref(null);
 
 // Modal State
 const showModal = ref(false);
+const codeModal = ref(false);
+const meetingCode = ref('');
+const meetingName = ref('');
+const isCreatingMeeting = ref(false);
 const currentModal = ref({
   type: '',
   title: ''
@@ -304,7 +310,8 @@ onUnmounted(() => {
 });
 
 const form = useForm({
-  name: ''
+  name: '',
+  code: ''
 })
 
 // Add this ref for the join input
@@ -317,18 +324,127 @@ const joinMeeting = () => {
     return;
   }
   
+  // Validate code format
+  const codePattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+  if (!codePattern.test(joinCode.value)) {
+    alert('Invalid code format. Please use format: XXXX-XXXX');
+    return;
+  }
+
+  form.code = joinCode.value;
   form.post(route('meeting-room-post'), {
     preserveScroll: true,
     onSuccess: () => {
       joinCode.value = '';
     },
+    onError: (errors) => {
+      alert(errors.error || 'Failed to join meeting');
+    }
   });
+};
+
+// Update the handleInstantMeeting function
+const handleInstantMeeting = async () => {
+  try {
+    if (!form.name) {
+      alert('Please enter a meeting name');
+      return;
+    }
+    let response;
+    if (!isCreatingMeeting.value) {
+      isCreatingMeeting.value = true;
+      response = await axios.post('/daily/create-room', {
+        name: form.name.split(' ').join('_'),
+      });
+    }
+
+    if (response.data.error) {
+      alert(response.data.error);
+      return;
+    }
+
+    meetingCode.value = response.data.code;
+    meetingName.value = response.data.name;
+    codeModal.value = true;
+    showModal.value = false;
+    isCreatingMeeting.value = false;
+    sessionStorage.setItem(`meeting_code_${response.data.name}`, response.data.code);
+  } catch (error) {
+    console.error('Error creating meeting:', error);
+    alert(error.response?.data?.error || 'Failed to create meeting. Please try again.');
+  }
+};
+
+const goToMeeting = () => {
+  if (!meetingName.value || !meetingCode.value) {
+    alert('Invalid meeting information');
+    return;
+  }
+
+  try {
+    const codeWithoutHyphen = meetingCode.value.replace('-', '');
+    const fullRoomName = `${meetingName.value}_${codeWithoutHyphen}`;
+
+    window.location.href = route('meeting-room', { name: fullRoomName });
+  } catch (error) {
+    console.error('Error navigating to meeting:', error);
+    alert('Failed to join meeting. Please try again.');
+  }
+};
+const codeCopied = ref(false);
+const stateDisplayMessage = ref('')
+const stateDisplayState = ref('success');
+const copyMeetingCode = () => {
+  navigator.clipboard.writeText(meetingCode.value)
+    .then(() => {
+      // Optional: Add a visual feedback that code was copied
+      const copyButton = document.querySelector('.copy-button');
+      copyButton.classList.add('text-green-600');
+      setTimeout(() => {
+        copyButton.classList.remove('text-green-600');
+      }, 1000);
+      stateDisplayMessage.value = 'Meeting code copied to clipboard';
+      codeCopied.value = true;
+    }).catch(err => {
+      stateDisplayState.value = 'error';
+      stateDisplayMessage.value = 'Failed to copy code';
+    });
 };
 
 </script>
 
 <template>
   <Head title="Meeting Home" />
+
+  <StateDisplay v-if="codeCopied" :state="stateDisplayState" :message="stateDisplayMessage"/>
+  <Modal v-model:modelValue="codeModal" title="Meeting Created">
+    <div class="w-full text-center p-4">
+      <p class="mb-2">Your meeting code is:</p>
+      <div class="bg-gray-50 p-4 rounded-lg mb-4 flex flex-row justify-center gap-4">
+        <p class="text-2xl font-bold text-violet-600">{{ meetingCode }}</p>
+        <button @click="copyMeetingCode" class="copy-button">
+          <Copy class="w-5 h-5 text-violet-600" />
+        </button>
+      </div>
+      <p class="text-sm text-gray-600 mb-6">Share this code with your team members to join the meeting.</p>
+      <div class="flex justify-end gap-4">
+        <button 
+          @click="codeModal = false" 
+          class="px-4 py-2 text-sm border rounded-md hover:bg-gray-100"
+        >
+          Close
+        </button>
+        <button 
+          @click="goToMeeting" 
+          class="px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700"
+          :class="`${isCreatingMeeting ? 'opacity-50' : ''}`"
+          :disabled="isCreatingMeeting"
+        >
+          {{  isCreatingMeeting ? 'Joining...' : 'Join Meeting' }}
+        </button>
+      </div>
+    </div>
+  </Modal>
   <div class="min-h-screen bg-gray-50 p-4">
     <div class="container max-w-5xl mx-auto">
       <div>
@@ -378,8 +494,9 @@ const joinMeeting = () => {
           <input 
             v-model="joinCode"
             type="text" 
-            placeholder="Enter a code or link" 
+            placeholder="Enter meeting code (e.g., ABCD-1234)" 
             class="w-full outline-none text-sm"
+            pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
           />
         </div>
         <button 
@@ -549,9 +666,9 @@ const joinMeeting = () => {
             <!-- Instant Meeting Modal Content -->
             <template v-if="currentModal.type === 'instant'">
               <p class="text-sm text-gray-600 mb-4">  
-                Start a meeting right now. Your team can join using the meeting link.
+                Start a meeting right now. You'll receive a unique code to share with participants.
               </p>
-              <form @submit.prevent="form.post(route('meeting-room-post'))" class="space-y-4">
+              <form @submit.prevent="handleInstantMeeting" class="space-y-4">
                 <div>
                   <label class="text-sm font-medium block mb-1">Meeting name</label>
                   <input 
@@ -559,6 +676,7 @@ const joinMeeting = () => {
                     class="w-full border rounded-md px-3 py-2 text-sm"
                     placeholder="My Instant Meeting"
                     v-model="form.name"
+                    required
                   />
                 </div>
                 <div>
@@ -572,6 +690,7 @@ const joinMeeting = () => {
                 </div>
                 <div class="flex justify-end gap-2">
                   <button 
+                    type="button"
                     class="btn-cancel"
                     @click="closeModal"
                   >

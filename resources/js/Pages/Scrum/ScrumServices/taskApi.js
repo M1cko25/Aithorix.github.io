@@ -31,16 +31,8 @@ export function createTask(newTask, taskCounts, selectedType, epics, epicSelecte
           projectId: projectDetails.id
         })
         .then(response => { 
-          epicSelected.tasks.push({
-            id: response.data.id,
-            title: newTask,
-            description: '',
-            priority: 'Low',
-            type: selectedType.name,
-            status: 'To Do',
-            assignees: [],
-            epic_id: activeEpic.id
-          });
+          console.log(response.data);
+          epicSelected.tasks.push(response.data.backlog);
           taskCountsUpdate(taskCounts, epicSelected);
           taskProcessing = false;
         })

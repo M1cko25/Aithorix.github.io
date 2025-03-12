@@ -104,7 +104,7 @@ class TaskController extends Controller
         $projKey = Backlogs::generateKey($projId);
         $epic = Epics::where('id', $request->epicId)->first();
         $creator = ProjectMembers::where('user_id', Auth::user()->id)->value('id');
-        $backlog = Backlogs::create([
+        $createdBacklog = Backlogs::create([
             'title' => $request->title,
             'project_id' => $projId,
             'key' => $projKey,
@@ -116,11 +116,14 @@ class TaskController extends Controller
             'status' => 'To Do',
             'order' => $request->order,
         ]);
+        $backlog = Backlogs::with(['attachments', 'assignees'])
+            ->where('id', $createdBacklog->id)
+            ->first();
         if ($epic->status == "On Sprint") {
             $startDate = new \DateTime($epic->start_date);
             $endDate = new \DateTime($epic->end_date);
             $duration = $startDate->diff($endDate)->days;
-            SprintTasks::create([
+            $sprint = SprintTasks::create([
                 'sprint_id' => $epic->id,
                 'backlog_id' => $backlog->id,
                 'start_date' => $epic->start_date,
@@ -130,7 +133,7 @@ class TaskController extends Controller
             ]);
         }
         $this->registerUpdate($projId, Auth::user()->id, "created " . $request->title . " in ", $epic->name);
-        return response()->json(['success' => true, 'id' => $backlog->id]);
+        return response()->json(['success' => true, 'backlog' => $backlog]);
     }
 
     public function deleteBacklog(Request $request) {

@@ -165,7 +165,7 @@ const handleTaskUpdate = (updatedTask) => {
   }
 
   // Update the task in the epics array as well
-  const epicIndex = epics.value.findIndex(e => e.epic_id === updatedTask.epic_id);
+  const epicIndex = epics.value.findIndex(e => e.id === updatedTask.epic_id);
   if (epicIndex !== -1) {
     const taskIndex = epics.value[epicIndex].tasks.findIndex(t => t.id === updatedTask.id);
     if (taskIndex !== -1) {
