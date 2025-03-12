@@ -65,6 +65,7 @@ class SocialiteController extends Controller
                 session()->put('members', $members);
                 session()->put('user', $user);
                 Auth::login($user);
+                Log::info('User logged in: ' . $user->name);
                 return redirect()->route('home');
             } else {
                 $newUser = User::create([
@@ -79,6 +80,7 @@ class SocialiteController extends Controller
                     session()->put('user', $newUser);
                     Auth::login($newUser);
                 }
+                Log::info('New user created: ' . $newUser->name);
                 return redirect()->route('template');
             }
         } catch (\Exception $e) {
@@ -150,6 +152,7 @@ class SocialiteController extends Controller
                 session()->put('user', $newUser);
                 Auth::login($newUser);
             }
+            Log::info('New user created: ' . $newUser->name);
             return redirect()->route('template');
         }
         }catch (\Exception $e) {
