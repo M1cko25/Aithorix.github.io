@@ -2,45 +2,36 @@
 import Sidebar from '../../Components/SideBar.vue';
 import Header from '@/Components/Header.vue';
 import Button from '@/Components/Button.vue';
-import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'
+import { Users, Video, Star, Share2, CircleCheck } from 'lucide-vue-next'
 import { ref, watch, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import Gantt from '@/Components/Gantt.vue'
 import AddTaskModal from './ScrumComponents/AddTaskModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
+import noData from '@/assets/NoDataIllustration.svg'
+import TimelineModal from './ScrumComponents/TimelineModal.vue'
+import { is } from 'date-fns/locale';
 
 const page = usePage().props;
-const activeTab = ref('timeline')
+const activeTab = ref('gantt')
 const taskNum = ref(0);
 const sprint_tasks = ref(page.sprintTasks);
+const backlogs = ref(page.backlogs);
 const sprints = ref(page.sprints);
 const data = ref([])
 const isSidebarOpen = ref(true);
 
-const activities = ref([
-    {
-        id: 1,
-        title: "You upload a file",
-        time: "10:00 AM",
-        type: "upload",
-    }, 
-    {
-        id: 2,
-        title: "You commented to a task",
-        time: "11:00 AM",
-        type: "comment",
-    }, {
-        id: 3,
-        title: "You created a new task",
-        time: "12:00 PM",
-        type: "create",
-    }, {
-        id: 4,
-        title: "You update a task",
-        time: "1:00 PM",
-        type: "update",
-    }
-])
+const activities = ref([]);
+
+sprints.value.forEach(sprint => {
+  if (sprint.status == "Completed") {
+    activities.value.push({
+      id: sprint.id,
+      title: sprint.name,
+      time: sprint.dated,
+    })
+  }
+})
 
 const sprintTasks = (sprintId) => {
   let subtasks = []
@@ -113,7 +104,6 @@ const handleTaskAdded = (newTask) => {
   console.log('Sprint index:', sprintIndex);
   
   if (sprintIndex !== -1) {
-    // Create a new array for subtasks if it doesn't exist
     if (!data.value[sprintIndex].subtasks) {
       data.value[sprintIndex].subtasks = [];
     }
@@ -176,6 +166,18 @@ const handleDeleteTask = () => {
   });
 }
 const logoDisplayed = ref(true);
+const isDetailsModalOpen = ref(false);
+const activitySelected = ref(null);
+
+const handleTimelineModalClose = () => {
+    isDetailsModalOpen.value = false;
+    activitySelected.value = null;
+};
+
+const handleSeeDetails = (activity) => {
+    activitySelected.value = activity;
+    isDetailsModalOpen.value = true;
+};
 </script>
 <template>
     <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
@@ -191,6 +193,15 @@ const logoDisplayed = ref(true);
         @confirm="handleDeleteTask"
     />
     <Head title=" | Timeline" />
+
+    <TimelineModal 
+    v-model="isDetailsModalOpen"
+    :selectedSprint="activitySelected"
+    :sprintedtasks="backlogs"
+    @update:modelValue="handleTimelineModalClose"
+/>
+
+     />
     <div class="min-h-screen overflow-y-auto">
         <div class="transition-all duration-300 ease-in-out pt-16" :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`">
             <div class="p-6 flex items-center justify-between">
@@ -217,44 +228,18 @@ const logoDisplayed = ref(true);
                 </div>
             </div>
             <div>
-                <div class="flex gap-8 border-b border-dark-gray mb-8">
-                    <button @click="activeTab = 'timeline'" class="ml-6 pb-2 text-gray-600"
-                        :class="activeTab === 'timeline' ? 'border-b-2 border-gray-900 text-gray-900' : ''">
-                        Timeline
-                    </button>
+                <div v-if="sprints.length > 0 && sprints.find(sprint => sprint.status == 'Completed')" class="flex gap-8 border-b border-dark-gray mb-8">
                     <button @click="activeTab = 'gantt'" class="pb-2 text-gray-600"
                         :class="activeTab === 'gantt' ? 'border-b-2 border-gray-900 text-gray-900' : ''">
                         Gantt Chart
                     </button>
+                    <button @click="activeTab = 'timeline'" class="ml-6 pb-2 text-gray-600"
+                        :class="activeTab === 'timeline' ? 'border-b-2 border-gray-900 text-gray-900' : ''">
+                        Timeline
+                    </button>
                 </div>
 
-                <div v-if="activeTab == 'timeline'" v-for="activity in activities" :key="activity.id" class="flex flex-col gap-6">
-                    <div class="py-2 px-6 h-fit justify-start items-start gap-2 inline-flex">
-                        <div  class="flex flex-col w-full justify-between items-center inline-flex">
-                            <div class="self-stretch justify-start items-center gap-6 inline-flex">
-                                <div class="w-2.5 h-2.5 bg-success rounded-full"></div>
-                                <div class="justify-center items-center gap-2.5 flex">
-                                    <Upload v-if="activity.type === 'upload'" class="w-5 h-5"/>
-                                    <ClipboardPlus v-if="activity.type === 'create'" class="w-5 h-5" />
-                                    <FilePenLine v-if="activity.type === 'update'" class="w-5 h-5" />
-                                    <MessageCircle v-if="activity.type === 'comment'" class="w-5 h-5" />
-                                    <div class="">{{ activity.title }}</div>
-                                </div>
-                            </div>
-                            <div class="self-stretch justify-start items-center inline-flex">
-                                <div class="self-stretch px-1 justify-start items-center gap-2.5 flex">
-                                    <div class="w-px self-stretch bg-success"></div>
-                                </div>
-                                <div class="px-10 py-3 justify-between w-full items-start flex overflow-hidden">
-                                    <div class="">{{ activity.time }}</div>
-                                    <Link href="#" class="text-blue underline">See Details</Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div v-if="activeTab == 'gantt'" class="w-full h-full flex flex-col gap-4">
+                <div v-if="activeTab == 'gantt' && sprints.length > 0" class="w-full h-full flex flex-col gap-4">
                     <div class="w-full flex items-center justify-end">
                         <button 
                             v-if="sprintSelected" 
@@ -277,6 +262,41 @@ const logoDisplayed = ref(true);
                         :key="data.length"
                         @rowSelected="(value) => rowSelected = value" />
                     </div>
+                </div>
+
+                <div v-if="activeTab == 'timeline'" v-for="activity in activities" :key="activity.id" class="flex flex-col gap-6">
+                    <div class="py-2 px-6 h-fit justify-start items-start gap-2 inline-flex">
+                        <div  class="flex flex-col w-full justify-between items-center inline-flex">
+                            <div class="self-stretch justify-start items-center gap-6 inline-flex">
+                                <div class="w-2.5 h-2.5 bg-success rounded-full"></div>
+                                <div class="justify-center items-center gap-2.5 flex">
+                                    <CircleCheck class="w-4 h-4" />
+                                    <div class="">{{ activity.title }}</div>
+                                </div>
+                            </div>
+                            <div class="self-stretch justify-start items-center inline-flex">
+                                <div class="self-stretch px-1 justify-start items-center gap-2.5 flex">
+                                    <div class="w-px self-stretch bg-success"></div>
+                                </div>
+                                <div class="px-10 py-3 justify-between w-full items-start flex overflow-hidden">
+                                    <div class="">{{ activity.time }}</div>
+                                    <button 
+                                        @click="handleSeeDetails(activity)" 
+                                        class="text-blue underline"
+                                    >
+                                        See Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="sprints == 0" class="flex flex-col items-center justify-center h-full ">
+                  <img :src="noData" alt="No Data" class="w-32 h-32">
+                  <p class="text-dark text-md">No Sprints available</p>
+                  <p class="text-dark text-md">Start a sprint to get started</p>
+                  <Link class="btn-primary mt-4" :href="`/scrum/backlog?id=` + page.projectDetails.id">Start Sprint</Link>
                 </div>
             </div>
         </div>

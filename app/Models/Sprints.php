@@ -16,5 +16,6 @@ class Sprints extends Model
         'end_date',
         'status',
         'description',
+        'updated_at',
     ];
 }

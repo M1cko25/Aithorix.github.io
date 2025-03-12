@@ -172,7 +172,7 @@ watch(isCollapsed.value, (newVal) => {
         <div v-for="project in projects" :key="project.id" class="w-full my-2">
           <button 
             @click="toggleDown(project.id)" 
-            class="flex w-full flex-row px-4 justify-between items-center"
+            class="flex w-full flex-row px-4 mb-2 justify-between items-center"
             :title="isCollapsed ? project.name : ''"
           >
             <p class="text-md truncate" :class="isCollapsed ? 'w-full text-center flex items-center justify-center w-7 h-7 rounded-full bg-neutral' : 'w-auto'">

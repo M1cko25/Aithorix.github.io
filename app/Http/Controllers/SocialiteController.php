@@ -133,7 +133,6 @@ class SocialiteController extends Controller
                 Auth::login($user);
                 return redirect()->route('template');
             }
-
             session()->put('projects', $projects);
             session()->put('members', $members);
             session()->put('user', $user);

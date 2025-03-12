@@ -142,7 +142,7 @@ Gantt.Inject(Edit, Selection, Toolbar, Resize, DayMarkers);
     :treeColumnIndex="1" 
     child="subtasks"
     :taskFields="taskFields" 
-    height="100%" 
+    height="800"
     :toolbar="toolbarOptions"
     :editSettings="editSettings" 
     :labelSettings="labelSettings" 
@@ -157,7 +157,7 @@ Gantt.Inject(Edit, Selection, Toolbar, Resize, DayMarkers);
     @recordDoubleClick="recordDoubleClick"
     @taskbarEditing="taskbarEditing"
   >
-        <e-columns class="border border-dark">
+      <e-columns class="border border-dark">
       <e-column field='TaskID' headerText='#' textAlign='Left' width=70></e-column>
       <e-column field='TaskName' headerText='Sprints' textAlign='Left' width=200></e-column>
             <e-column field='StartDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>

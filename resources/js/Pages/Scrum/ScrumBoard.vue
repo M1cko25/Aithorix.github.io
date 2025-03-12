@@ -158,19 +158,22 @@ const createNewTask = async (taskData, columnId) => {
       type: taskData.type.name,
       priority: 'Low',
       status: column.title, 
-      epicId: selectedEpic.value.epic_id, 
+      epicId: selectedEpic.value.id, 
       projectId: page.projectDetails.id
     })
 
     if (response.data.success) {
       const newTask = {
-        id: response.data.id,
-        title: taskData.title,
+        id: response.data.backlog.id,
+        title: response.data.backlog.title,
+        key: response.data.backlog.key,
         type: taskData.type.name,
         status: column.title,
         priority: 'Low',
         assignees: [],
-        epic_id: selectedEpic.value.epic_id
+        comments: response.data.backlog.comments,
+        attachments: response.data.backlog.attachments,
+        epic_id: response.data.backlog.epic_id,
       }
       backlogs.value.push(newTask)
       filterTasksByEpic()
@@ -219,7 +222,8 @@ const removeColumn = async (columnId) => {
         const toDoColumn = columns.value.find(col => col.title === 'To Do')
         if (toDoColumn && tasksToMove.length > 0) {
           for (const task of tasksToMove) {
-            await updateTaskStatus(task, 'To Do')
+            await updateTaskStatus(task, 'Done');
+            handleTaskUpdate(task);
           }
         }
         columns.value.splice(columnIndex, 1)
