@@ -9,6 +9,8 @@ use App\Models\ProjectMembers;
 use App\Models\User;
 use App\Models\TaskStatusCol;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 class TemplatesController extends Controller
 {
     public function templateSelected(Request $request)
@@ -48,7 +50,8 @@ class TemplatesController extends Controller
                 }
             }
             
-            $members = [];
+            \DB::beginTransaction();
+            
             $projectCreated = Project::create([
                 'name' => $request->name,
                 'key' => $request->key,
@@ -56,38 +59,13 @@ class TemplatesController extends Controller
                 'template' => $request->template,
                 'members' => count($request->members),
             ]);
+            
             foreach($request->members as $member) {
                 ProjectMembers::create([
                     'project_id' => $projectCreated->id,
                     'user_id' => $member['id'],
                     'role' => $member['role'],
                 ]);
-            }
-
-            // Initialize projects array and name count tracker
-            $projects = [];
-            $nameCount = [];
-
-            // Get all projects for the user
-            $getAllProjects = ProjectMembers::where('user_id', Auth::user()->id)->get();
-            
-            foreach ($getAllProjects as $projectMember) {
-                $project = Project::where('id', $projectMember->project_id)->first();
-                
-                if ($project) {
-                    $originalName = $project->name;
-                    
-                    // Check if this name already exists
-                    if (isset($nameCount[$originalName])) {
-                        $nameCount[$originalName]++;
-                        $project->name = $originalName . ' (' . $nameCount[$originalName] . ')';
-                    } else {
-                        // First occurrence of this name
-                        $nameCount[$originalName] = 0;
-                    }
-                    
-                    array_push($projects, $project);
-                }
             }
 
             $taskTypes = ['To Do', 'In Progress', 'Done'];
@@ -98,10 +76,23 @@ class TemplatesController extends Controller
                 ]);
             }
 
-            session()->put('projects', $projects);
+            // Get fresh list of all projects for the user
+            $userProjects = ProjectMembers::where('user_id', Auth::user()->id)
+                ->with('project')
+                ->get()
+                ->map(function ($projectMember) {
+                    return $projectMember->project;
+                });
+
+            \DB::commit();
+
+            // Update session with fresh project list
+            session()->put('projects', $userProjects);
             session()->put('members', $request->members);
+
             return redirect()->route('scrum-board', ['id' => $projectCreated->id]);
         } catch (\Exception $e) {
+            \DB::rollBack();
             return redirect()->back()->withErrors([
                 'error' => 'An error occurred while creating the project.',
             ]);

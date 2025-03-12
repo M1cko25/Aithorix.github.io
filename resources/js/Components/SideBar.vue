@@ -116,10 +116,10 @@ watch(isCollapsed.value, (newVal) => {
 </script>
 
 <template>
-  <div class="relative transition-all duration-300 ease-in-out" :class="isCollapsed ? 'w-16' : 'md:w-64 w-64'">
+  <div class="absolute transition-all duration-300 ease-in-out min-h-screen" :class="isCollapsed ? 'w-16' : 'md:w-64 w-64'">
     <button
       @click="toggleSidebar"
-      class="absolute z-30 -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50"
+      class="absolute z-40 -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50"
     >
       <component
         :is="isCollapsed ? ChevronRight : ChevronLeft" 
@@ -127,7 +127,7 @@ watch(isCollapsed.value, (newVal) => {
       />
     </button>
   <aside :class="[
-    'fixed top-0 bottom-0 z-10 transition-all duration-300 ease-in-out bg-light border-r',
+    'fixed top-0 bottom-0 z-30 transition-all duration-300 ease-in-out bg-light border-r',
     isCollapsed ? 'w-16 pt-6' : 'md:w-64 w-64'
   ]">
     <img v-if="isCollapsed" :src="Logo" alt="Aithorix" class="h-8 mx-auto mt-4" />
