@@ -1,18 +1,18 @@
 <script setup>
-import Sidebar from '../../Components/Sidebar.vue'
-import Header from '../../Components/Header.vue'
+import Sidebar from '@/js/Components/Sidebar.vue'
+import Header from '@/js/Components/Header.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2, X } from 'lucide-vue-next'
-import Button from '../../Components/Button.vue'
-import KanbanColumn from '../../Components/KanbanColumn.vue'
+import Button from '@/js/Components/Button.vue'
+import KanbanColumn from '@/js/Components/KanbanColumn.vue'
 import { usePage } from '@inertiajs/vue3'
 import graphics from '../../graphics'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import TaskModal from './ScrumComponents/TaskModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue';
-import Lira from '../../Components/Lira.vue';
-import MeetingModal from '../../Components/Meeting/MeetingModal.vue';
+import Lira from '@/js/Components/Lira.vue';
+import MeetingModal from '@/js/Components/Meeting/MeetingModal.vue';
 
 const page = usePage().props;
 const isLiraOpen = ref(false);

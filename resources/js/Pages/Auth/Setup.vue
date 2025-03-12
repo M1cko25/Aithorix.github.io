@@ -1,11 +1,11 @@
 <script setup>
-import Button from '../../Components/Button.vue'
-import TextField from '../../Components/TextField.vue'
+import Button from '@/js/Components/Button.vue'
+import TextField from '@/js/Components/TextField.vue'
 import icon from '../../Icons.js';
 import logo from '@/images/Logo.png'
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
-import Modal from '../../Components/Modal.vue'
+import Modal from '@/js/Components/Modal.vue'
 import { route } from '../../../../vendor/tightenco/ziggy/src/js/index.js';
 
 const page = usePage();

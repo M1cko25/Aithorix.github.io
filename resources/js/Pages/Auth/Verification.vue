@@ -1,6 +1,6 @@
 <script setup>
-import Button from '../../Components/Button.vue'
-import OtpInput from '../../Components/OtpInput.vue'
+import Button from '@/js/Components/Button.vue'
+import OtpInput from '@/js/Components/OtpInput.vue'
 import logo from '@/images/Logo.png'
 import { ref, watch } from 'vue'
 import { router, usePage, useForm } from '@inertiajs/vue3'

@@ -1,11 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue'
-import Button from '../../Components/Button.vue'
-import TextField from '../../Components/TextField.vue'
+import Button from '@/js/Components/Button.vue'
+import TextField from '@/js/Components/TextField.vue'
 import PasswordIcon from '../../../../public/assets/password-icon.svg'
 import resetPasswordIllustration from '../../../../public/assets/resetpass.svg'
 import { useForm, usePage, router } from '@inertiajs/vue3'
-import StateDisplay from '../../Components/StateDisplay.vue' 
+import StateDisplay from '@/js/Components/StateDisplay.vue' 
 
 const { props } = usePage();
 
