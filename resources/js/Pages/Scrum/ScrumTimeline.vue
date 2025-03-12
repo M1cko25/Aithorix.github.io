@@ -1,5 +1,5 @@
 <script setup>
-import Sidebar from '@/Components/Sidebar.vue';
+import Sidebar from '../../Components/SideBar.vue';
 import Header from '@/Components/Header.vue';
 import Button from '@/Components/Button.vue';
 import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'

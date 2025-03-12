@@ -1,6 +1,6 @@
 <script setup>
 import Header from '@/Components/Header.vue'
-import Sidebar from '@/Components/Sidebar.vue'
+import Sidebar from '../../Components/SideBar.vue'
 import { ref } from 'vue'
 import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import 'vue-cal/dist/vuecal.css';

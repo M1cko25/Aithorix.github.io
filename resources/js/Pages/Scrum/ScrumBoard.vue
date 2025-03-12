@@ -1,5 +1,5 @@
 <script setup>
-import Sidebar from '@/Components/Sidebar.vue'
+import Sidebar from '../../Components/SideBar.vue'
 import Header from '@/Components/Header.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2, X } from 'lucide-vue-next'
