@@ -1,7 +1,7 @@
 <script setup>
 // Component Imports
 import Header from '@/Components/Header.vue'
-import Sidebar from '@/Components/Sidebar.vue'
+import Sidebar from '../../Components/SideBar.vue'
 import EpicContainer from './ScrumComponents/EpicContainer.vue'
 import BacklogContainer from './ScrumComponents/BacklogContainer.vue'
 import SprintModal from './ScrumComponents/SprintModal.vue'
