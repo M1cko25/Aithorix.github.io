@@ -4,8 +4,8 @@ import { ref, watch } from 'vue';
 import { Video, Calendar, X, Copy } from 'lucide-vue-next';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
-import Modal from '@/Components/Modal.vue';
-import StateDisplay from '@/Components/StateDisplay.vue';
+import Modal from '../Modal.vue';
+import StateDisplay from '../StateDisplay.vue';
 
 const props = defineProps({
   modelValue: Boolean

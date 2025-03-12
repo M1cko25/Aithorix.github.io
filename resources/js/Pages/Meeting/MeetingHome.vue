@@ -2,12 +2,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Clock, ChevronDown, ChevronLeft, ChevronRight, Video, Calendar, Clock3, CalendarPlus, X, Users, Copy } from 'lucide-vue-next';
 import { format, isToday, isThisWeek, parseISO, isAfter, isSameDay, addDays } from 'date-fns';
-import MeetingModal from '@/Components/Meeting/MeetingModal.vue';
+import MeetingModal from '../../Components/Meeting/MeetingModal.vue';
 import axios from 'axios';
 import { usePage, useForm } from '@inertiajs/vue3';
 import Icons from '../../Icons'
-import Modal from '@/Components/Modal.vue';
-import StateDisplay from '@/Components/StateDisplay.vue';
+import Modal from '../../Components/Modal.vue';
+import StateDisplay from '../../Components/StateDisplay.vue';
 
 
 const page = usePage().props;

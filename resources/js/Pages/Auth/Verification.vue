@@ -1,7 +1,7 @@
 <script setup>
 import Button from '../../Components/Button.vue'
 import OtpInput from '../../Components/OtpInput.vue'
-import logo from '../../../../public/assets/logo.png'
+import logo from '@/images/Logo.png'
 import { ref, watch } from 'vue'
 import { router, usePage, useForm } from '@inertiajs/vue3'
 import { route } from '../../../../vendor/tightenco/ziggy/src/js'

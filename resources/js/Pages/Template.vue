@@ -4,7 +4,7 @@ import Button from '../Components/Button.vue'
 import TemplateCard from '../Components/TemplateCard.vue'
 import graphics from '../graphics'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import logo from '../../../public/assets/logo.png'
+import logo from '@/images/Logo.png'
 import { useForm } from '@inertiajs/vue3'
 
 const templateCards = ref(null);

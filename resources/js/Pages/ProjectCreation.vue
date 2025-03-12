@@ -1,5 +1,5 @@
 <script setup>
-import Logo from '../../../public/assets/logo.png';
+import Logo from '@/images/Logo.png';
 import Icons from '../Icons.js';
 import TextField from '../Components/TextField.vue';
 import Button from '../Components/Button.vue';

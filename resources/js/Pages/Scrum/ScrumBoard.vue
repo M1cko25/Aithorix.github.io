@@ -10,9 +10,9 @@ import graphics from '../../graphics'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import TaskModal from './ScrumComponents/TaskModal.vue'
-import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
-import Lira from '../../Components/Lira.vue'
-import MeetingModal from '@/Components/Meeting/MeetingModal.vue'
+import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue';
+import Lira from '../../Components/Lira.vue';
+import MeetingModal from '../../Components/Meeting/MeetingModal.vue';
 
 const page = usePage().props;
 const isLiraOpen = ref(false);

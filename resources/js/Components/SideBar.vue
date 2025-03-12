@@ -17,7 +17,7 @@ import {
   Menu
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
-import Logo from '../../../public/assets/logo.png'
+import Logo from '@/images/Logo.png'
 import CreateProjectModal from './CreateProjectModal.vue'
 
 const page = usePage()

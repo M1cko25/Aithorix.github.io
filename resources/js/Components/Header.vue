@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { Bell, Settings, HelpCircle, ChevronDown, Plus } from 'lucide-vue-next'
 import Button from './Button.vue'
-import Logo from '../../../public/assets/logo.png'
+import Logo from '@/images/Logo.png'
 import { usePage } from '@inertiajs/vue3'
 import { route } from '../../../vendor/tightenco/ziggy/src/js'
 import CreateProjectModal from './CreateProjectModal.vue'
