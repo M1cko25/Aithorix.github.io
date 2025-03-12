@@ -1,7 +1,8 @@
 <script setup>
 import Button from '@/Components/Button.vue'
 import TextField from '@/Components/TextField.vue'
-import icon from '../../Icons.js';
+import userIcon from '@/assets/user-icon.svg'
+import passwordIcon from '@/assets/password-icon.svg'
 import logo from '@/images/Logo.png'
 import { ref } from 'vue'
 import { useForm, router, usePage } from '@inertiajs/vue3'
@@ -57,7 +58,7 @@ const submit = () => {
                 <div>
                     <TextField 
                     v-model="form.name" 
-                    :icon="icon.userIcon" 
+                    :icon="userIcon" 
                     label="fullName" 
                     type="text"
                     name="fullName"
@@ -70,7 +71,7 @@ const submit = () => {
                 <div>
                     <TextField 
                     v-model="form.password" 
-                    :icon="icon.passwordIcon" 
+                    :icon="passwordIcon" 
                     label="password" 
                     type="password" 
                     name="password"
@@ -83,7 +84,7 @@ const submit = () => {
                 <div>
                     <TextField 
                     v-model="form.password_confirmation" 
-                    :icon="icon.passwordIcon" 
+                    :icon="passwordIcon" 
                     label="confirmPassword" 
                     name="password_confirmation"
                     type="password" 

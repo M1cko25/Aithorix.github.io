@@ -1,6 +1,7 @@
 <script setup>
 import Logo from '@/images/Logo.png';
-import Icons from '../Icons.js';
+import plusIcon from '@/assets/plus-icon.svg'
+import leftIcon from '@/assets/Left-icon.svg'
 import TextField from '../Components/TextField.vue';
 import Button from '../Components/Button.vue';
 import DropDown from '../Components/DropDown.vue';
@@ -226,7 +227,7 @@ const createProject = () => {
              <div>
                 <Link :href="route('template')" preserve-scroll class="flex flex-row 
                 items-center gap-4 top-4 left-4">
-                    <img :src="Icons.leftIcon">
+                    <img :src="leftIcon">
                     <p>Back to Template Selection</p>
                 </Link>
              </div>
@@ -353,7 +354,7 @@ const createProject = () => {
                 <div v-else class="flex flex-row md:gap-2  items-center">
                   <DropDown v-if="member.role !== 'Custom'" :options="roles[templateNum][templateSelected]" style1 v-model="member.role" @select="(value) => updateMemberRole(member.id, value)"/>
                   <TextField v-if="member.role === 'Custom'" v-model="customRole"
-                  hasButton :icon="Icons.plusIcon" :style="`w-full h-10`" 
+                  hasButton :icon="plusIcon" :style="`w-full h-10`" 
                   @click="addCustomRole(member.id)" @onEnter="addCustomRole(member.id)"  />
                   <button v-if="member.role !== 'Custom' && member.role !== leader[templateNum]" @click="RemoveOpen(member.id)">
                     <Delete class="text-red-600"/>
