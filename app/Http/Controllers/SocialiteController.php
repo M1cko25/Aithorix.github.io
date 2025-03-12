@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\ProjectMembers;
+use Illuminate\Support\Facades\Log;
 
 class SocialiteController extends Controller
 {
@@ -81,6 +82,7 @@ class SocialiteController extends Controller
                 return redirect()->route('template');
             }
         } catch (\Exception $e) {
+            Log::error('Error in googleAuth: ' . $e->getMessage());
             return redirect()->route('login');
         }
     }
@@ -90,7 +92,8 @@ class SocialiteController extends Controller
         return Socialite::driver('slack')->redirect();
     }
     public function slacksAuth() {
-        $slackUser = Socialite::driver('slack')->user();
+        try {
+            $slackUser = Socialite::driver('slack')->user();
         $user = User::where('slack_id', $slackUser->id)->first();
         if ($user) {
             $userId = User::where('slack_id', $slackUser->id)->value('id');
@@ -148,6 +151,10 @@ class SocialiteController extends Controller
                 Auth::login($newUser);
             }
             return redirect()->route('template');
+        }
+        }catch (\Exception $e) {
+            Log::error('Error in slackAuth: ' . $e->getMessage());
+            return redirect()->route('login');
         }
     }
 }
