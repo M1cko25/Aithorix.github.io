@@ -3,10 +3,10 @@ import { ref, watch } from 'vue'
 import draggable from "vuedraggable";
 import { ChevronRight, Edit2 } from 'lucide-vue-next'
 import { createNewEpic } from '../ScrumServices/epicApi';
-import Overlay from '../../../Components/Overlay.vue';
+import Overlay from '@/Components/Overlay.vue';
 import {usePage} from '@inertiajs/vue3';
 import axios from 'axios';
-import Button from '../../../Components/Button.vue';
+import Button from '@/Components/Button.vue';
 import EpicModal from './EpicModal.vue'
 
 const page = usePage().props;

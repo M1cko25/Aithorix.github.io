@@ -1,11 +1,11 @@
 <script setup>
-import Sidebar from '@/js/Components/Sidebar.vue';
-import Header from '@/js/Components/Header.vue';
-import Button from '@/js/Components/Button.vue';
+import Sidebar from '@/Components/Sidebar.vue';
+import Header from '@/Components/Header.vue';
+import Button from '@/Components/Button.vue';
 import { Users, Video, Star, Share2, Upload, FilePenLine, ClipboardPlus, MessageCircle } from 'lucide-vue-next'
 import { ref, watch, computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import Gantt from '@/js/Components/Gantt.vue'
+import Gantt from '@/Components/Gantt.vue'
 import AddTaskModal from './ScrumComponents/AddTaskModal.vue'
 import DeleteTaskModal from './ScrumComponents/DeleteTaskModal.vue'
 

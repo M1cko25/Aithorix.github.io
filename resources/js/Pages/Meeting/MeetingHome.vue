@@ -5,8 +5,8 @@ import { format, isToday, isThisWeek, parseISO, isAfter, isSameDay, addDays } fr
 import axios from 'axios';
 import { usePage, useForm } from '@inertiajs/vue3';
 import Icons from '../../Icons'
-import Modal from '@/js/Components/Modal.vue';
-import StateDisplay from '@/js/Components/StateDisplay.vue';
+import Modal from '@/Components/Modal.vue';
+import StateDisplay from '@/Components/StateDisplay.vue';
 
 
 const page = usePage().props;

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import Modal from '../../../Components/Modal.vue'
+import Modal from '@/Components/Modal.vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 

@@ -1,8 +1,8 @@
 <script setup>
 import icon from '../../Icons.js';
 import graphics from '../../graphics.js';
-import Button from '@/js/Components/Button.vue'
-import TextField from '@/js/Components/TextField.vue';
+import Button from '@/Components/Button.vue'
+import TextField from '@/Components/TextField.vue';
 import { Inertia } from '@inertiajs/inertia';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';

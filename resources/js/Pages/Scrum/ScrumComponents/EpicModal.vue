@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import Modal from '../../../Components/Modal.vue'
+import Modal from '@/Components/Modal.vue'
 import { X, Trash2, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 

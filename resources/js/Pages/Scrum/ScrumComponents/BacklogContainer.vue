@@ -4,8 +4,7 @@ import { updateTaskStatus, createTask, deleteTask } from '../ScrumServices/taskA
 import { Edit2, MoreHorizontal, ClipboardList, Bookmark, Bug } from 'lucide-vue-next'
 import draggable from "vuedraggable";
 import { usePage } from '@inertiajs/vue3';
-import Modal from '../../../Components/Modal.vue';
-import Overlay from '../../../Components/Overlay.vue';
+import Overlay from '@/Components/Overlay.vue';
 
 const page = usePage().props;
 const props = defineProps({

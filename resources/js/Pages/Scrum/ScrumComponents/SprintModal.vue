@@ -1,10 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
-import { DatePickerComponent } from '@syncfusion/ej2-vue-calendars'
-import TextField from '../../../Components/TextField.vue'
-import DropDown from '../../../Components/DropDown.vue'
-import Modal from '../../../Components/Modal.vue'
+import Modal from '@/Components/Modal.vue'
 import { updateEpicStatus } from '../ScrumServices/epicApi'
 import axios from 'axios'
 

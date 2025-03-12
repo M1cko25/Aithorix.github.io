@@ -1,7 +1,7 @@
 <script setup>
 // Component Imports
-import Header from '@/js/Components/Header.vue'
-import Sidebar from '@/js/Components/Sidebar.vue'
+import Header from '@/Components/Header.vue'
+import Sidebar from '@/Components/Sidebar.vue'
 import EpicContainer from './ScrumComponents/EpicContainer.vue'
 import BacklogContainer from './ScrumComponents/BacklogContainer.vue'
 import SprintModal from './ScrumComponents/SprintModal.vue'
@@ -13,8 +13,8 @@ import MoveTaskModal from './ScrumComponents/MoveTaskModal.vue'
 import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { Filter, ArrowUpDown, Trash, Replace } from 'lucide-vue-next'
-import TextField from '@/js/Components/TextField.vue'
-import graphics from '@/js/graphics'
+import TextField from '@/Components/TextField.vue'
+import graphics from '@/graphics'
 import axios from 'axios'
 
 const page = usePage().props

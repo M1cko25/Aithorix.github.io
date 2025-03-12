@@ -1,13 +1,13 @@
 <script setup>
-import Header from '@/js/Components/Header.vue'
-import Sidebar from '@/js/Components/Sidebar.vue'
+import Header from '@/Components/Header.vue'
+import Sidebar from '@/Components/Sidebar.vue'
 import { ref } from 'vue'
 import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
 import graphics from '../../graphics';
-import Lira from '@/js/Components/Lira.vue';
+import Lira from '@/Components/Lira.vue';
 
 const page = usePage().props;
 
