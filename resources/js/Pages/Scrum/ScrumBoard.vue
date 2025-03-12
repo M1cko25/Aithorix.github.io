@@ -6,7 +6,7 @@ import { Search, Users, Filter, ArrowUpDown, Video, Star, Share2, X } from 'luci
 import Button from '@/Components/Button.vue'
 import KanbanColumn from '@/Components/KanbanColumn.vue'
 import { usePage } from '@inertiajs/vue3'
-import graphics from '../../graphics'
+import noDataIllustration from '@/assets/noDataIllustration.svg'
 import { Link } from '@inertiajs/vue3'
 import axios from 'axios'
 import TaskModal from './ScrumComponents/TaskModal.vue'
@@ -342,7 +342,7 @@ const logoDisplayed = ref(true);
 
       <!-- No Epics Message -->
       <div v-if="!hasEpics" class="px-6 flex flex-col items-center justify-center py-12">
-        <img :src="graphics.noDataIllustration" class="w-32 h-32 mb-4">
+        <img :src="noDataIllustration" class="w-32 h-32 mb-4">
         <p class="text-gray-600 mb-4">No epics found in this project.</p>
         <Link :href="'/scrum/backlog?id=' + page.projectDetails.id" class="btn-primary">
           Create Epic in Backlog

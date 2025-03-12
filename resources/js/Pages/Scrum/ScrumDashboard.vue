@@ -6,7 +6,7 @@ import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight 
 import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
-import graphics from '../../graphics';
+import noDataIllustration from '@/assets/noDataIllustration.svg'
 import Lira from '@/Components/Lira.vue';
 
 const page = usePage().props;
@@ -183,7 +183,7 @@ const logoDisplayed = ref(true);
             </div>
           </div>
           <div v-else class="flex flex-col justify-center h-full items-center gap-5">
-            <img :src="graphics.noDataIllustration" class="w-20 h-20">
+            <img :src="noDataIllustration" class="w-20 h-20">
             <h1 class="font-bold">No activity yet</h1>
             <p>Try creating few backlogs</p>
           </div>

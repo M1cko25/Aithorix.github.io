@@ -14,7 +14,7 @@ import { ref, computed, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { Filter, ArrowUpDown, Trash, Replace } from 'lucide-vue-next'
 import TextField from '@/Components/TextField.vue'
-import graphics from '@/graphics'
+import noDataIllustration from '@/assets/noDataIllustration.svg'
 import axios from 'axios'
 
 const page = usePage().props
@@ -408,7 +408,7 @@ const logoDisplayed = ref(true);
         />
         
         <div v-else-if="epics.length == 0" class="flex flex-col gap-4 justify-center items-center mt-6">
-          <img :src="graphics.noDataIllustration" class="w-20 h-20">
+          <img :src="noDataIllustration" class="w-20 h-20">
           <p>Try Create some epic to get started</p>
         </div>
       </div>
