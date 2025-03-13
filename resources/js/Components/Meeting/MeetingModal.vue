@@ -24,6 +24,7 @@ const currentModal = ref({
   type: '',
   title: ''
 });
+const isJoiningRoom = ref(false);
 
 const form = useForm({
   name: '',
@@ -89,7 +90,8 @@ const handleInstantMeeting = async () => {
     sessionStorage.setItem(`meeting_code_${response.data.name}`, response.data.code);
   } catch (error) {
     console.error('Error creating meeting:', error);
-    alert(error.response?.data?.error || 'Failed to create meeting. Please try again.');
+    alert(error.response?.data?.error || 'Failed to create meeting. Please try again later.');
+    isCreatingMeeting.value = false;
   }
 };
 
@@ -106,16 +108,21 @@ const joinMeeting = () => {
   }
 
   form.code = joinCode.value;
-  form.post(route('meeting-room-post'), {
+  if (!isJoiningRoom.value){
+    isJoiningRoom.value = true;
+    form.post(route('meeting-room-post'), {
     preserveScroll: true,
     onSuccess: () => {
       joinCode.value = '';
       emit('update:modelValue', false);
+      isJoiningRoom.value = false;
     },
     onError: (errors) => {
       alert(errors.error || 'Failed to join meeting');
+      isJoiningRoom.value = false;
     }
-  });
+    });
+  }
 };
 
 const goToMeeting = () => {
@@ -171,9 +178,10 @@ const copyMeetingCode = () => {
         />
         <button 
           @click="joinMeeting" 
+          :disabled="isJoiningRoom"
           class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          Join
+          {{ isJoiningRoom ? 'Joining...' : 'Join' }}
         </button>
       </div>
 
@@ -222,9 +230,10 @@ const copyMeetingCode = () => {
             </button>
             <button 
               type="submit" 
+              :disabled="isCreatingMeeting"
               class="px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700"
             >
-              Start Meeting
+              {{ isCreatingMeeting ? 'Creating...' : 'Create Meeting' }}
             </button>
           </div>
         </form>

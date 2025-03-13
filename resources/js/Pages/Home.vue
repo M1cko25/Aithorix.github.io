@@ -1,7 +1,7 @@
 <script setup>
 import Header from '../Components/Header.vue'
 import SideBar from '../Components/SideBar.vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { MoreVertical, Plus } from 'lucide-vue-next'
 import TextField from '../Components/TextField.vue'
 
@@ -13,21 +13,35 @@ const today = d.toLocaleDateString('en-US', {
 }).replace(',', '.');
 const currentDate = ref(today)
 
-const stats = ref([
-  { label: 'Total Project', value: '1' },
-  { label: 'Total Tasks', value: '3' },
-  { label: 'Assigned Tasks', value: '1' },
-  { label: 'Completed Tasks', value: '1' }
-])
+const props = defineProps({
+  stats: {
+    type: Object,
+    required: true
+  },
+  tasks: {
+    type: Array,
+    required: true
+  },
+  projectCards: {
+    type: Array,
+    required: true
+  },
+  meetings: {
+    type: Array,
+    required: true
+  }
+});
+
+const formattedStats = computed(() => [
+  { label: 'Total Projects', value: props.stats.totalProjects },
+  { label: 'Total Tasks', value: props.stats.totalTasks },
+  { label: 'Assigned Tasks', value: props.stats.assignedTasks },
+  { label: 'Completed Tasks', value: props.stats.completedTasks }
+]);
 
 const myWorkTabs = ref(['Upcoming', 'Overdue', 'Completed'])
 const activeMyWorkTab = ref('Upcoming')
-
-const tasks = ref()
-
-const projects = ref()
 const isSidebarOpen = ref(true);
-const meetings = ref()
 const logoDisplayed = ref(true);
 </script>
 
@@ -46,7 +60,7 @@ const logoDisplayed = ref(true);
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div
-        v-for="stat in stats"
+        v-for="stat in formattedStats"
         :key="stat.label"
         class="bg-white rounded-xl p-6 shadow-sm"
       >
@@ -85,8 +99,11 @@ const logoDisplayed = ref(true);
             <input type="checkbox" class="mt-1" />
             <div>
               <h4 class="font-medium">{{ task.title }}</h4>
-              <p class="text-sm text-gray-500">{{ task.dateRange }}</p>
+              <p class="text-sm text-gray-500">{{ task.project }} - {{ task.dateRange }}</p>
             </div>
+          </div>
+          <div v-if="tasks.length === 0" class="text-center text-gray-500 py-4">
+            No tasks found
           </div>
         </div>
       </div>
@@ -100,7 +117,7 @@ const logoDisplayed = ref(true);
 
         <div class="space-y-4">
           <div
-            v-for="project in projects"
+            v-for="project in projectCards"
             :key="project.name"
             class="flex items-center justify-between p-4 border rounded-lg"
           >
@@ -111,16 +128,33 @@ const logoDisplayed = ref(true);
               </span>
             </div>
             <div class="flex -space-x-2">
-              <img
-                v-for="(member, index) in project.members"
-                :key="index"
-                :src="member"
-                class="w-8 h-8 rounded-full border-2 border-white"
-              />
-              <span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600 border-2 border-white">
-                +3
-              </span>
+              <template v-if="project.members.length > 0">
+                <template v-for="(member, index) in project.members.slice(0, 3)" :key="member.id">
+                  <img 
+                    v-if="member.avatar" 
+                    :src="member.avatar" 
+                    :alt="member.name"
+                    class="w-8 h-8 rounded-full border-2 border-white"
+                  />
+                  <div 
+                    v-else 
+                    class="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-800"
+                  >
+                    {{ member.name.charAt(0).toUpperCase() }}
+                  </div>
+                </template>
+                <span 
+                  v-if="project.members.length > 3" 
+                  class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600 border-2 border-white"
+                >
+                  +{{ project.members.length - 3 }}
+                </span>
+              </template>
+              <span v-else class="text-sm text-gray-500">No members yet</span>
             </div>
+          </div>
+          <div v-if="projectCards.length === 0" class="text-center text-gray-500 py-4">
+            No projects found
           </div>
         </div>
       </div>
@@ -143,6 +177,9 @@ const logoDisplayed = ref(true);
               <h4 class="font-medium">{{ meeting.title }}</h4>
               <p class="text-sm text-gray-500">{{ meeting.time }}</p>
             </div>
+          </div>
+          <div v-if="meetings.length === 0" class="text-center text-gray-500 py-4">
+            No upcoming meetings
           </div>
         </div>
       </div>
