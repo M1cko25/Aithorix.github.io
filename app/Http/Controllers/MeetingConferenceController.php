@@ -102,18 +102,28 @@ class MeetingConferenceController extends Controller
                     ->where('expires_at', '>', now())
                     ->first();
 
-                $project = Project::where('id', $meetingRecord->project_id)->first();
-
-                // MeetingParticipants::create([
-                //     'meeting_id' => $meetingRecord->id,
-                //     'user_id' => Auth::id(),
-                //     'status' => 'On Time'
-                // ]);
-
                 if (!$meetingRecord) {
                     Log::error('Invalid or expired meeting code');
                     return redirect()->back()->with('error', 'Invalid or expired meeting code');
                 }
+
+                // Get the actual meeting record
+                $meeting = Meetings::where('code_id', $meetingRecord->id)->first();
+                
+                if (!$meeting) {
+                    Log::error('Meeting not found for code: ' . $meetingCode);
+                    return redirect()->back()->with('error', 'Meeting not found');
+                }
+
+                $project = Project::where('id', $meetingRecord->project_id)->first();
+
+                // Create participant record with the correct meeting ID
+                MeetingParticipants::create([
+                    'meeting_id' => $meeting->id, // Use the actual meeting ID
+                    'user_id' => Auth::id(),
+                    'status' => 'On Time'
+                ]);
+
                 $fullRoomName = $meetingRecord->getFullRoomName();
                 Log::info('Meeting code: ' . $fullRoomName);
                 return redirect()->route('meeting-room', ['name' => $fullRoomName, 'project' => $project]);
@@ -142,17 +152,27 @@ class MeetingConferenceController extends Controller
                 ->where('expires_at', '>', now())
                 ->first();
 
-            // MeetingParticipants::create([
-            //     'meeting_id' => $meetingRecord->id,
-            //     'user_id' => Auth::id(),
-            //     'status' => 'On Time'
-            // ]);
-                
-            $project = Project::where('id', $meetingRecord->project_id)->first();
             if (!$meetingRecord) {
                 Log::error('Invalid or expired meeting, code: ' . $code);
                 return redirect()->back()->with('error', 'Invalid or expired meeting');
             }
+
+            // Get the actual meeting record
+            $meeting = Meetings::where('code_id', $meetingRecord->id)->first();
+            
+            if (!$meeting) {
+                Log::error('Meeting not found for code: ' . $code);
+                return redirect()->back()->with('error', 'Meeting not found');
+            }
+
+            // Create participant record with the correct meeting ID
+            MeetingParticipants::create([
+                'meeting_id' => $meeting->id,
+                'user_id' => Auth::id(),
+                'status' => 'On Time'
+            ]);
+                
+            $project = Project::where('id', $meetingRecord->project_id)->first();
 
             return Inertia::render('Meeting/Meeting', [
                 'meetingName' => $name,
@@ -163,7 +183,8 @@ class MeetingConferenceController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error joining meeting', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return redirect()->back()->with('error', 'Failed to join meeting');
         }
