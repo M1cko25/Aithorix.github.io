@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Models\TaskStatusCol;
 use Illuminate\Validation\ValidationException;
 use App\Models\SprintTasks;
+use App\Models\TaskAssignees;
 
 
 class ScrumController extends Controller
@@ -44,14 +45,38 @@ class ScrumController extends Controller
             ->count();
             
         $meetingCreated = Meetings::where('project_id', $projectDetails->id)
-        ->where('created_at', '>=', Carbon::now()->subDays(7))
-        ->count();
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->count();
             
         $meetings = Meetings::where('project_id', $projectDetails->id)
             ->get(['id','date', 'start_time', 'end_time']);
             
         $backlogCreated = Backlogs::where('project_id', $projectDetails->id)
-        ->where('created_at', '>=', Carbon::now()->subDays(7))->count();
+            ->where('created_at', '>=', Carbon::now()->subDays(7))->count();
+
+        // Get project members with their task counts
+        $memberWorkloads = ProjectMembers::where('project_id', $projectDetails->id)
+            ->with(['user:id,name,avatar'])
+            ->get()
+            ->map(function ($member) use ($projectDetails) {
+                $taskCount = TaskAssignees::whereIn('task_id', function($query) use ($projectDetails) {
+                    $query->select('id')
+                        ->from('backlogs')
+                        ->where('project_id', $projectDetails->id);
+                })
+                ->where('user_id', $member->user_id)
+                ->count();
+
+                return [
+                    'id' => $member->user_id,
+                    'name' => $member->user->name,
+                    'avatar' => $member->user->avatar,
+                    'role' => $member->role,
+                    'taskCount' => $taskCount
+                ];
+            })
+            ->sortByDesc('taskCount')
+            ->values();
             
         $activities = Activity::with('user:id,name,avatar')
             ->where('project_id', $projectDetails->id)
@@ -62,13 +87,17 @@ class ScrumController extends Controller
                 $activity->created = Carbon::parse($activity->created_at)->diffForHumans();
                 return $activity;
             });
+
         if ($meetings->isNotEmpty()) {
-            $onTime = MeetingParticipants::where('meeting_id', $meetings->pluck('id'))
-            ->where('status', 'on time')->count();
-            $late = MeetingParticipants::where('meeting_id', $meetings->pluck('id'))
-            ->where('status', 'late')->count();
-            $absent = MeetingParticipants::where('meeting_id', $meetings->pluck('id'))
-            ->where('status', 'absent')->count();
+            $onTime = MeetingParticipants::whereIn('meeting_id', $meetings->pluck('id'))
+                ->where('status', '=', 'On Time')
+                ->count();
+            $late = MeetingParticipants::whereIn('meeting_id', $meetings->pluck('id'))
+                ->where('status', '=', 'Late')
+                ->count();
+            $absent = MeetingParticipants::whereIn('meeting_id', $meetings->pluck('id'))
+                ->where('status', '=', 'Absent')
+                ->count();
         } else {
             $onTime = 0;
             $late = 0;
@@ -89,6 +118,7 @@ class ScrumController extends Controller
             'late' => $late,
             'absent' => $absent,
             'totalMembers' => $totalMembers,
+            'memberWorkloads' => $memberWorkloads,
         ]);
     }
     

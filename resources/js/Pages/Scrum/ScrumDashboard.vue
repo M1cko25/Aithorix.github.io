@@ -191,7 +191,7 @@ const logoDisplayed = ref(true);
       </div>
 
       <!-- Meeting Participation -->
-      <div v-if="meetingDates.length > 0" class="flex flex-row gap-6">
+      <div v-if="meetingDates.length > 0" class="flex md:flex-row flex-col gap-6">
         <div class="bg-light w-full rounded-xl p-6 shadow-sm">
           <h2 class="font-semibold text-xl mb-4">Meeting Participation</h2>
           <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>
@@ -201,24 +201,64 @@ const logoDisplayed = ref(true);
             class="border rounded-lg px-3 py-2">
               <option v-for="date in meetingDates" :key="date">{{ formatDate(date) }}</option>
             </select>
-            <!-- <select class="border rounded-lg px-3 py-2">
-              <option v-for="times in meetingTimes" :key="times">{{ times }}</option>
-            </select> -->
           </div>
 
           <!-- Radial Chart Placeholder -->
-            <div class="relative flex flex-row items-center justify-center">
-              <VueApexCharts 
-                :options="radialOptions"
-                :series="radialSeries"
-                height="180"
+          <div class="relative flex flex-row items-center justify-center">
+            <VueApexCharts 
+              :options="radialOptions"
+              :series="radialSeries"
+              height="180"
+            />
+            <ul class="list-disc">
+                <li>{{ page.onTime }} on time</li>
+                <li>{{ page.late }} late</li>
+                <li>{{ page.absent }} absent</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Task Workloads -->
+        <div class="bg-light w-full rounded-xl p-6 shadow-sm">
+          <h2 class="font-semibold text-xl mb-4">Task Workloads</h2>
+          <p class="text-sm text-gray-500 mb-6">View task distribution among team members</p>
+
+          <div v-if="page.memberWorkloads.length > 0" class="space-y-4 max-h-[300px] overflow-y-auto">
+            <div v-for="member in page.memberWorkloads" 
+              :key="member.id" 
+              class="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
+            >
+              <img 
+                v-if="member.avatar" 
+                :src="member.avatar" 
+                :alt="member.name" 
+                class="w-10 h-10 rounded-full"
               />
-              <ul class="list-disc">
-                  <li>{{ page.onTime }} on time</li>
-                  <li>{{ page.late }} late</li>
-                  <li>{{ page.absent }} absent</li>
-              </ul>
+              <div v-else class="w-10 h-10 rounded-full bg-blue flex items-center justify-center text-light">
+                {{ member.name.slice(0,2).toUpperCase() }}
+              </div>
+              
+              <div class="flex-1">
+                <div class="flex justify-between items-center mb-1">
+                  <div>
+                    <p class="font-medium">{{ member.name }}</p>
+                    <p class="text-sm text-gray-500">{{ member.role }}</p>
+                  </div>
+                  <span class="text-sm font-medium">{{ member.taskCount }} tasks</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    class="bg-blue h-2 rounded-full" 
+                    :style="{ width: `${(member.taskCount / Math.max(...page.memberWorkloads.map(m => m.taskCount))) * 100}%` }"
+                  ></div>
+                </div>
+              </div>
             </div>
+          </div>
+          <div v-else class="flex flex-col items-center justify-center py-8 text-gray-500">
+            <ClipboardList class="w-12 h-12 mb-2" />
+            <p>No tasks assigned yet</p>
+          </div>
         </div>
       </div>
     </div>

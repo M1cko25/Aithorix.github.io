@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\MeetingCodes;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Project;
+use App\Models\Meetings;
+use App\Models\MeetingParticipants;
 
 class MeetingConferenceController extends Controller
 {
@@ -51,12 +53,23 @@ class MeetingConferenceController extends Controller
                 return response()->json(['error' => 'Failed to create room'], 500);
             }
             Log::info('room name: ' . $fullRoomName);
-            MeetingCodes::create([
+            
+            $meetCode = MeetingCodes::create([
                 'meeting_name' => $request->name,
                 'code' => $meetingCode,
                 'created_by' => Auth::id(),
                 'expires_at' => now()->addDays(1),
                 'project_id' => $request->projectId
+            ]);
+            Meetings::create([
+                'name' => $request->name,
+                'code_id' => $meetCode->id,
+                'status' => 'started',
+                'date' => now(),
+                'start_time' => now(),
+                'end_time' => now()->addHours(1),
+                'project_id' => $request->projectId,
+                'creator_id' => Auth::id()
             ]);
             
             $newRoom = $response->json();
@@ -91,6 +104,12 @@ class MeetingConferenceController extends Controller
 
                 $project = Project::where('id', $meetingRecord->project_id)->first();
 
+                MeetingParticipants::create([
+                    'meeting_id' => $meetingRecord->id,
+                    'user_id' => Auth::id(),
+                    'status' => 'On Time'
+                ]);
+
                 if (!$meetingRecord) {
                     Log::error('Invalid or expired meeting code');
                     return redirect()->back()->with('error', 'Invalid or expired meeting code');
@@ -122,6 +141,12 @@ class MeetingConferenceController extends Controller
                 ->where('meeting_name', $meetingName)
                 ->where('expires_at', '>', now())
                 ->first();
+
+            MeetingParticipants::create([
+                'meeting_id' => $meetingRecord->id,
+                'user_id' => Auth::id(),
+                'status' => 'On Time'
+            ]);
                 
             $project = Project::where('id', $meetingRecord->project_id)->first();
             if (!$meetingRecord) {
