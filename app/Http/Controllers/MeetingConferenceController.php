@@ -104,11 +104,11 @@ class MeetingConferenceController extends Controller
 
                 $project = Project::where('id', $meetingRecord->project_id)->first();
 
-                MeetingParticipants::create([
-                    'meeting_id' => $meetingRecord->id,
-                    'user_id' => Auth::id(),
-                    'status' => 'On Time'
-                ]);
+                // MeetingParticipants::create([
+                //     'meeting_id' => $meetingRecord->id,
+                //     'user_id' => Auth::id(),
+                //     'status' => 'On Time'
+                // ]);
 
                 if (!$meetingRecord) {
                     Log::error('Invalid or expired meeting code');
@@ -142,11 +142,11 @@ class MeetingConferenceController extends Controller
                 ->where('expires_at', '>', now())
                 ->first();
 
-            MeetingParticipants::create([
-                'meeting_id' => $meetingRecord->id,
-                'user_id' => Auth::id(),
-                'status' => 'On Time'
-            ]);
+            // MeetingParticipants::create([
+            //     'meeting_id' => $meetingRecord->id,
+            //     'user_id' => Auth::id(),
+            //     'status' => 'On Time'
+            // ]);
                 
             $project = Project::where('id', $meetingRecord->project_id)->first();
             if (!$meetingRecord) {
