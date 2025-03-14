@@ -30,7 +30,12 @@ defineProps({
         type: String,
         default: ''
     },
+    enterable: {
+        type: Boolean,
+        default: false
+    },
 })
+
 </script>
 <template>
     <a v-if="social" :href="href" :class="`btn-cancel ${style} py-2 w-full text-lg flex row justify-center items-center gap-2`">
@@ -41,6 +46,3 @@ defineProps({
         <slot/>
     </button>
 </template>
-<style scoped>
-
-</style>

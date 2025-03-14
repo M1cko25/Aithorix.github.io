@@ -1,5 +1,5 @@
 <script setup>
-import logo from '../../../public/assets/Logo2.png'
+import logo from '@/images/Logo2.png'
 import Button from '../Components/Button.vue'
 
 defineProps({

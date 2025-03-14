@@ -1,11 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import Button from '../../Components/Button.vue'
-import TextField from '../../Components/TextField.vue'
-import EmailIcon from '../../../../public/assets/email-icon.svg'
-import forgotPasswordIllustration from '../../../../public/assets/forgotpass.svg'
+import Button from '@/Components/Button.vue'
+import TextField from '@/Components/TextField.vue'
+import EmailIcon from '@/assets/email-icon.svg'
+import forgotPasswordIllustration from '@/assets/forgotpass.svg'
 import { useForm } from '@inertiajs/vue3'
-import StateDisplay from '../../Components/StateDisplay.vue'
+import StateDisplay from '@/Components/StateDisplay.vue'
 
 let form = useForm({
     email: '',

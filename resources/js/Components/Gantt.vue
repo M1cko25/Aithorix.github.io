@@ -1,111 +1,169 @@
 <script setup>
 import { GanttComponent as EjsGantt, ColumnsDirective as EColumns,
- ColumnDirective as EColumn, Edit, Selection, Toolbar } from '@syncfusion/ej2-vue-gantt';
+ ColumnDirective as EColumn, Edit, Selection, Toolbar, Resize, DayMarkers, Gantt } from '@syncfusion/ej2-vue-gantt';
  import '@syncfusion/ej2-material-theme/styles/material.css';
- import { ref, provide } from 'vue'
- import { Plus } from 'lucide-vue-next'
+import { ref, provide, watch } from 'vue'
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import TaskModal from '../Pages/Scrum/ScrumComponents/TaskModal.vue'
 
-const data = ref([{
-         TaskID: 1,
-         TaskName: 'Planning',
-         StartDate: new Date('02/03/2025'),
-         EndDate: new Date('02/07/2025'),
-         Progress: 20,
-         Duration: 5,
-         subtasks: [
-             { TaskID: 2, TaskName: 'Plan timeline', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100,},
-             { TaskID: 3, TaskName: 'Plan budget', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
-             { TaskID: 4, TaskName: 'Allocate resources', StartDate: new Date('02/03/2025'), EndDate: new Date('02/07/2025'), Duration: 5, Progress: 100, },
-         ]
-     },
-     {
-         TaskID: 6,
-         TaskName: 'Design',
-         StartDate: new Date('02/10/2025'),
-         EndDate: new Date('02/14/2025'),
-         Duration: 3,
-         Progress: 26,
-         subtasks: [
-             { TaskID: 7, TaskName: 'Software Specification', StartDate: new Date('02/10/2025'), EndDate: new Date('02/12/2025'), Duration: 3, Progress: 60, },
-             { TaskID: 8, TaskName: 'Develop prototype', StartDate: new Date('02/10/2025'), EndDate: new Date('02/12/2025'), duration: 3, Progress: 100,},
-             { TaskID: 9, TaskName: 'Get approval from customer', startDate: new Date('02/13/2025'), EndDate: new Date('02/14/2025'), Duration: 2, Progress: 100, },
-             { TaskID: 10, TaskName: 'Design Documentation', startDate: new Date('02/13/2025'), endDate: new Date('02/14/2025'), duration: 2, Progress: 100, },
-         ]
-     }, {
-      TaskID: 11,
-         TaskName: 'Implementation',
-         StartDate: new Date('02/17/2025'),
-         EndDate: new Date('02/27/2025'),
-         Duration: 11,
-         Progress: 50,
-         subtasks: [
-             { TaskID: 12, TaskName: 'Software Development', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-             { TaskID: 13, TaskName: 'Prepare documentation', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-         ]
-     }, {
-      TaskID: 14,
-         TaskName: 'Quality Assurance',
-         StartDate: new Date('02/17/2025'),
-         EndDate: new Date('02/27/2025'),
-         Duration: 11,
-         Progress: 50,
-         subtasks: [
-             { TaskID: 15, TaskName: 'Bug fix', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-             { TaskID: 16, TaskName: 'Follow-up', StartDate: new Date('02/17/2025'), EndDate: new Date('02/27/2025'), Duration: 11, Progress: 50, },
-         ]
-     }
-    ])
-     let taskFields = ref({
+const page = usePage().props;
+
+const props = defineProps({
+  data: {
+    type: Array,
+    required: true
+  }
+})
+
+const emit = defineEmits(['rowSelected']);
+
+const ganttData = ref(props.data);
+
+// Watch for changes in props.data
+watch(() => props.data, (newData) => {
+  ganttData.value = [...newData];
+}, { deep: true });
+
+const taskFields = ref({
              id: 'TaskID',
              name: 'TaskName',
              startDate: 'StartDate',
              endDate: 'EndDate',
-             duration: 'Duration',
              progress: 'Progress',
+  status: 'Status',
              child: 'subtasks',
+  duration: 'Duration'
      })
-     const toolbarOptions = ref(['Add', 'Edit', 'Update', 'Delete', 'Cancel', 'ExpandAll', 'CollapseAll']);
+
+const toolbarOptions = ref(['Edit', 'Update', 'Cancel', 'ExpandAll', 'CollapseAll']);
      const editSettings = ref({
-         allowAdding: true,
-         allowEditing: true,
-         allowTaskbarEditing: true,
+  AllowEditing: true,
          allowDeleting: true,
-         allowTaskbarEditing: true,
          allowDependencyEditing: true,
          showDeleteConfirmDialog: true,
          allowAdding: true,
-         mode: 'auto',
+  allowResizing: true,
+  allowTaskbarEditing: true,
+  allowDragAndDrop: true,
+  allowSelection: true,
+  mode: 'Auto'
      })
 
      const labelSettings = {
-        rightLabel: '<img src=""',
+  rightLabel: '${Progress}%',
         taskLabel: '${taskData.TaskName}'
     };
-    const addSubTask = (parentTask) => {
-  const newTaskID = tasks.value.length + 1;
-  tasks.value.push({
-    TaskID: newTaskID,
-    TaskName: `New Task ${newTaskID}`,
-    StartDate: new Date(),
-    Duration: 3,
-    parentID: parentTask.TaskID, // Assign as a subtask
-  });
-};
 
-provide("gantt", [Edit, Selection, Toolbar]);
+const rowSelected = (args) => {
+  emit('rowSelected', args.data.TaskName);
+}
+
+const taskbarEdited = (args) => {
+    const task = page.backlogs.find(backlog => backlog.title + " (" + backlog.key + ")" == args.data.TaskName);
+    axios.post('/scrum/sprint-task-update', {
+      taskId: task.id,
+      start_date: args.data.StartDate,
+      end_date: args.data.EndDate,
+      duration: args.data.Duration,
+      projectId: page.projectDetails.id,
+      epicId: task.epic_id
+    }).catch(error => {
+      console.log(error);
+    })
+}
+
+const isTaskModalOpen = ref(false)
+const selectedTask = ref(null)
+
+const recordDoubleClick = (args) => {
+  const task = page.backlogs.find(backlog => backlog.title + " (" + backlog.key + ")" == args.rowData.TaskName);
+  if (task) {
+    selectedTask.value = task;
+    isTaskModalOpen.value = true;
+  }
+}
+
+const handleTaskUpdate = (updatedTask) => {
+  // Find the sprint in data
+  const sprintIndex = ganttData.value.findIndex(item => 
+    item.subtasks && item.subtasks.some(task => 
+      task.TaskName === updatedTask.title + " (" + updatedTask.key + ")"
+    )
+  );
+  
+  if (sprintIndex !== -1) {
+    // Find and update the task in subtasks
+    const taskIndex = ganttData.value[sprintIndex].subtasks.findIndex(task => 
+      task.TaskName === selectedTask.value.title + " (" + selectedTask.value.key + ")"
+    );
+    
+    if (taskIndex !== -1) {
+      // Update task data
+      ganttData.value[sprintIndex].subtasks[taskIndex] = {
+        ...ganttData.value[sprintIndex].subtasks[taskIndex],
+        TaskName: updatedTask.title + " (" + updatedTask.key + ")",
+        Status: updatedTask.status,
+        Progress: updatedTask.status === 'Done' ? 100 : updatedTask.status === 'In Progress' ? 50 : 0
+      };
+      
+      // Create a new array reference to trigger reactivity
+      ganttData.value = [...ganttData.value];
+    }
+  }
+}
+
+const taskbarEditing = (args) => {
+  const taskSprint = page.backlogs.find(backlog => backlog.title + " (" + backlog.key + ")" == args.data.TaskName);
+
+  if (taskSprint) {
+    const sprint = page.sprints.find(sprint => sprint.epic_id == taskSprint.epic_id);
+    if (sprint.status != "Active") {
+      args.cancel = true;
+    }
+  }
+}
+
+provide("gantt", [Edit, Selection, Toolbar, Resize, DayMarkers]);
+Gantt.Inject(Edit, Selection, Toolbar, Resize, DayMarkers);
+
 </script>
 
 <template>
-  <ejs-gantt :dataSource='data' :treeColumnIndex='1' child='subtasks' 
-  :taskFields= 'taskFields' height="100%" :toolbar="toolbarOptions"
-  :editSettings="editSettings" allowTaskbarEditing="true" :labelSettings="labelSettings">
-        <e-columns class="border border-dark">
-            <e-column field='TaskName' headerText='Task Name' textAlign='Left' width=200></e-column>
+  <TaskModal
+    v-model:isOpen="isTaskModalOpen"
+    :task="selectedTask"
+    :epicSelected="page.epics.find(epic => epic.id === selectedTask?.epic_id)"
+    @update:task="handleTaskUpdate"
+  />
+  <ejs-gantt 
+    :key="JSON.stringify(ganttData)"
+    :dataSource="ganttData" 
+    :treeColumnIndex="1" 
+    child="subtasks"
+    :taskFields="taskFields" 
+    height="800"
+    :toolbar="toolbarOptions"
+    :editSettings="editSettings" 
+    :labelSettings="labelSettings" 
+    :allowDragAndDrop="true" 
+    :allowResizing="true"
+    :allowTaskbarEditing="true"
+    :allowEditing="true"
+    :highlightWeekends="true"
+    :workWeek="['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
+    @taskbarEdited="taskbarEdited"
+    @rowSelected="rowSelected"
+    @recordDoubleClick="recordDoubleClick"
+    @taskbarEditing="taskbarEditing"
+  >
+      <e-columns class="border border-dark">
+      <e-column field='TaskID' headerText='#' textAlign='Left' width=70></e-column>
+      <e-column field='TaskName' headerText='Sprints' textAlign='Left' width=200></e-column>
             <e-column field='StartDate' headerText='Start Date' textAlign='Right' format='yMd' width=90></e-column>
-            <e-column field='Duration' headerText='Duration' textAlign='Right' width=80></e-column>
-            <template #columnTemplate="{ data }">
-              <button @click="addSubTask(data)" class="p-1"><Plus/></button>
-            </template>
+      <e-column field='EndDate' headerText='End Date' textAlign='Right' format='yMd' width=90></e-column>
+      <e-column field='Status' headerText='Status' textAlign='Right' width=80></e-column>
+      <e-column field='Progress' headerText='Progress' textAlign='Right' width=80></e-column>
        </e-columns>
     </ejs-gantt>
 </template>
@@ -116,19 +174,21 @@ provide("gantt", [Edit, Selection, Toolbar]);
   outline: none !important;
 }
 .e-gantt-parent-progressbar {
+  background-color: #0077B6 !important;
   outline: none !important;
-  background: none !important;
 }
 .e-gantt-child-taskbar {
   background: #D9D9D9 !important;
   outline: none !important;
 }
 .e-gantt-child-progressbar {
-  background: none !important;
-  border-top: 3px solid #09B1EC !important;
+  background: #09B1EC !important;
 }
 .e-gantt-child-taskbar .e-task-label {
   color: #000 !important;
   font-size: 0.6rem !important;
+}
+.e-gantt .e-gantt-chart .e-gantt-parent-taskbar .e-task-label {
+  color: white !important;
 }
 </style>

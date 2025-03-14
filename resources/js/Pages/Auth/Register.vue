@@ -1,9 +1,11 @@
 <script setup>
-import icon from '../../Icons.js';
-import graphics from '../../graphics.js';
-import Button from '../../Components/Button.vue'
-import TextField from '../../Components/TextField.vue';
-import { Inertia } from '@inertiajs/inertia';
+import leftIcon from '@/assets/Left-icon.svg'
+import signupIllustration from '@/assets/signup-illustration.svg'
+import googleIcon from '@/assets/google-icon.svg'
+import slackIcon from '@/assets/slack-icon.svg'
+import emailIcon from '@/assets/email-icon.svg'
+import Button from '@/Components/Button.vue'
+import TextField from '@/Components/TextField.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -18,7 +20,7 @@ const form = useForm({
     <Head title="| Sign Up"/>
     <div class="min-h-screen flex items-center justify-center">
         <Link :href="route('landing')" class="flex flex-row items-center gap-4 absolute top-4 left-4">
-            <img :src="icon.leftIcon">
+            <img :src="leftIcon">
             <p>Back</p>
         </Link>
         <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
@@ -30,8 +32,8 @@ const form = useForm({
                     
                     <!-- OAuth Buttons -->
                     <div class=" mb-6 flex flex-col gap-2 border">
-                        <Button social :pic="icon.googleIcon" :href="route('googleLogin')">Google</Button>
-                        <Button social :pic="icon.slackIcon" :href="route('slackLogin')">Slack</Button>
+                        <Button social :pic="googleIcon" :href="route('googleLogin')">Google</Button>
+                        <Button social :pic="slackIcon" :href="route('slackLogin')">Slack</Button>
                     </div>
 
                     <div class="relative flex flex-col gap-3">
@@ -46,7 +48,7 @@ const form = useForm({
                     <!-- Form -->
                     <form @submit.prevent="form.post('/register')" class="flex flex-col gap-8 p-4">
                     <div>
-                        <TextField :icon="icon.emailIcon" label="Email" v-model="form.email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
+                        <TextField :icon="emailIcon" label="Email" v-model="form.email" type="email" labeltxt="Email" name="email" placeholder="jon@email.com"/>
                         <p v-if="form.errors.email" class="text-red-600 text-sm text-center">{{ form.errors.email }}</p>
                     </div>
                     <Button
@@ -65,7 +67,7 @@ const form = useForm({
             </div>
             <!-- Right side - Illustration -->
             <div class="hidden lg:block lg:w-1/2 bg-light p-6">
-                <img :src="graphics.signupIllustration" alt="Illustration" class="w-full h-full object-contain" />
+                <img :src="signupIllustration" alt="Illustration" class="w-full h-full object-contain" />
             </div>
         </div>
     </div>

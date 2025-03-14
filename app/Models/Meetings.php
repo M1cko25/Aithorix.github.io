@@ -10,9 +10,8 @@ class Meetings extends Model
     /** @use HasFactory<\Database\Factories\MeetingsFactory> */
     use HasFactory;
     protected $fillable = [
-        'title',
-        'description',
-        'link',
+        'name',
+        'code_id',
         'status',
         'date',
         'start_time',

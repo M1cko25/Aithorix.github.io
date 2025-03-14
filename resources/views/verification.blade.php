@@ -15,7 +15,6 @@
     <p>Aithorix will never ask you for your code or password via email or phone.<br></p>
     <p>For assistance or to report suspicious activity contact support at<br>[support@aithorix.com]</p>
     <p>Sincerely,<br>The Aithorix Security Team<br></p>
-    <p>[Privacy Policy][Contact Support]</p>
 </body>
 
 </html>

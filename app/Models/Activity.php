@@ -16,6 +16,7 @@ class Activity extends Model
         'project_id',
         'date',
         'update',
+        'created_at',
     ];
 
     public function user() {

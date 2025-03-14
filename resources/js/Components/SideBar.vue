@@ -10,12 +10,16 @@ import {
   Logs,
   Rocket,
   CalendarDays,
-  Search,
-  Filter
+  Plus,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from 'lucide-vue-next'
 import { usePage } from '@inertiajs/vue3'
+import Logo from '@/images/Logo.png'
+import CreateProjectModal from './CreateProjectModal.vue'
 
-// Add this after your existing props definition
 const page = usePage()
 const props = defineProps({
   projectItems: {
@@ -25,43 +29,39 @@ const props = defineProps({
       { id: 'board', icon: Kanban, text: 'Board', path: '/scrum/board?id=', active: true },
       { id: 'timeline', icon: ChartGantt, text: 'Timeline', path: '/scrum/timeline?id=', active: false },
       { id: 'backlog', icon: Logs, text: 'Backlog', path: '/scrum/backlog?id=', active: false },
-      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/upgrade', active: false },
+      { id: 'upgrade', icon: Rocket, text: 'Upgrade Plan', path: '/scrum/upgrade-plan?id=', active: false },
     ]
-  }
+  }, 
 })
+const emits = defineEmits(['sidebarCollapsed', 'logoAppear'])
+const isCollapsed = ref(false);
+const isProjectSectionCollapsed = ref(false)
+const projects = ref(page.props.projects.project)
+const isCreateModal = ref(false)
 
-const searchQuery = ref('')
-const currentProject = ref('Scrum Project')
-
-const menuItems = [
-  { icon: Home, text: 'Home', path: '/home' },
-  { icon: Briefcase, text: 'My Work', path: '/work' },
-  { icon: Star, text: 'Starred', path: '/starred' },
-]
+const menuItems = ref([
+  { icon: Home, text: 'Home', path: '/home', isActive: true },
+  { icon: Briefcase, text: 'My Work', path: '/work', isActive: false },
+  { icon: Star, text: 'Starred', path: '/starred', isActive: false },
+])
 
 const activeStates = ref(new Map())
+const projectStates = ref(new Map())
+
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  emits('sidebarCollapsed', isCollapsed.value)
+  emits('logoAppear', !isCollapsed.value)
+}
+
+const toggleProjectSection = () => {
+  isProjectSectionCollapsed.value = !isProjectSectionCollapsed.value
+}
 
 const isItemActive = (projectId, itemPath) => {
   const key = `${projectId}-${itemPath}`
   return activeStates.value.get(key) || false
 }
-
-watch(
-  () => page.url,
-  (newUrl) => {
-    if (page.props.projects?.project?.length) {
-      page.props.projects.project.forEach(project => {
-      props.projectItems.forEach(item => {
-        const key = `${project.id}-${item.path}`
-        const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
-        activeStates.value.set(key, isActive)
-      })
-    })
-    }
-  },
-  { immediate: true }
-)
-const projectStates = ref(new Map())
 
 const toggleDown = (projectId) => {
   projectStates.value.set(projectId, !isProjectOpen(projectId))
@@ -74,6 +74,30 @@ const isProjectOpen = (projectId) => {
   }
   return page.url.includes(projectId)
 }
+
+watch(
+  () => page.url,
+  (newUrl) => {
+    if (page.props.projects?.project?.length) {
+      page.props.projects.project.forEach(project => {
+        props.projectItems.forEach(item => {
+          const key = `${project.id}-${item.path}`
+          const isActive = newUrl === item.path + project.id || newUrl.includes(item.path + project.id)
+          activeStates.value.set(key, isActive)
+        })
+      })
+    }
+    menuItems.value.forEach(item => {
+      if (item.path == newUrl) {
+        item.isActive = true
+      } else {
+        item.isActive = false
+      }
+    })
+  },
+  { immediate: true }
+)
+
 watch(
   () => page.props.projects,
   (newProjects) => {
@@ -85,32 +109,47 @@ watch(
   },
   { immediate: true, deep: true }
 )
+watch(isCollapsed.value, (newVal) => {
+  emits('sidebarCollapsed', newVal)
+}, { immediate: true, deep: true })
 
 </script>
 
 <template>
-  <aside class="md:w-64 absolute md:left-0 -left-full bg-light border-r h-screen fixed top-0">
-    <!-- Search Section -->
-    <div class="p-4">
-      <div class="relative">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search"
-          class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
-        <Search class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-        <Filter class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
-      </div>
-    </div>
+  <div class="absolute transition-all duration-300 ease-in-out min-h-screen" :class="isCollapsed ? 'w-16' : 'md:w-64 w-64'">
+    <button
+      @click="toggleSidebar"
+      class="absolute z-40 -right-3 top-16 bg-white border rounded-full p-1 shadow-md hover:bg-gray-50"
+    >
+      <component
+        :is="isCollapsed ? ChevronRight : ChevronLeft" 
+        class="w-4 h-4"
+      />
+    </button>
+  <aside :class="[
+    'fixed top-0 bottom-0 z-30 transition-all duration-300 ease-in-out bg-light border-r',
+    isCollapsed ? 'w-16 pt-6' : 'md:w-64 w-64'
+  ]">
+    <img v-if="isCollapsed" :src="Logo" alt="Aithorix" class="h-8 mx-auto mt-4" />
 
     <!-- Main Navigation -->
     <nav class="px-2">
       <ul class="space-y-1">
+        <li class="my-4">
+          <button @click="isCreateModal = true" class="flex items-center w-full btn-primary gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-neutral">
+            <Plus class="w-4 h-4" />
+            <p v-if="!isCollapsed">Create Project</p>
+          </button>
+        </li>
         <li v-for="item in menuItems" :key="item.text">
-          <Link :href="item.path" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+          <Link 
+            :href="item.path" 
+            :title="isCollapsed ? item.text : ''"
+            class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg"
+            :class="item.isActive ? 'bg-button text-light hover:bg-blue' : 'hover:bg-neutral'"
+          >
             <component :is="item.icon" class="w-5 h-5" />
-            {{ item.text }}
+            <span v-if="!isCollapsed">{{ item.text }}</span>
           </Link>
         </li>
       </ul>
@@ -118,38 +157,113 @@ watch(
 
     <!-- Project Section -->
     <div class="mt-6">
-      <div class="px-4 mb-2 border-b border-neutral mx-2">
-        Projects
-      </div>  
-      <div v-for="project in page.props.projects.project" :key="project.id" class="w-full my-2">
-        <button @click="toggleDown(project.id)" class="flex w-full flex-row px-5 justify-between items-center">
-          <p class="text-lg">{{ project.name }}</p>
-          <ChevronDown :class="{ 'transform rotate-180 transition-transform duration-300': projectStates.get(project.id) }"/>
-        </button>
-        <Transition name="list">
-          <ul v-show="isProjectOpen(project.id)" class="space-y-1 px-2">
-          <li v-for="item in props.projectItems" :key="item.text">
-            <Link
-              :href="item.path + project.id" @click="activateLink(item.text)"
-              class="flex items-center gap-3 px-4 py-2 rounded-lg"
-              :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' 
-              : 'text-gray-700'">
-              <component :is="item.icon" class="w-5 h-5" />
-              {{ item.text }}
-            </Link>
-          </li>
-        </ul>
-      </Transition>
+      <div 
+        class="px-4 mb-2 border-b border-neutral mx-2 flex items-center justify-between cursor-pointer"
+        @click="toggleProjectSection"
+      >
+        <span v-if="!isCollapsed">Projects</span>
+        <component 
+          :is="isCollapsed ? Menu : (isProjectSectionCollapsed ? ChevronRight : ChevronDown)" 
+          class="w-4 h-4"
+        />
       </div>
       
+      <div v-show="!isProjectSectionCollapsed || isCollapsed">
+        <div v-for="project in projects" :key="project.id" class="w-full my-2">
+          <button 
+            @click="toggleDown(project.id)" 
+            class="flex w-full flex-row px-4 mb-2 justify-between items-center"
+            :title="isCollapsed ? project.name : ''"
+          >
+            <p class="text-md truncate" :class="isCollapsed ? 'w-full text-center flex items-center justify-center w-7 h-7 rounded-full bg-neutral' : 'w-auto'">
+              {{ isCollapsed ? project.name.charAt(0) : project.name }}
+            </p>
+            <ChevronDown 
+              v-if="!isCollapsed" class="w-4 h-4"
+              :class="{ 'transform rotate-180 transition-transform duration-300': projectStates.get(project.id) }"
+            />
+          </button>
+          
+          <Transition name="list">
+            <ul v-show="isProjectOpen(project.id)" class="space-y-1 px-2">
+              <li v-for="item in props.projectItems" :key="item.text">
+                <Link
+                  :href="item.path + project.id"
+                  :title="isCollapsed ? item.text : ''"
+                  class="flex items-center gap-3 px-4 py-2 rounded-lg"
+                  :class="isItemActive(project.id, item.path) ? 'bg-blue text-light hover:bg-button-hover' : 'text-dark'"
+                >
+                  <component :is="item.icon" class="w-5 h-5" />
+                  <span v-if="!isCollapsed">{{ item.text }}</span>
+                </Link>
+              </li>
+            </ul>
+          </Transition>
+        </div>
+      </div>
     </div>
 
     <!-- Meeting Summaries -->
     <div class="mt-6 px-4">
-      <a href="/meetings" class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+      <a 
+        href="/meetings" 
+        class="flex items-center gap-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+        :title="isCollapsed ? 'Meeting Summaries' : ''"
+      >
         <CalendarDays class="w-5 h-5" />
-        Meeting Summaries
+        <span v-if="!isCollapsed">Meeting Summaries</span>
       </a>
     </div>
   </aside>
+</div>
+  <!-- Overlay for mobile -->
+  <div 
+    v-if="!isCollapsed" 
+    class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+    @click="toggleSidebar"
+  ></div>
+  <CreateProjectModal
+    v-model="isCreateModal"
+  />
 </template>
+
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ensure content is scrollable */
+aside {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+</style>

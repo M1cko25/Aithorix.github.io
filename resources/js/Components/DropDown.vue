@@ -31,17 +31,17 @@ const selectOption = (event) => {
 </script>
 <template>
     <div>
-        <select v-if="style1" @change="selectOption($event)" :value="modelValue" class="rounded-md bg-transparent hover:bg-light-gray md:p-2 outline-none" >
+        <select v-if="style1" @change="selectOption($event)" :value="modelValue" class="rounded-md w-full bg-transparent hover:bg-light-gray md:p-2 outline-none" >
             <option v-for="option in options" :key="option" :value="option" >
                 {{ option }}
             </option>
         </select>
-        <select v-else-if="oneValue" class="rounded-md bg-transparent hover:bg-light-gray p-2 outline-none" disabled>
+        <select v-else-if="oneValue" class="rounded-md w-full bg-transparent hover:bg-light-gray p-2 outline-none" disabled>
             <option>
                 {{ value }}
             </option>
         </select>
-        <select v-else class="bg-transparent border-b-2 border-primary p-2 text-dark rounded shadow-lg">
+        <select v-else class="bg-transparent w-full border border-dark p-2 text-dark rounded">
             <option v-for="(option, index) in options" :key="option" :value="option">
                 {{ option }}
             </option>

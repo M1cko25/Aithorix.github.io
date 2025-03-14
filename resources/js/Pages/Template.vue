@@ -2,9 +2,14 @@
 import { ref, computed } from 'vue'
 import Button from '../Components/Button.vue'
 import TemplateCard from '../Components/TemplateCard.vue'
-import graphics from '../graphics'
+import educationIllustration from '@/assets/education-illustration.svg'
+import eventIllustration from '@/assets/eventPlanning-Illustration.svg'
+import scrumIllustration from '@/assets/scrum-illustration.svg'
+import researchIllustration from '@/assets/research-illustration.svg'
+import contentIllustration from '@/assets/content-illustration.svg'
+
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import logo from '../../../public/assets/logo.png'
+import logo from '@/images/Logo.png'
 import { useForm } from '@inertiajs/vue3'
 
 const templateCards = ref(null);
@@ -15,31 +20,31 @@ const templates = [
     id: 1,
     title: 'Education Purpose',
     description: 'For students or teachers to plan lessons, track assignments, and manage deadlines.',
-    illustration: graphics.educationIllustration
+    illustration: educationIllustration
   },
   {
     id: 2,
     title: 'Event Planning',
     description: 'For planning events like conferences, weddings, or product launches.',
-    illustration: graphics.eventIllustration
+    illustration: eventIllustration
   },
   {
     id: 3,
     title: 'Scrum',
     description: 'Built for teams using the Scrum framework, emphasizing structured workflows and clear roles.',
-    illustration: graphics.scrumIllustration
+    illustration: scrumIllustration
   },
   {
     id: 4,
     title: 'Research Development',
     description: 'For teams conducting research, testing prototypes, or innovating products.',
-    illustration: graphics.researchIllustration
+    illustration: researchIllustration
   },
   {
     id: 5,
     title: 'Content Calendar',
     description: 'For marketers, bloggers, or social media managers to plan and track content publication schedules.',
-    illustration: graphics.contentIllustration
+    illustration: contentIllustration
   }
 ]
 

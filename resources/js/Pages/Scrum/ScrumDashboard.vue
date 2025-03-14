@@ -1,12 +1,13 @@
 <script setup>
-import Header from '../../Components/Header.vue'
-import Sidebar from '../../Components/Sidebar.vue'
+import Header from '@/Components/Header.vue'
+import Sidebar from '../../Components/SideBar.vue'
 import { ref } from 'vue'
 import { Calendar, CheckSquare, Video, ClipboardList, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import 'vue-cal/dist/vuecal.css';
 import VueApexCharts from 'vue3-apexcharts';
 import { usePage } from '@inertiajs/vue3';
-import graphics from '../../graphics';
+import noDataIllustration from '@/assets/noDataIllustration.svg'
+import Lira from '@/Components/Lira.vue';
 
 const page = usePage().props;
 
@@ -24,20 +25,21 @@ const stats = ref([
     period: 'at the last 7 days'
   },
   {
+    icon: Calendar,
+    label: 'Backlog Created',
+    value: page.backlogCreated,
+    period: 'in the last 7 days'
+  },
+  {
     icon: Video,
     label: 'Meeting Created',
     value: page.meetingCreated,
     period: 'at the last 7 days'
-  },
-  {
-    icon: Calendar,
-    label: 'Sprints',
-    value: page.sprints,
-    period: 'in the last 7 days'
   }
 ])
 
 const activities = page.activities;
+const isLiraOpen = ref(false);
 
 const chartOptions = ref({
   chart: {
@@ -101,13 +103,14 @@ const formatDate = (dateString) => {
 
 
 const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
-
+const isSidebarOpen = ref(true);
+const logoDisplayed = ref(true);
 </script>
 
 <template>
-  <Header />
-  <Sidebar />
-  <div class="md:ml-64 md:pt-16 md:p-6 p-2" id="content">
+  <Header :logoDisplay="logoDisplayed"/>
+  <Sidebar @sidebarCollapsed="(value) => { isSidebarOpen = value }" @logoAppear="(value) => logoDisplayed = value"/>
+  <div class="md:pt-16 md:p-6 p-2 transition-all duration-300 ease-in-out"  :class="`${isSidebarOpen ? 'ml-16' : 'ml-64'}`" id="content">
     <div class="py-6 flex items-center">
         <h1 class="text-2xl font-bold ">{{ page.projectDetails.name }}<span class="text-xl font-normal"> > Dashboard</span></h1>
     </div>
@@ -117,7 +120,7 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
       <div 
         v-for="stat in stats" 
         :key="stat.label"
-        class="bg-light rounded-xl p-6 shadow-sm"
+        class="border border-neutral rounded-xl p-6 shadow-sm"
       >
         <div class="flex items-start justify-between">
           <div>
@@ -154,7 +157,7 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
                 in
                 <span class="text-blue">{{ activity.update }}</span>
               </p>
-              <p class="text-xs text-gray-500 mt-1">{{ activity.date }}</p>
+              <p class="text-xs text-gray-500 mt-1">{{ activity.created }}</p>
             </div>
           </div>
         </div>
@@ -180,7 +183,7 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
             </div>
           </div>
           <div v-else class="flex flex-col justify-center h-full items-center gap-5">
-            <img :src="graphics.noDataIllustration" class="w-20 h-20">
+            <img :src="noDataIllustration" class="w-20 h-20">
             <h1 class="font-bold">No activity yet</h1>
             <p>Try creating few backlogs</p>
           </div>
@@ -188,7 +191,7 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
       </div>
 
       <!-- Meeting Participation -->
-      <div v-if="meetingDates.length > 0" class="flex flex-row gap-6">
+      <div v-if="meetingDates.length > 0" class="flex md:flex-row flex-col gap-6">
         <div class="bg-light w-full rounded-xl p-6 shadow-sm">
           <h2 class="font-semibold text-xl mb-4">Meeting Participation</h2>
           <p class="text-sm text-gray-500 mb-6">View all members participation in meetings</p>
@@ -198,26 +201,67 @@ const meetingDates = ref(page.meetings.map((meeting) => meeting.date))
             class="border rounded-lg px-3 py-2">
               <option v-for="date in meetingDates" :key="date">{{ formatDate(date) }}</option>
             </select>
-            <!-- <select class="border rounded-lg px-3 py-2">
-              <option v-for="times in meetingTimes" :key="times">{{ times }}</option>
-            </select> -->
           </div>
 
           <!-- Radial Chart Placeholder -->
-            <div class="relative flex flex-row items-center justify-center">
-              <VueApexCharts 
-                :options="radialOptions"
-                :series="radialSeries"
-                height="180"
+          <div class="relative flex flex-row items-center justify-center">
+            <VueApexCharts 
+              :options="radialOptions"
+              :series="radialSeries"
+              height="180"
+            />
+            <ul class="list-disc">
+                <li>{{ page.onTime }} on time</li>
+                <li>{{ page.late }} late</li>
+                <li>{{ page.absent }} absent</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Task Workloads -->
+        <div class="bg-light w-full rounded-xl p-6 shadow-sm">
+          <h2 class="font-semibold text-xl mb-4">Task Workloads</h2>
+          <p class="text-sm text-gray-500 mb-6">View task distribution among team members</p>
+
+          <div v-if="page.memberWorkloads.length > 0" class="space-y-4 max-h-[300px] overflow-y-auto">
+            <div v-for="member in page.memberWorkloads" 
+              :key="member.id" 
+              class="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
+            >
+              <img 
+                v-if="member.avatar" 
+                :src="member.avatar" 
+                :alt="member.name" 
+                class="w-10 h-10 rounded-full"
               />
-              <ul class="list-disc">
-                  <li>{{ page.onTime }} on time</li>
-                  <li>{{ page.late }} late</li>
-                  <li>{{ page.absent }} absent</li>
-              </ul>
+              <div v-else class="w-10 h-10 rounded-full bg-blue flex items-center justify-center text-light">
+                {{ member.name.slice(0,2).toUpperCase() }}
+              </div>
+              
+              <div class="flex-1">
+                <div class="flex justify-between items-center mb-1">
+                  <div>
+                    <p class="font-medium">{{ member.name }}</p>
+                    <p class="text-sm text-gray-500">{{ member.role }}</p>
+                  </div>
+                  <span class="text-sm font-medium">{{ member.taskCount }} tasks</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    class="bg-blue h-2 rounded-full" 
+                    :style="{ width: `${(member.taskCount / Math.max(...page.memberWorkloads.map(m => m.taskCount))) * 100}%` }"
+                  ></div>
+                </div>
+              </div>
             </div>
+          </div>
+          <div v-else class="flex flex-col items-center justify-center py-8 text-gray-500">
+            <ClipboardList class="w-12 h-12 mb-2" />
+            <p>No tasks assigned yet</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
+  <Lira :isOpen="isLiraOpen" @update:isOpen="isLiraOpen = $event" />
 </template>

@@ -1,8 +1,12 @@
 <script setup>
-import icon from '../../Icons.js'
-import graphics from '../../graphics.js'
-import Button from '../../Components/Button.vue'
-import TextField from '../../Components/TextField.vue'
+import leftIcon from '@/assets/Left-icon.svg'
+import signinIllustration from '@/assets/signin-illustration.svg'
+import googleIcon from '@/assets/google-icon.svg'
+import slackIcon from '@/assets/slack-icon.svg'
+import emailIcon from '@/assets/email-icon.svg'
+import passwordIcon from '@/assets/password-icon.svg'
+import Button from '@/Components/Button.vue'
+import TextField from '@/Components/TextField.vue'
 import { useForm } from '@inertiajs/vue3'
 
 const form = useForm({
@@ -17,13 +21,13 @@ const form = useForm({
     <Head title="| Log In" />
     <div class="min-h-screen flex items-center justify-center overflow-hidden">
         <Link :href="route('landing')" class="flex flex-row items-center gap-4 absolute top-4 left-4">
-            <img :src="icon.leftIcon">
+            <img :src="leftIcon">
             <p>Back</p>
         </Link>
         <div class="bg-light rounded-xl shadow-lg overflow-hidden flex max-w-4xl w-full">
             <!-- Left side - Illustration -->
             <div class="hidden lg:block lg:w-1/2 bg-gray-100 p-6">
-                <img :src="graphics.signinIllustration" alt="Illustration" class="w-full h-full object-contain" />
+                <img :src="signinIllustration" alt="Illustration" class="w-full h-full object-contain" />
             </div>
             
             <!-- Right side - Form -->
@@ -36,13 +40,13 @@ const form = useForm({
                     <div class="flex gap-4 mb-6">
                         <Button 
                             social 
-                            :pic="icon.googleIcon" 
+                            :pic="googleIcon" 
                             :style="`py-2 flex-1 text-lg`" 
                             :href="route('googleLogin')"
                         >Google</Button>
                         <Button 
                             social 
-                            :pic="icon.slackIcon" 
+                            :pic="slackIcon" 
                             :style="`py-2 flex-1 text-lg`" 
                             :href="route('slackLogin')"
                         >Slack</Button>
@@ -61,7 +65,7 @@ const form = useForm({
                     <form @submit.prevent="form.post('/login')" class="flex flex-col gap-2 p-2">
                         <TextField
                             v-model="form.email" 
-                            :icon="icon.emailIcon" 
+                            :icon="emailIcon" 
                             label="Email" 
                             type="email"
                             labeltxt="Email" 
@@ -72,7 +76,7 @@ const form = useForm({
                         <div class="flex flex-col gap-1">
                             <TextField 
                             v-model="form.password" 
-                            :icon="icon.passwordIcon" 
+                            :icon="passwordIcon" 
                             label="Password" 
                             type="password" 
                             labeltxt="Password" 
