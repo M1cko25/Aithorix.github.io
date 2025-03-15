@@ -10,9 +10,9 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
         }),
-    ], resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'resources/js'),
+        ], resolve: {
+            alias: {
+                '@': path.resolve(__dirname, 'resources/js'),
+            },
         },
-    },
 });
