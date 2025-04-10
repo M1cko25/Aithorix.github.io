@@ -23,13 +23,16 @@ use App\Models\User;
 use App\Models\TaskStatusCol;
 use Illuminate\Validation\ValidationException;
 use App\Models\SprintTasks;
+use App\Models\TaskAssignees;
+use App\Services\TaskEmailService;
+use App\Models\Notifications;
 
 
 class TaskController extends Controller
 {
     private function registerUpdate($projectId ,$userId, $description,$subject) {
         try {
-            $activity = Activity::create([ 
+            $activity = Activity::create([
                 'user_id' => $userId,
                 'description' => $description,
                 'date' => now(),
@@ -58,10 +61,13 @@ class TaskController extends Controller
 
         try {
             $backlog = Backlogs::with('epic')->find($request->taskId);
-            
+
+            // Begin transaction
+            DB::beginTransaction();
+
             // Clear existing assignees
             DB::table('task_assignees')->where('task_id', $request->taskId)->delete();
-            
+
             // Add new assignees
             foreach ($request->assignees as $assigneeId) {
                 DB::table('task_assignees')->insert([
@@ -70,6 +76,15 @@ class TaskController extends Controller
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+
+                // Send email notification to the assignee
+                $user = User::find($assigneeId);
+
+                // Send email notification
+                TaskEmailService::sendTaskAssignedEmail($backlog, $user);
+
+                // Create in-app notification for task assignment
+                $this->createTaskAssignedNotification($assigneeId, $request->taskId, $backlog->title, Auth::user()->name);
             }
 
             // Get updated assignees with correct data structure
@@ -85,55 +100,75 @@ class TaskController extends Controller
                 $backlog->epic->name
             );
 
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'assignees' => $updatedAssignees,
                 'message' => 'Assignees updated successfully'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Error updating assignees: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating assignees'
+                'message' => 'Error updating assignees: ' . $e->getMessage()
             ], 500);
         }
     }
 
     public function createBacklog(Request $request) {
-        $projId = $request->projectId;
-        $projKey = Backlogs::generateKey($projId);
-        $epic = Epics::where('id', $request->epicId)->first();
-        $creator = ProjectMembers::where('user_id', Auth::user()->id)->value('id');
-        $createdBacklog = Backlogs::create([
-            'title' => $request->title,
-            'project_id' => $projId,
-            'key' => $projKey,
-            'type' => $request->type,
-            'description' => '',
-            'priority' => $request->priority,
-            'epic_id' => $request->epicId,
-            'creator_id' => $creator,
-            'status' => 'To Do',
-            'order' => $request->order,
-        ]);
-        $backlog = Backlogs::with(['attachments', 'assignees'])
-            ->where('id', $createdBacklog->id)
-            ->first();
-        if ($epic->status == "On Sprint") {
-            $startDate = new \DateTime($epic->start_date);
-            $endDate = new \DateTime($epic->end_date);
-            $duration = $startDate->diff($endDate)->days;
-            $sprint = SprintTasks::create([
-                'sprint_id' => $epic->id,
-                'backlog_id' => $backlog->id,
-                'start_date' => $epic->start_date,
-                'end_date' => $epic->end_date,
-                'duration' => $duration,
-                'progress' => 0,
+        try {
+            $projId = $request->projectId;
+            $projKey = Backlogs::generateKey($projId);
+            $epic = Epics::where('id', $request->epicId)->first();
+            $creator = ProjectMembers::where('user_id', Auth::user()->id)->value('id');
+
+            $createdBacklog = Backlogs::create([
+                'title' => $request->title,
+                'project_id' => $projId,
+                'key' => $projKey,
+                'type' => $request->type,
+                'description' => '',
+                'priority' => $request->priority ?? 'Low',
+                'epic_id' => $request->epicId,
+                'creator_id' => $creator,
+                'status' => 'To Do',
+                'order' => $request->order ?? 1,
             ]);
+
+            $backlog = Backlogs::with(['attachments', 'assignees'])
+                ->where('id', $createdBacklog->id)
+                ->first();
+
+            if ($epic->status == "On Sprint") {
+                $startDate = new \DateTime($epic->start_date);
+                $endDate = new \DateTime($epic->end_date);
+                $duration = $startDate->diff($endDate)->days;
+
+                $sprint = SprintTasks::create([
+                    'sprint_id' => $epic->id,
+                    'backlog_id' => $backlog->id,
+                    'start_date' => $epic->start_date,
+                    'end_date' => $epic->end_date,
+                    'duration' => $duration,
+                    'progress' => 0,
+                ]);
+            }
+
+            $this->registerUpdate($projId, Auth::user()->id, "created " . $request->title . " in ", $epic->name);
+
+            // Send emails to project members about new task
+            TaskEmailService::sendNewTaskCreatedEmail($backlog);
+
+            return response()->json(['success' => true, 'backlog' => $backlog]);
+        } catch (\Exception $e) {
+            Log::error('Error creating backlog: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating backlog: ' . $e->getMessage()
+            ], 500);
         }
-        $this->registerUpdate($projId, Auth::user()->id, "created " . $request->title . " in ", $epic->name);
-        return response()->json(['success' => true, 'backlog' => $backlog]);
     }
 
     public function deleteBacklog(Request $request) {
@@ -157,7 +192,7 @@ class TaskController extends Controller
 
             DB::commit();
             return response()->json(['success' => true]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting backlog: ' . $e->getMessage());
@@ -170,7 +205,7 @@ class TaskController extends Controller
 
     public function updateBacklog(Request $request) {
         $backlog = Backlogs::where('id', $request->id)->first();
-        
+
         if ($backlog) {
             $backlog->update([
                 'title' => $request->title,
@@ -213,13 +248,13 @@ class TaskController extends Controller
             // Get epic names for logging
             $sourceEpic = Epics::find($request->sourceEpicId);
             $targetEpic = Epics::find($request->targetEpicId);
-            
+
             // Log the move action
             $taskCount = count($request->taskIds);
-            $actionDesc = $taskCount > 1 
+            $actionDesc = $taskCount > 1
                 ? "moved {$taskCount} tasks from {$sourceEpic->name} to "
                 : "moved a task from {$sourceEpic->name} to ";
-            
+
             $this->registerUpdate(
                 $request->projectId,
                 Auth::user()->id,
@@ -253,7 +288,7 @@ class TaskController extends Controller
 
         try {
             $attachment = TaskAttachments::findOrFail($request->attachmentId);
-            
+
             // Check if attachment belongs to the task
             if ($attachment->task_id != $request->taskId) {
                 return response()->json([
@@ -304,7 +339,7 @@ class TaskController extends Controller
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $fileName = $file->getClientOriginalName();
-                
+
                 // Store file in public storage
                 $filePath = Storage::disk('public')->put('attachments', $file);
 
@@ -397,7 +432,7 @@ class TaskController extends Controller
         $backlog = Backlogs::where('id', $request->id)->first();
         $backlog->status = $request->status;
         $backlog->save();
-        
+
         $epic = Epics::where('id', $backlog->epic_id)->first();
 
             $totalBacklogs = Backlogs::where('epic_id', $backlog->epic_id)->count();
@@ -414,12 +449,12 @@ class TaskController extends Controller
             $epic->save();
 
             $this->registerUpdate(
-                $request->projectId, 
-                Auth::user()->id, 
-                "updated status of " . $backlog->title . " to " . $request->status . " in ", 
+                $request->projectId,
+                Auth::user()->id,
+                "updated status of " . $backlog->title . " to " . $request->status . " in ",
                 $epic->name
             );
-            
+
             return response()->json([
                 'success' => true,
                 'progress_percent' => $newProgressPercent
@@ -431,5 +466,22 @@ class TaskController extends Controller
                 'message' => 'Error updating backlog status'
             ], 500);
         }
+    }
+
+    /**
+     * Create a task assignment notification
+     */
+    private function createTaskAssignedNotification($userId, $taskId, $taskTitle, $assignedByName)
+    {
+        $content = "{$assignedByName} assigned a task for you. <a href='/scrum/board?id=" . Backlogs::find($taskId)->project_id . "' class='text-blue-600 hover:underline'>Click this to see</a>";
+
+        return Notifications::create([
+            'title' => 'New task assigned to you',
+            'content' => $content,
+            'sender_id' => Auth::id(),
+            'receiver_id' => $userId,
+            'is_read' => false,
+            'type' => 'task_assigned',
+        ]);
     }
 }

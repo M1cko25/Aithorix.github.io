@@ -30,7 +30,7 @@ export function createTask(newTask, taskCounts, selectedType, epics, epicSelecte
           order: activeEpic.order + 1,
           projectId: projectDetails.id
         })
-        .then(response => { 
+        .then(response => {
           console.log(response.data);
           epicSelected.tasks.push(response.data.backlog);
           taskCountsUpdate(taskCounts, epicSelected);
@@ -62,4 +62,3 @@ export function deleteTask(epicSelected, taskCounts, selectedTaskToUpdate, proje
     });
   }
 
-  

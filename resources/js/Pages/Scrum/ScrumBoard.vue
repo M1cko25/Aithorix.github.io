@@ -91,7 +91,7 @@ const filterTasksByEpic = () => {
   }
 
   const filteredBacklogs = backlogs.value.filter(task => task.epic_id === selectedEpic.value.id)
-  
+
   columns.value.forEach(column => {
     column.tasks = filteredBacklogs.filter(task => task.status === column.title)
   })
@@ -157,8 +157,8 @@ const createNewTask = async (taskData, columnId) => {
       title: taskData.title,
       type: taskData.type.name,
       priority: 'Low',
-      status: column.title, 
-      epicId: selectedEpic.value.id, 
+      status: column.title,
+      epicId: selectedEpic.value.id,
       projectId: page.projectDetails.id
     })
 
@@ -294,7 +294,7 @@ const logoDisplayed = ref(true);
       :comments="selectedTaskToEdit ? (page.comments?.[selectedTaskToEdit.id] || []) : []"
       @update:task="handleTaskUpdate"
     />
-    <DeleteTaskModal 
+    <DeleteTaskModal
       v-model:isOpen="isDeleteModalOpen"
       :epicSelected="selectedEpic"
       :selectedTaskToUpdate="[selectedTaskToDelete]"
@@ -331,8 +331,8 @@ const logoDisplayed = ref(true);
         </div>
         <div class="flex items-center gap-4">
           <div class="w-64">
-            <select 
-              v-model="selectedEpic" 
+            <select
+              v-model="selectedEpic"
               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option v-for="epic in [...epics].sort((a, b) => a.order - b.order)" :key="epic.id" :value="epic">
@@ -356,24 +356,24 @@ const logoDisplayed = ref(true);
       <!-- Kanban Board -->
       <div v-else class="px-6 pb-6">
         <div class="flex gap-6 overflow-x-auto min-w-full kanban-container">
-        <KanbanColumn 
-          v-for="column in columns" 
-          :key="column.id" 
-          :title="column.title" 
+        <KanbanColumn
+          v-for="column in columns"
+          :key="column.id"
+          :title="column.title"
           :tasks="column.tasks"
           :columnId="column.id"
-          :createTask="() => createTask(column.id)" 
+          :createTask="() => createTask(column.id)"
           :isCreatingTask="taskCreating[column.id]"
-          @create-new-task="(task) => createNewTask(task, column.id)" 
+          @create-new-task="(task) => createNewTask(task, column.id)"
           @update:tasks="(newTasks) => column.tasks = newTasks"
           @taskMoved="handleTaskMove"
             @editTask="handleEditTask"
             @deleteTask="handleDeleteTask"
-          :taskNum="TaskNum" 
+          :taskNum="TaskNum"
             class="flex-shrink-0"
           >
             <template v-if="!column.isDefault" #column-header-actions>
-              <button 
+              <button
                 @click="removeColumn(column.id)"
                 class="p-1 hover:bg-gray-100 rounded-full"
               >
@@ -383,7 +383,7 @@ const logoDisplayed = ref(true);
           </KanbanColumn>
 
           <!-- Add Column Button/Form -->
-          <div v-if="!isAddingColumn" 
+          <div v-if="!isAddingColumn"
             @click="isAddingColumn = true"
             class="w-80 h-12 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 flex items-center justify-center text-gray-600 hover:text-gray-800 cursor-pointer flex-shrink-0">
             Add Column
@@ -399,7 +399,7 @@ const logoDisplayed = ref(true);
               autofocus
             />
             <div class="flex justify-end gap-2">
-              <button 
+              <button
                 @click="isAddingColumn = false"
                 class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded"
               >

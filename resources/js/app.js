@@ -10,7 +10,7 @@ import { CalendarComponent } from '@syncfusion/ej2-vue-calendars';
 createInertiaApp({
   title: (title) => `Aithorix ${title}`,
   resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true }) 
+    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
     let page = pages[`./Pages/${name}.vue`]
     page.default.layout = page.default.layout || Layout;
     return page;
@@ -31,4 +31,4 @@ createInertiaApp({
     delay: 250,
   }
 })
-registerLicense('Ngo9BigBOggjHTQxAR8/V1NMaF1cXmhNYVVpR2Nbek5xdF9HZ1ZQTWYuP1ZhSXxWdkZjXn5ecXNXRWJUWUY=')
+registerLicense('Ngo9BigBOggjHTQxAR8/V1NMaF1cXGFCe0x/WmFZfVtgfV9CaVZURGY/P1ZhSXxWdkFjUH1fdXRXRmhaUEB9XUo=')

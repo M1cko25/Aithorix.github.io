@@ -6,6 +6,7 @@ import Logo from '@/images/Logo.png'
 import { usePage } from '@inertiajs/vue3'
 import { route } from '../../../vendor/tightenco/ziggy/src/js'
 import CreateProjectModal from './CreateProjectModal.vue'
+import NotificationOverlay from './NotificationOverlay.vue'
 
 const page = usePage().props;
 const props = defineProps({
@@ -19,6 +20,35 @@ let isShowLogin = ref(false)
 const showLogin = () => {
   isShowLogin.value = !isShowLogin.value;
 }
+
+const showNotifications = ref(false)
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value;
+  if (showNotifications.value) {
+    isShowLogin.value = false;
+  }
+}
+
+// Close dropdown when clicking outside
+const closeDropdowns = (event) => {
+  const notificationBtn = document.querySelector('.notification-btn');
+  const profileBtn = document.querySelector('.profile-btn');
+
+  if (notificationBtn && !notificationBtn.contains(event.target) &&
+      !event.target.closest('.notification-overlay')) {
+    showNotifications.value = false;
+  }
+
+  if (profileBtn && !profileBtn.contains(event.target) &&
+      !event.target.closest('.profile-dropdown')) {
+    isShowLogin.value = false;
+  }
+}
+
+// Add click event listener to document
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', closeDropdowns);
+}
 </script>
 
 <template>
@@ -29,27 +59,41 @@ const showLogin = () => {
     </div>
 
     <div class="flex items-center gap-4">
-      <button class="p-2 text-gray-600 hover:text-gray-800">
+      <!-- Notification Button -->
+      <button
+        class="p-2 text-gray-600 hover:text-gray-800 notification-btn relative"
+        @click.stop="toggleNotifications"
+      >
         <Bell class="w-5 h-5" />
+        <!-- Notification Badge -->
+        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
       </button>
+
       <button class="p-2 text-gray-600 hover:text-gray-800">
         <Settings class="w-5 h-5" />
       </button>
+
       <button class="p-2 text-gray-600 hover:text-gray-800">
         <HelpCircle class="w-5 h-5" />
       </button>
-      
+
       <div>
-        <button @click="showLogin" class="flex w-fit items-center gap-2 ml-4">
+        <button @click="showLogin" class="flex w-fit items-center gap-2 ml-4 profile-btn">
             <img :src="page.auth.user.avatar" alt="User" class="w-8 h-8 rounded-full" />
             <ChevronDown class="w-4 h-4 text-gray-600" />
         </button>
-        <div v-if="isShowLogin" class="absolute bg-light shadow-lg p-2 z-10 rounded-md bottom-0 translate-y-8" >
+        <div v-if="isShowLogin" class="absolute bg-light shadow-lg p-2 z-10 rounded-md bottom-0 translate-y-8 profile-dropdown" >
             <Link :href="route('logout')" method="post">Log out</Link>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Notification Overlay -->
+  <NotificationOverlay
+    v-model="showNotifications"
+    class="notification-overlay"
+  />
 </template>
 
 <style scoped>

@@ -16,6 +16,8 @@
         "laravel/socialite": "^5.16",
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.6",
+        "predis/predis": "^2.3",
+        "pusher/pusher-php-server": "^7.2",
         "symfony/http-client": "^7.2",
         "symfony/mailgun-mailer": "^7.2",
         "tightenco/ziggy": "^2.4"
