@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { CheckCircle } from 'lucide-vue-next'
 import Header from '@/Components/Header.vue'
 import Sidebar from '../../Components/SideBar.vue'
 
 const billingCycle = ref('monthly')
+
+const price = computed(() => {
+    return billingCycle.value === 'monthly' ? 8 : 80
+})
+
+const billingText = computed(() => {
+    return billingCycle.value === 'monthly' ? 'billed monthly' : 'billed annually'
+})
 
 const handleUpgrade = () => {
     console.log('Upgrading plan:', billingCycle.value)
@@ -51,11 +59,11 @@ const logoDisplayed = ref(true);
                 <ul class="space-y-4">
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
-                        <span><span class="font-medium text-button">UNLIMITED</span> Video Call Meetings</span>
+                        <span><span class="font-lg text-button">UNLIMITED</span> Video Call Meetings</span>
                     </li>
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
-                        <span><span class="font-medium text-button">UNLIMITED</span> Access to AI LIRA</span>
+                        <span><span class="font-lg text-button">UNLIMITED</span> Access to AI LIRA</span>
                     </li>
                     <li class="flex items-center">
                         <CheckCircle class="mr-2 h-5 w-5 text-blue-500" />
@@ -65,12 +73,14 @@ const logoDisplayed = ref(true);
             </div>
 
             <!-- Pricing and CTA -->
-            <div class="flex items-center justify-between border-t pt-6">
-                <div>
-                    <span class="text-3xl font-bold">$8</span>
-                    <span class="text-gray-600">(billed monthly)</span>
+            <div class="flex items-center justify-between border-t pt-8">
+                <div class="space-y-1">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-2xl font-bold">${{ price }}</span>
+                        <span class="text-gray-600 space-x-1 ">({{ billingText }})</span>
+                    </div>
                 </div>
-                <button @click="handleUpgrade" class="btn-primary">
+                <button @click="handleUpgrade" class="btn-primary px-8 py-3 text-lg">
                     Upgrade To Plus
                 </button>
             </div>
